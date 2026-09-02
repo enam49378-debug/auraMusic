@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AuraMusic - Content Script Injected into music.youtube.com
  * Advanced Customization Suite (Themes, Ambient Glow, Visualizer, EQ, Ad-Free)
  */
@@ -404,6 +404,7 @@
           <button type="button" class="auramusic-tab" data-tab="visualizer">📊 Visualizador</button>
           <button type="button" class="auramusic-tab" data-tab="audio">🎚️ Audio & EQ</button>
           <button type="button" class="auramusic-tab" data-tab="clean">🚫 Limpieza</button>
+          <button type="button" class="auramusic-tab" id="hub-cinema-lyrics-tab" style="color: #ff8fa3; font-weight: 700;">🎤 Modo Letras</button>
         </nav>
 
         <main class="auramusic-body">
@@ -530,6 +531,13 @@
     const closeBtn = document.getElementById('auramusic-close-btn');
 
     launcher.addEventListener('click', () => overlay.classList.add('active'));
+    const cinemaTabBtn = document.getElementById('hub-cinema-lyrics-tab');
+    if (cinemaTabBtn) {
+      cinemaTabBtn.addEventListener('click', () => {
+        overlay.classList.remove('active');
+        openCinemaMode();
+      });
+    }
     closeBtn.addEventListener('click', () => overlay.classList.remove('active'));
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) overlay.classList.remove('active');
@@ -683,9 +691,308 @@
     setInterval(checkSongChange, 2000);
   }
 
+  
+  // ==========================================================
+  // SISTEMA DE LETRAS ANIMADAS ESTILO APPLE MUSIC (CINEMATIC KARAOKE)
+  // ==========================================================
+  let currentLyrics = [];
+  let isCinemaActive = false;
+
+  function parseLrc(lrcString) {
+    const lines = lrcString.split('\n');
+    const result = [];
+    const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/;
+
+    lines.forEach(line => {
+      const match = timeRegex.exec(line);
+      if (match) {
+        const min = parseInt(match[1], 10);
+        const sec = parseInt(match[2], 10);
+        const ms = parseFloat('0.' + match[3]);
+        const time = min * 60 + sec + ms;
+        const text = line.replace(/\[\d{2}:\d{2}\.\d{2,3}\]/g, '').trim();
+        if (text) {
+          result.push({ time, text });
+        }
+      }
+    });
+
+    return result.sort((a, b) => a.time - b.time);
+  }
+
+  async function fetchSyncedLyrics(title, artist, duration) {
+    // 1. Intentar obtener letras sincronizadas de la API pública LrcLib
+    try {
+      const cleanTitle = title.replace(/\(.*?\)|\[.*?\]/g, '').trim();
+      const cleanArtist = artist.split('•')[0].split(',')[0].trim();
+      const url = `https://lrclib.net/api/get?track_name=${encodeURIComponent(cleanTitle)}&artist_name=${encodeURIComponent(cleanArtist)}&duration=${Math.round(duration || 180)}`;
+
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.syncedLyrics) {
+          console.log('🎤 AuraMusic: Letras sincronizadas encontradas en LrcLib!');
+          return parseLrc(data.syncedLyrics);
+        }
+      }
+    } catch (e) {
+      console.log('AuraMusic: Fallback a letras locales de YouTube Music');
+    }
+
+    // 2. Fallback: Extraer las letras nativas de la pestaña LETRA de YouTube Music
+    const localDesc = document.querySelector('ytmusic-description-shelf-renderer .description');
+    if (localDesc && localDesc.textContent.trim()) {
+      const rawLines = localDesc.innerText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      const totalSec = duration > 0 ? duration : 200;
+      const step = totalSec / Math.max(1, rawLines.length);
+
+      return rawLines.map((text, idx) => ({
+        time: idx * step,
+        text: text
+      }));
+    }
+
+    // 3. Fallback en caso de no haber letra
+    return [
+      { time: 0, text: 'Disfruta de la melodía...' },
+      { time: 10, text: title },
+      { time: 30, text: artist }
+    ];
+  }
+
+  function createCinemaOverlay() {
+    if (document.getElementById('auramusic-cinema-overlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'auramusic-cinema-overlay';
+    overlay.innerHTML = `
+      <div class="cinema-mesh-bg"></div>
+
+      <button type="button" class="cinema-close-btn" id="cinema-close-btn">
+        <span>✕</span> <span>Salir de Letra Animada</span>
+      </button>
+
+      <div class="cinema-content-grid">
+        <!-- Columna Izquierda: Portada y Controles -->
+        <div class="cinema-left">
+          <div class="cinema-artwork-box">
+            <img id="cinema-art-img" src="" alt="Portada">
+          </div>
+
+          <div class="cinema-meta-info">
+            <div class="cinema-track-title" id="cinema-track-title">Cargando...</div>
+            <div class="cinema-track-artist" id="cinema-track-artist">Artista</div>
+          </div>
+
+          <div class="cinema-timeline-box">
+            <div class="cinema-progress-bg" id="cinema-progress-bg">
+              <div class="cinema-progress-fill" id="cinema-progress-fill"></div>
+            </div>
+            <div class="cinema-time-row">
+              <span id="cinema-current-time">0:00</span>
+              <span id="cinema-total-time">0:00</span>
+            </div>
+          </div>
+
+          <div class="cinema-controls">
+            <button type="button" class="cinema-ctrl-btn" id="cinema-prev-btn" title="Anterior">⏮</button>
+            <button type="button" class="cinema-play-btn" id="cinema-play-btn" title="Reproducir / Pausar">▶</button>
+            <button type="button" class="cinema-ctrl-btn" id="cinema-next-btn" title="Siguiente">⏭</button>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Letras Cinematográficas -->
+        <div class="cinema-right" id="cinema-right-scroll">
+          <div class="cinema-lyrics-wrapper" id="cinema-lyrics-wrapper">
+            <div class="cinema-lyric-line active-line">Cargando letra sincronizada...</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Eventos del Overlay
+    const closeBtn = document.getElementById('cinema-close-btn');
+    closeBtn.addEventListener('click', closeCinemaMode);
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isCinemaActive) {
+        closeCinemaMode();
+      }
+    });
+
+    // Controles dentro del modo cine
+    const playBtn = document.getElementById('cinema-play-btn');
+    const prevBtn = document.getElementById('cinema-prev-btn');
+    const nextBtn = document.getElementById('cinema-next-btn');
+
+    playBtn.addEventListener('click', () => {
+      const nativePlay = document.querySelector('.play-pause-button.ytmusic-player-bar');
+      if (nativePlay) nativePlay.click();
+    });
+
+    prevBtn.addEventListener('click', () => {
+      const nativePrev = document.querySelector('.previous-button.ytmusic-player-bar');
+      if (nativePrev) nativePrev.click();
+    });
+
+    nextBtn.addEventListener('click', () => {
+      const nativeNext = document.querySelector('.next-button.ytmusic-player-bar');
+      if (nativeNext) nativeNext.click();
+    });
+
+    // Salto en la barra de tiempo
+    const progressBg = document.getElementById('cinema-progress-bg');
+    progressBg.addEventListener('click', (e) => {
+      const video = document.querySelector('video');
+      if (!video || !video.duration) return;
+      const rect = progressBg.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      video.currentTime = pct * video.duration;
+    });
+  }
+
+  async function openCinemaMode() {
+    createCinemaOverlay();
+    const overlay = document.getElementById('auramusic-cinema-overlay');
+    if (!overlay) return;
+
+    isCinemaActive = true;
+    overlay.classList.add('active');
+
+    // Obtener datos actuales de la canción
+    const titleEl = document.querySelector('ytmusic-player-bar .title');
+    const artistEl = document.querySelector('ytmusic-player-bar .byline');
+    const coverImg = document.querySelector('ytmusic-player-bar .image');
+    const video = document.querySelector('video');
+
+    const title = titleEl ? titleEl.textContent.trim() : 'Canción';
+    const artist = artistEl ? artistEl.textContent.trim() : 'Artista';
+    const imgSrc = coverImg ? coverImg.src : '';
+    const duration = video ? video.duration : 180;
+
+    document.getElementById('cinema-track-title').textContent = title;
+    document.getElementById('cinema-track-artist').textContent = artist;
+    document.getElementById('cinema-art-img').src = imgSrc;
+
+    // Obtener letras
+    const wrapper = document.getElementById('cinema-lyrics-wrapper');
+    wrapper.innerHTML = '<div class="cinema-lyric-line active-line">Sincronizando letra...</div>';
+
+    currentLyrics = await fetchSyncedLyrics(title, artist, duration);
+
+    // Renderizar todas las líneas
+    wrapper.innerHTML = '';
+    currentLyrics.forEach((item, index) => {
+      const lineDiv = document.createElement('div');
+      lineDiv.className = `cinema-lyric-line ${index === 0 ? 'active-line' : ''}`;
+      lineDiv.textContent = item.text;
+      lineDiv.dataset.time = item.time;
+      lineDiv.dataset.index = index;
+
+      // Al tocar cualquier línea de la letra: Salto interactivo al segundo exacto (Karaoke)
+      lineDiv.addEventListener('click', () => {
+        if (video) {
+          video.currentTime = item.time;
+        }
+      });
+
+      wrapper.appendChild(lineDiv);
+    });
+
+    startCinemaSyncLoop();
+  }
+
+  function closeCinemaMode() {
+    const overlay = document.getElementById('auramusic-cinema-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+    }
+    isCinemaActive = false;
+  }
+
+  function startCinemaSyncLoop() {
+    let lastActiveIdx = -1;
+
+    function sync() {
+      if (!isCinemaActive) return;
+
+      const video = document.querySelector('video');
+      if (video) {
+        const currentTime = video.currentTime;
+        const duration = video.duration || 1;
+
+        // Actualizar barra de progreso y tiempos
+        const fill = document.getElementById('cinema-progress-fill');
+        const curSpan = document.getElementById('cinema-current-time');
+        const totSpan = document.getElementById('cinema-total-time');
+        const playBtn = document.getElementById('cinema-play-btn');
+
+        if (fill) fill.style.width = `${(currentTime / duration) * 100}%`;
+        if (curSpan) curSpan.textContent = formatTime(currentTime);
+        if (totSpan) totSpan.textContent = formatTime(duration);
+        if (playBtn) playBtn.textContent = video.paused ? '▶' : '⏸';
+
+        // Buscar línea activa de letra
+        let activeIdx = 0;
+        for (let i = 0; i < currentLyrics.length; i++) {
+          if (currentTime >= currentLyrics[i].time) {
+            activeIdx = i;
+          } else {
+            break;
+          }
+        }
+
+        if (activeIdx !== lastActiveIdx) {
+          lastActiveIdx = activeIdx;
+          const allLines = document.querySelectorAll('.cinema-lyric-line');
+          allLines.forEach((l, idx) => {
+            if (idx === activeIdx) {
+              l.classList.add('active-line');
+              l.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+              l.classList.remove('active-line');
+            }
+          });
+        }
+      }
+
+      requestAnimationFrame(sync);
+    }
+
+    requestAnimationFrame(sync);
+  }
+
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  }
+
+  // Inyectar el botón de "Letra Animada" en la pestaña LETRA de YouTube Music
+  function checkAndInjectLyricsButton() {
+    const lyricsTab = document.querySelector('ytmusic-tab-renderer[page-type="MUSIC_PAGE_TYPE_TRACK_LYRICS"], #tabsContent ytmusic-tab-header-renderer:nth-child(2)');
+    const lyricsShelf = document.querySelector('ytmusic-description-shelf-renderer');
+
+    if (lyricsShelf && !document.getElementById('auramusic-cinema-trigger-btn')) {
+      const btn = document.createElement('button');
+      btn.id = 'auramusic-cinema-trigger-btn';
+      btn.type = 'button';
+      btn.innerHTML = `<span>✨</span> <span>Ver Letra Animada (Estilo Apple Music)</span>`;
+      btn.addEventListener('click', openCinemaMode);
+
+      lyricsShelf.parentNode.insertBefore(btn, lyricsShelf);
+      console.log('🎤 AuraMusic: Botón de Letra Animada inyectado con éxito!');
+    }
+  }
+
+  setInterval(checkAndInjectLyricsButton, 1500);
+
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     init();
   } else {
     window.addEventListener('DOMContentLoaded', init);
   }
 })();
+
