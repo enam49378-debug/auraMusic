@@ -1,0 +1,68 @@
+/* ==========================================================
+   AURAMUSIC - VISUALIZADOR DE AUDIO E ILUMINACIÓN AMBIENTAL
+   ========================================================== */
+
+/* Contenedor del Visualizador sobre la barra de reproducción */
+#auramusic-visualizer-container {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 28px !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+  overflow: hidden !important;
+  opacity: 0.85;
+}
+
+#auramusic-visualizer-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* Asegurar que los textos, carátula y botones siempre queden por encima del visualizador */
+ytmusic-player-bar .left-controls,
+ytmusic-player-bar .middle-controls,
+ytmusic-player-bar .right-controls,
+ytmusic-player-bar .thumbnail-image-wrapper,
+ytmusic-player-bar .title,
+ytmusic-player-bar .byline {
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+/* Iluminación Ambiental Reactiva (Glow detrás de la carátula) */
+#auramusic-ambient-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 1.2s ease, filter 1.2s ease;
+}
+
+body.auramusic-ambient-active #auramusic-ambient-glow {
+  opacity: 0.65;
+}
+
+.auramusic-glow-layer {
+  position: absolute;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.5;
+  transition: background 1.5s ease, transform 0.5s ease-out;
+  pointer-events: none;
+}
+
+#auramusic-glow-1 {
+  top: -10%;
+  right: -5%;
+}
+
+#auramusic-glow-2 {
+  bottom: 0%;
+  left: -10%;
+}

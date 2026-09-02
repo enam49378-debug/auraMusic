@@ -1,0 +1,148 @@
+/* ==========================================================
+   AURAMUSIC - SISTEMA DE TEMAS AVANZADOS PARA YOUTUBE MUSIC
+   ========================================================== */
+
+:root {
+  --auramusic-primary: #00e5ff;
+  --auramusic-secondary: #7c4dff;
+  --auramusic-glow: rgba(0, 229, 255, 0.35);
+  --auramusic-bg: #07090e;
+  --auramusic-card-bg: rgba(16, 20, 32, 0.88);
+  --auramusic-border: rgba(255, 255, 255, 0.12);
+  --auramusic-ambient-color: #00e5ff;
+}
+
+/* ==========================================================
+   1. TEMA: OLED PURE BLACK (Negro Puro #000000 y Acentos Neón)
+   ========================================================== */
+body.auramusic-theme-oled,
+body.auramusic-theme-oled ytmusic-app,
+body.auramusic-theme-oled #nav-bar-background.ytmusic-nav-bar,
+body.auramusic-theme-oled ytmusic-nav-bar,
+body.auramusic-theme-oled ytmusic-player-bar,
+body.auramusic-theme-oled ytmusic-browse-response,
+body.auramusic-theme-oled ytmusic-player-page,
+body.auramusic-theme-oled #main-panel.ytmusic-player-page,
+body.auramusic-theme-oled #side-panel.ytmusic-player-page,
+body.auramusic-theme-oled ytmusic-app-layout,
+body.auramusic-theme-oled #player-bar-background.ytmusic-player-bar {
+  background: #000000 !important;
+  background-color: #000000 !important;
+}
+
+body.auramusic-theme-oled ytmusic-player-bar {
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.8) !important;
+}
+
+body.auramusic-theme-oled tp-yt-paper-slider #primaryProgress.tp-yt-paper-progress {
+  background: var(--auramusic-primary) !important;
+  box-shadow: 0 0 12px var(--auramusic-primary) !important;
+}
+
+body.auramusic-theme-oled tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
+  background: #ffffff !important;
+  box-shadow: 0 0 10px var(--auramusic-primary) !important;
+}
+
+/* ==========================================================
+   2. TEMA: CYBERPUNK NEON (Violeta, Neón Cian y Resplandores)
+   ========================================================== */
+body.auramusic-theme-cyberpunk {
+  --auramusic-primary: #00f2fe;
+  --auramusic-secondary: #ff007f;
+  --auramusic-glow: rgba(0, 242, 254, 0.45);
+}
+
+body.auramusic-theme-cyberpunk ytmusic-app,
+body.auramusic-theme-cyberpunk #nav-bar-background.ytmusic-nav-bar,
+body.auramusic-theme-cyberpunk #player-bar-background.ytmusic-player-bar,
+body.auramusic-theme-cyberpunk ytmusic-browse-response {
+  background: #090812 !important;
+  background-color: #090812 !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-player-bar {
+  border-top: 1px solid var(--auramusic-secondary) !important;
+  box-shadow: 0 -5px 30px rgba(255, 0, 127, 0.25) !important;
+}
+
+body.auramusic-theme-cyberpunk .play-pause-button.ytmusic-player-bar {
+  background: linear-gradient(135deg, #00f2fe, #ff007f) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.5) !important;
+}
+
+body.auramusic-theme-cyberpunk tp-yt-paper-slider #primaryProgress.tp-yt-paper-progress {
+  background: linear-gradient(90deg, #00f2fe, #ff007f) !important;
+  box-shadow: 0 0 10px #ff007f !important;
+}
+
+/* ==========================================================
+   3. TEMA: GLASSMORPHISM FROST (Cristal Esmerilado Premium)
+   ========================================================== */
+body.auramusic-theme-glass ytmusic-player-bar {
+  background: rgba(14, 18, 28, 0.82) !important;
+  backdrop-filter: blur(20px) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.auramusic-theme-glass ytmusic-nav-bar {
+  background: rgba(14, 18, 28, 0.75) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ==========================================================
+   4. TEMA: AMBIENT COVER DYNAMIC (Color Dinámico de Carátula)
+   ========================================================== */
+body.auramusic-theme-dynamic tp-yt-paper-slider #primaryProgress.tp-yt-paper-progress {
+  background: var(--auramusic-ambient-color) !important;
+  box-shadow: 0 0 12px var(--auramusic-ambient-color) !important;
+}
+
+body.auramusic-theme-dynamic .play-pause-button.ytmusic-player-bar {
+  color: var(--auramusic-ambient-color) !important;
+}
+
+/* ==========================================================
+   5. ELIMINACIÓN DE DISTRACCIONES Y BANNERS (CLEAN MODE)
+   ========================================================== */
+body.auramusic-clean-mode ytmusic-mealbar-promo-renderer,
+body.auramusic-clean-mode ytmusic-upsell-dialog-renderer,
+body.auramusic-clean-mode #upsell-dialog,
+body.auramusic-clean-mode .ytmusic-mealbar-promo-renderer,
+body.auramusic-clean-mode ytmusic-pivot-bar-item-renderer[tab-id="SPunlimited"],
+body.auramusic-clean-mode #banner.ytmusic-item-section-renderer,
+body.auramusic-clean-mode .upgrade-button {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ==========================================================
+   ESTILOS GLOBALES DE MEJORA VISUAL
+   ========================================================== */
+/* Barra de desplazamiento futurista */
+::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.4) !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--auramusic-primary) !important;
+}
