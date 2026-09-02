@@ -1,7 +1,8 @@
 /* ==========================================================
-   AURAMUSIC - SISTEMA DE DISEÑOS COMPLETOS PARA YOUTUBE MUSIC
-   (YouTube Red, Aesthetic Pastel, Cyberpunk Mecha, Minecraft Pixel, OLED)
+   AURAMUSIC - SISTEMA MULTI-DISEÑO CON ANIMACIONES Y TIPOGRAFÍAS DEDICADAS
    ========================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Orbitron:wght@600;800;900&family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@500;700&family=Quicksand:wght@600;700&family=Rajdhani:wght@600;700&family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap');
 
 :root {
   --auramusic-primary: #00e5ff;
@@ -11,18 +12,39 @@
   --auramusic-card-bg: rgba(16, 20, 32, 0.88);
   --auramusic-border: rgba(255, 255, 255, 0.12);
   --auramusic-ambient-color: #00e5ff;
-  --auramusic-radius: 14px;
 }
 
 /* ==========================================================
-   ESTILOS GENERALES Y CORRECCIÓN DE MENÚS (NO BLOQUE / NO ROBÓTICO)
+   CORRECCIÓN GLOBAL DE TAMAÑOS Y CONTENCIÓN (CERO RECORTES)
    ========================================================== */
 
-/* Menú lateral orgánico y limpio */
+/* Chips superiores adaptables y sin texto aplastado */
+ytmusic-chip-cloud-chip-renderer {
+  height: auto !important;
+  min-height: 36px !important;
+  padding: 4px 14px !important;
+  margin: 0 8px 8px 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+
+ytmusic-chip-cloud-chip-renderer #chip,
+ytmusic-chip-cloud-chip-renderer #chip-container,
+ytmusic-chip-cloud-chip-renderer yt-formatted-string {
+  overflow: visible !important;
+  line-height: 1.3 !important;
+  display: flex !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+}
+
+/* Menú lateral orgánico */
 ytmusic-guide-entry-renderer {
   border-radius: 12px !important;
   margin: 3px 8px !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 ytmusic-guide-entry-renderer tp-yt-paper-item {
@@ -31,42 +53,7 @@ ytmusic-guide-entry-renderer tp-yt-paper-item {
   min-height: 44px !important;
 }
 
-/* Chips superiores estilizados y cómodos (altura natural) */
-ytmusic-chip-cloud-chip-renderer {
-  height: 32px !important;
-  padding: 0 16px !important;
-  margin: 0 6px 0 0 !important;
-  border-radius: 16px !important;
-  font-size: 0.85rem !important;
-  font-weight: 500 !important;
-  transition: all 0.2s ease !important;
-}
-
-ytmusic-chip-cloud-chip-renderer #chip-container {
-  padding: 0 !important;
-  height: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-/* Buscador Moderno */
-ytmusic-search-box {
-  border-radius: 24px !important;
-  height: 42px !important;
-  transition: all 0.25s ease !important;
-}
-
-/* Línea de tiempo corregida para todos los temas */
-tp-yt-paper-progress#primaryProgress.tp-yt-paper-progress,
-#progressContainer.tp-yt-paper-progress {
-  height: 4px !important;
-  border-radius: 4px !important;
-}
-
-ytmusic-player-bar:hover #progressContainer.tp-yt-paper-progress {
-  height: 6px !important;
-}
-
+/* Barra de progreso universal */
 tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
   background: transparent !important;
   box-shadow: none !important;
@@ -75,52 +62,350 @@ tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
   height: 24px !important;
 }
 
-/* ==========================================================
-   DISEÑO 1: 🔴 YOUTUBE CLASSIC RED (Elegancia Oficial YouTube)
-   ========================================================== */
+/* ==========================================================================
+   DISEÑO 1: ⛏️ MINECRAFT / RETRO PIXEL ART (8-Bit GUI, XP Bar y Clics Retro)
+   ========================================================================== */
+body.auramusic-theme-minecraft {
+  --auramusic-primary: #55ff55;
+  --auramusic-secondary: #00aa00;
+  --auramusic-glow: rgba(85, 255, 85, 0.4);
+  font-family: 'Silkscreen', 'Press Start 2P', monospace !important;
+}
+
+body.auramusic-theme-minecraft * {
+  font-family: 'Silkscreen', monospace !important;
+}
+
+/* Fondo con patrón de cuadrícula de textura de piedra */
+body.auramusic-theme-minecraft ytmusic-app,
+body.auramusic-theme-minecraft ytmusic-browse-response,
+body.auramusic-theme-minecraft ytmusic-player-page {
+  background-color: #1a1a1a !important;
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.3) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(0,0,0,0.3) 2px, transparent 2px) !important;
+  background-size: 24px 24px !important;
+}
+
+/* Paneles con marco biselado de piedra 3D */
+body.auramusic-theme-minecraft ytmusic-nav-bar,
+body.auramusic-theme-minecraft ytmusic-guide-renderer {
+  background: #2b2b2b !important;
+  border: 3px solid #3d3d3d !important;
+  border-top-color: #555555 !important;
+  border-left-color: #555555 !important;
+  border-bottom-color: #141414 !important;
+  border-right-color: #141414 !important;
+}
+
+/* Buscador estilo Bloque de Comandos */
+body.auramusic-theme-minecraft ytmusic-search-box {
+  background: #141414 !important;
+  border: 2px solid #555555 !important;
+  border-radius: 0px !important;
+  box-shadow: inset 2px 2px 0px #000 !important;
+  transition: border-color 0.1s steps(2) !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-search-box:focus-within {
+  border-color: #55ff55 !important;
+}
+
+/* Chips estilo bloques de inventario con clic retro */
+body.auramusic-theme-minecraft ytmusic-chip-cloud-chip-renderer {
+  border-radius: 0px !important;
+  background: #3c3c3c !important;
+  border: 3px solid #4a4a4a !important;
+  border-top-color: #666666 !important;
+  border-left-color: #666666 !important;
+  border-bottom-color: #1f1f1f !important;
+  border-right-color: #1f1f1f !important;
+  color: #ffffff !important;
+  font-size: 0.8rem !important;
+  transition: none !important;
+  image-rendering: pixelated !important;
+}
+
+/* Animación retro: Clic se hunde 2px */
+body.auramusic-theme-minecraft ytmusic-chip-cloud-chip-renderer:active,
+body.auramusic-theme-minecraft .play-pause-button:active,
+body.auramusic-theme-minecraft ytmusic-guide-entry-renderer:active {
+  transform: translate(2px, 2px) !important;
+  border-top-color: #1f1f1f !important;
+  border-left-color: #1f1f1f !important;
+  border-bottom-color: #666666 !important;
+  border-right-color: #666666 !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-chip-cloud-chip-renderer:hover {
+  background: #4e4e4e !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-chip-cloud-chip-renderer[is-selected] {
+  background: #1f4f1f !important;
+  border-color: #55ff55 !important;
+  color: #55ff55 !important;
+  text-shadow: 1px 1px 0px #000 !important;
+}
+
+/* Portadas de álbum con marco pixelado biselado */
+body.auramusic-theme-minecraft ytmusic-two-row-item-renderer .image-wrapper.ytmusic-two-row-item-renderer,
+body.auramusic-theme-minecraft ytmusic-two-row-item-renderer img {
+  border-radius: 0px !important;
+  border: 3px solid #3c3c3c !important;
+  border-top-color: #5a5a5a !important;
+  border-left-color: #5a5a5a !important;
+  border-bottom-color: #111111 !important;
+  border-right-color: #111111 !important;
+  image-rendering: pixelated !important;
+  transition: transform 0.1s steps(2) !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-two-row-item-renderer:hover .image-wrapper.ytmusic-two-row-item-renderer {
+  transform: translateY(-4px) !important;
+}
+
+/* Barra de reproducción estilo Hotbar de Minecraft */
+body.auramusic-theme-minecraft ytmusic-player-bar {
+  background: #2b2b2b !important;
+  border-top: 4px solid #3c3c3c !important;
+  border-top-color: #555555 !important;
+  box-shadow: inset 0 2px 0 #666666, 0 -6px 0 #151515 !important;
+}
+
+/* Barra de Experiencia Verde (XP Bar) con pulso retro */
+body.auramusic-theme-minecraft tp-yt-paper-progress#primaryProgress.tp-yt-paper-progress,
+body.auramusic-theme-minecraft #progressContainer.tp-yt-paper-progress {
+  height: 8px !important;
+  border-radius: 0px !important;
+  border: 1px solid #000000 !important;
+}
+
+body.auramusic-theme-minecraft tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
+  background: #55ff55 !important;
+  box-shadow: inset 0 2px 0 #aaffaa, inset 0 -2px 0 #00aa00 !important;
+  animation: minecraftXpPulse 1.8s steps(4) infinite alternate !important;
+}
+
+@keyframes minecraftXpPulse {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.3) drop-shadow(0 0 5px #55ff55); }
+}
+
+/* Tirador cuadrado como bloque pixel */
+body.auramusic-theme-minecraft tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
+  background: #ffff55 !important;
+  border-radius: 0px !important;
+  width: 14px !important;
+  height: 14px !important;
+  border: 2px solid #000000 !important;
+  box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #aa5500 !important;
+}
+
+/* ==========================================================================
+   DISEÑO 2: 🌸 AESTHETIC PASTEL / LOFI (Curvas suaves, Flote y Relajación)
+   ========================================================================== */
+body.auramusic-theme-aesthetic {
+  --auramusic-primary: #ff8fa3;
+  --auramusic-secondary: #c77dff;
+  --auramusic-glow: rgba(255, 143, 163, 0.4);
+  font-family: 'Quicksand', 'Comfortaa', sans-serif !important;
+}
+
+body.auramusic-theme-aesthetic * {
+  font-family: 'Quicksand', sans-serif !important;
+}
+
+body.auramusic-theme-aesthetic ytmusic-app,
+body.auramusic-theme-aesthetic ytmusic-browse-response,
+body.auramusic-theme-aesthetic ytmusic-player-page {
+  background: linear-gradient(135deg, #120e18 0%, #181124 50%, #1d132b 100%) !important;
+}
+
+body.auramusic-theme-aesthetic ytmusic-nav-bar,
+body.auramusic-theme-aesthetic ytmusic-guide-renderer {
+  background: rgba(22, 16, 32, 0.8) !important;
+  backdrop-filter: blur(24px) !important;
+  border-color: rgba(255, 143, 163, 0.12) !important;
+}
+
+/* Chips en forma de almohadilla suave */
+body.auramusic-theme-aesthetic ytmusic-chip-cloud-chip-renderer {
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 143, 163, 0.2) !important;
+  color: #ffccd5 !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+body.auramusic-theme-aesthetic ytmusic-chip-cloud-chip-renderer:hover {
+  background: rgba(255, 143, 163, 0.15) !important;
+  transform: translateY(-3px) scale(1.03) !important;
+  box-shadow: 0 8px 20px rgba(255, 143, 163, 0.25) !important;
+}
+
+body.auramusic-theme-aesthetic ytmusic-chip-cloud-chip-renderer[is-selected] {
+  background: linear-gradient(135deg, #ff8fa3, #c77dff) !important;
+  color: #120e18 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 20px rgba(255, 143, 163, 0.4) !important;
+}
+
+/* Tarjetas con elevación elástica suave */
+body.auramusic-theme-aesthetic ytmusic-two-row-item-renderer .image-wrapper.ytmusic-two-row-item-renderer,
+body.auramusic-theme-aesthetic ytmusic-two-row-item-renderer img {
+  border-radius: 22px !important;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease !important;
+}
+
+body.auramusic-theme-aesthetic ytmusic-two-row-item-renderer:hover .image-wrapper.ytmusic-two-row-item-renderer {
+  transform: translateY(-8px) scale(1.03) !important;
+  box-shadow: 0 20px 40px rgba(255, 143, 163, 0.35) !important;
+}
+
+/* Barra de reproducción flotante lofi */
+body.auramusic-theme-aesthetic ytmusic-player-bar {
+  background: rgba(22, 16, 32, 0.88) !important;
+  backdrop-filter: blur(25px) !important;
+  border-top: 1px solid rgba(255, 143, 163, 0.2) !important;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.auramusic-theme-aesthetic tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
+  background: linear-gradient(90deg, #ff8fa3, #c77dff) !important;
+  box-shadow: 0 0 12px rgba(255, 143, 163, 0.5) !important;
+}
+
+body.auramusic-theme-aesthetic tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
+  background: #ffffff !important;
+  border: 2px solid #ff8fa3 !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 15px rgba(255, 143, 163, 0.7) !important;
+}
+
+body.auramusic-theme-aesthetic .play-pause-button.ytmusic-player-bar {
+  background: linear-gradient(135deg, #ff8fa3, #c77dff) !important;
+  border-radius: 50% !important;
+  color: #120e18 !important;
+  box-shadow: 0 0 20px rgba(255, 143, 163, 0.5) !important;
+  animation: lofiPulse 3s ease-in-out infinite alternate !important;
+}
+
+@keyframes lofiPulse {
+  0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 143, 163, 0.4); }
+  100% { transform: scale(1.08); box-shadow: 0 0 25px rgba(199, 125, 255, 0.6); }
+}
+
+/* ==========================================================================
+   DISEÑO 3: 🤖 CYBERPUNK MECHA (HUD Sci-Fi, Esquinas Angulares y Reflejos)
+   ========================================================================== */
+body.auramusic-theme-cyberpunk {
+  --auramusic-primary: #00f2fe;
+  --auramusic-secondary: #ff007f;
+  --auramusic-glow: rgba(0, 242, 254, 0.45);
+  font-family: 'Rajdhani', 'Orbitron', sans-serif !important;
+}
+
+body.auramusic-theme-cyberpunk * {
+  font-family: 'Rajdhani', sans-serif !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-app,
+body.auramusic-theme-cyberpunk ytmusic-browse-response {
+  background: #080710 !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-nav-bar,
+body.auramusic-theme-cyberpunk ytmusic-guide-renderer {
+  background: rgba(12, 10, 24, 0.96) !important;
+  border-color: rgba(255, 0, 127, 0.25) !important;
+}
+
+/* Chips estilo tarjeta angular HUD */
+body.auramusic-theme-cyberpunk ytmusic-chip-cloud-chip-renderer {
+  border-radius: 4px !important;
+  background: rgba(255, 0, 127, 0.08) !important;
+  border: 1px solid rgba(255, 0, 127, 0.35) !important;
+  color: #00f2fe !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.8px !important;
+  font-size: 0.9rem !important;
+  transition: all 0.12s ease !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-chip-cloud-chip-renderer:hover {
+  background: rgba(0, 242, 254, 0.15) !important;
+  border-color: #00f2fe !important;
+  transform: skewX(-4deg) translateX(3px) !important;
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.4) !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-chip-cloud-chip-renderer[is-selected] {
+  background: #ff007f !important;
+  color: #ffffff !important;
+  border-color: #ff007f !important;
+  box-shadow: 0 0 20px rgba(255, 0, 127, 0.7) !important;
+}
+
+/* Portadas de álbum con corte angular */
+body.auramusic-theme-cyberpunk ytmusic-two-row-item-renderer .image-wrapper.ytmusic-two-row-item-renderer,
+body.auramusic-theme-cyberpunk ytmusic-two-row-item-renderer img {
+  border-radius: 6px !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-two-row-item-renderer:hover .image-wrapper.ytmusic-two-row-item-renderer {
+  transform: translateY(-6px) scale(1.03) !important;
+  box-shadow: 0 10px 25px rgba(0, 242, 254, 0.35), 0 0 15px rgba(255, 0, 127, 0.35) !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-player-bar {
+  background: #0c0a18 !important;
+  border-top: 2px solid #ff007f !important;
+  box-shadow: 0 -8px 30px rgba(255, 0, 127, 0.35) !important;
+}
+
+body.auramusic-theme-cyberpunk tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
+  background: linear-gradient(90deg, #00f2fe, #ff007f) !important;
+  box-shadow: 0 0 14px #00f2fe !important;
+}
+
+body.auramusic-theme-cyberpunk tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
+  background: #00f2fe !important;
+  border: 2px solid #ff007f !important;
+  border-radius: 3px !important;
+  box-shadow: 0 0 15px #00f2fe !important;
+}
+
+/* ==========================================================================
+   DISEÑO 4: 🔴 YOUTUBE CLASSIC RED (Diseño Oficial Pulido y Snappy)
+   ========================================================================== */
 body.auramusic-theme-youtube {
   --auramusic-primary: #ff0000;
   --auramusic-secondary: #cc0000;
-  --auramusic-glow: rgba(255, 0, 0, 0.35);
+  --auramusic-glow: rgba(255, 0, 0, 0.4);
+  font-family: 'Roboto', sans-serif !important;
 }
 
 body.auramusic-theme-youtube ytmusic-app,
-body.auramusic-theme-youtube ytmusic-browse-response,
-body.auramusic-theme-youtube ytmusic-player-page {
+body.auramusic-theme-youtube ytmusic-browse-response {
   background: #0f0f0f !important;
-}
-
-body.auramusic-theme-youtube ytmusic-nav-bar,
-body.auramusic-theme-youtube ytmusic-guide-renderer {
-  background: #0f0f0f !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-body.auramusic-theme-youtube ytmusic-search-box {
-  background: #212121 !important;
-  border: 1px solid #303030 !important;
-}
-
-body.auramusic-theme-youtube ytmusic-search-box:focus-within {
-  border-color: #ff0000 !important;
-  box-shadow: 0 0 12px rgba(255, 0, 0, 0.3) !important;
-}
-
-body.auramusic-theme-youtube ytmusic-guide-entry-renderer[is-primary] tp-yt-paper-item,
-body.auramusic-theme-youtube ytmusic-guide-entry-renderer[aria-selected="true"] tp-yt-paper-item {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-left: 3px solid #ff0000 !important;
-}
-
-body.auramusic-theme-youtube ytmusic-guide-entry-renderer[is-primary] yt-icon,
-body.auramusic-theme-youtube ytmusic-guide-entry-renderer[aria-selected="true"] yt-icon {
-  color: #ff0000 !important;
 }
 
 body.auramusic-theme-youtube ytmusic-chip-cloud-chip-renderer {
   background: #272727 !important;
   border: 1px solid #383838 !important;
   color: #f1f1f1 !important;
+  border-radius: 16px !important;
+  font-weight: 500 !important;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+body.auramusic-theme-youtube ytmusic-chip-cloud-chip-renderer:hover {
+  background: #3f3f3f !important;
+  transform: scale(1.04) !important;
 }
 
 body.auramusic-theme-youtube ytmusic-chip-cloud-chip-renderer[is-selected] {
@@ -136,316 +421,23 @@ body.auramusic-theme-youtube ytmusic-player-bar {
 
 body.auramusic-theme-youtube tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
   background: #ff0000 !important;
-  box-shadow: 0 0 8px rgba(255, 0, 0, 0.5) !important;
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.6) !important;
 }
 
 body.auramusic-theme-youtube tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
   background: #ff0000 !important;
   border: 2px solid #ffffff !important;
-  box-shadow: 0 0 10px rgba(255, 0, 0, 0.6) !important;
-}
-
-body.auramusic-theme-youtube .play-pause-button.ytmusic-player-bar {
-  background: #ff0000 !important;
-  color: #ffffff !important;
-}
-
-/* ==========================================================
-   DISEÑO 2: 🌸 AESTHETIC PASTEL / LOFI (Cálido, Suave y Relajante)
-   ========================================================== */
-body.auramusic-theme-aesthetic {
-  --auramusic-primary: #ff8fa3;
-  --auramusic-secondary: #c77dff;
-  --auramusic-glow: rgba(255, 143, 163, 0.35);
-  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif !important;
-}
-
-body.auramusic-theme-aesthetic ytmusic-app,
-body.auramusic-theme-aesthetic ytmusic-browse-response,
-body.auramusic-theme-aesthetic ytmusic-player-page {
-  background: linear-gradient(135deg, #120e17 0%, #171120 50%, #1a1224 100%) !important;
-}
-
-body.auramusic-theme-aesthetic ytmusic-nav-bar,
-body.auramusic-theme-aesthetic ytmusic-guide-renderer {
-  background: rgba(22, 17, 30, 0.8) !important;
-  backdrop-filter: blur(20px) !important;
-  border-color: rgba(255, 143, 163, 0.12) !important;
-}
-
-body.auramusic-theme-aesthetic ytmusic-search-box {
-  background: rgba(255, 143, 163, 0.07) !important;
-  border: 1px solid rgba(255, 143, 163, 0.2) !important;
-  border-radius: 26px !important;
-}
-
-body.auramusic-theme-aesthetic ytmusic-search-box:focus-within {
-  border-color: #ff8fa3 !important;
-  box-shadow: 0 0 20px rgba(255, 143, 163, 0.25) !important;
-}
-
-body.auramusic-theme-aesthetic ytmusic-guide-entry-renderer:hover {
-  background: rgba(255, 143, 163, 0.08) !important;
-  transform: translateX(3px) !important;
-}
-
-body.auramusic-theme-aesthetic ytmusic-guide-entry-renderer[is-primary] tp-yt-paper-item,
-body.auramusic-theme-aesthetic ytmusic-guide-entry-renderer[aria-selected="true"] tp-yt-paper-item {
-  background: rgba(255, 143, 163, 0.15) !important;
-  border-left: 3px solid #ff8fa3 !important;
-}
-
-body.auramusic-theme-aesthetic ytmusic-guide-entry-renderer[is-primary] yt-icon,
-body.auramusic-theme-aesthetic ytmusic-guide-entry-renderer[aria-selected="true"] yt-icon {
-  color: #ff8fa3 !important;
-}
-
-body.auramusic-theme-aesthetic ytmusic-chip-cloud-chip-renderer {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 143, 163, 0.15) !important;
-  color: #ffccd5 !important;
-}
-
-body.auramusic-theme-aesthetic ytmusic-chip-cloud-chip-renderer[is-selected] {
-  background: linear-gradient(135deg, #ff8fa3, #c77dff) !important;
-  color: #120e17 !important;
-  font-weight: 700 !important;
-  box-shadow: 0 0 15px rgba(255, 143, 163, 0.3) !important;
-}
-
-body.auramusic-theme-aesthetic ytmusic-two-row-item-renderer .image-wrapper.ytmusic-two-row-item-renderer,
-body.auramusic-theme-aesthetic ytmusic-two-row-item-renderer img {
-  border-radius: 18px !important;
-}
-
-body.auramusic-theme-aesthetic ytmusic-player-bar {
-  background: rgba(22, 17, 30, 0.88) !important;
-  backdrop-filter: blur(25px) !important;
-  border-top: 1px solid rgba(255, 143, 163, 0.15) !important;
-  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.5) !important;
-}
-
-body.auramusic-theme-aesthetic tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
-  background: linear-gradient(90deg, #ff8fa3, #c77dff) !important;
-  box-shadow: 0 0 10px rgba(255, 143, 163, 0.4) !important;
-}
-
-body.auramusic-theme-aesthetic tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
-  background: #ffffff !important;
-  border: 2px solid #ff8fa3 !important;
-  box-shadow: 0 0 12px rgba(255, 143, 163, 0.6) !important;
-}
-
-body.auramusic-theme-aesthetic .play-pause-button.ytmusic-player-bar {
-  background: linear-gradient(135deg, #ff8fa3, #c77dff) !important;
   border-radius: 50% !important;
-  color: #120e17 !important;
-  box-shadow: 0 0 18px rgba(255, 143, 163, 0.4) !important;
+  box-shadow: 0 0 12px rgba(255, 0, 0, 0.7) !important;
 }
 
-/* ==========================================================
-   DISEÑO 3: ⛏️ MINECRAFT / RETRO PIXEL ART (Estilo Bloques y GUI)
-   ========================================================== */
-body.auramusic-theme-minecraft {
-  --auramusic-primary: #55ff55;
-  --auramusic-secondary: #00aa00;
-  --auramusic-glow: rgba(85, 255, 85, 0.4);
-  font-family: 'VT323', 'Courier New', monospace !important;
-  letter-spacing: 0.5px !important;
+/* ==========================================================================
+   DISEÑO 5: 🖤 OLED PURE BLACK (Negro Absoluto y Space Grotesk)
+   ========================================================================== */
+body.auramusic-theme-oled {
+  font-family: 'Space Grotesk', sans-serif !important;
 }
 
-/* GUI Gris Minecraft clásico con biselado de píxeles */
-body.auramusic-theme-minecraft ytmusic-app,
-body.auramusic-theme-minecraft ytmusic-browse-response,
-body.auramusic-theme-minecraft ytmusic-player-page {
-  background-color: #1c1c1c !important;
-  background-image: 
-    linear-gradient(rgba(0,0,0,0.2) 2px, transparent 2px),
-    linear-gradient(90deg, rgba(0,0,0,0.2) 2px, transparent 2px) !important;
-  background-size: 32px 32px !important;
-}
-
-body.auramusic-theme-minecraft ytmusic-nav-bar,
-body.auramusic-theme-minecraft ytmusic-guide-renderer {
-  background: #2a2a2a !important;
-  border: 3px solid #3c3c3c !important;
-  border-top-color: #555555 !important;
-  border-left-color: #555555 !important;
-  border-bottom-color: #151515 !important;
-  border-right-color: #151515 !important;
-}
-
-/* Buscador estilo Bloque de Comando / Chat */
-body.auramusic-theme-minecraft ytmusic-search-box {
-  background: #151515 !important;
-  border: 2px solid #555555 !important;
-  border-radius: 0px !important;
-  box-shadow: inset 2px 2px 0px #000 !important;
-}
-
-body.auramusic-theme-minecraft ytmusic-search-box:focus-within {
-  border-color: #55ff55 !important;
-}
-
-/* Botones y chips estilo inventario de piedra */
-body.auramusic-theme-minecraft ytmusic-chip-cloud-chip-renderer {
-  border-radius: 0px !important;
-  background: #3a3a3a !important;
-  border: 2px solid #4a4a4a !important;
-  border-top-color: #666666 !important;
-  border-left-color: #666666 !important;
-  border-bottom-color: #1f1f1f !important;
-  border-right-color: #1f1f1f !important;
-  font-family: inherit !important;
-  font-size: 0.95rem !important;
-}
-
-body.auramusic-theme-minecraft ytmusic-chip-cloud-chip-renderer:hover {
-  background: #4a4a4a !important;
-}
-
-body.auramusic-theme-minecraft ytmusic-chip-cloud-chip-renderer[is-selected] {
-  background: #256625 !important;
-  border-color: #55ff55 !important;
-  color: #55ff55 !important;
-  text-shadow: 2px 2px 0px #000 !important;
-}
-
-body.auramusic-theme-minecraft ytmusic-guide-entry-renderer {
-  border-radius: 0px !important;
-}
-
-body.auramusic-theme-minecraft ytmusic-guide-entry-renderer[is-primary] tp-yt-paper-item,
-body.auramusic-theme-minecraft ytmusic-guide-entry-renderer[aria-selected="true"] tp-yt-paper-item {
-  background: #333333 !important;
-  border-left: 4px solid #55ff55 !important;
-}
-
-body.auramusic-theme-minecraft ytmusic-guide-entry-renderer[is-primary] yt-icon,
-body.auramusic-theme-minecraft ytmusic-guide-entry-renderer[aria-selected="true"] yt-icon {
-  color: #55ff55 !important;
-}
-
-/* Portadas Cuadradas estilo Bloque con marco biselado */
-body.auramusic-theme-minecraft ytmusic-two-row-item-renderer .image-wrapper.ytmusic-two-row-item-renderer,
-body.auramusic-theme-minecraft ytmusic-two-row-item-renderer img {
-  border-radius: 0px !important;
-  border: 3px solid #3c3c3c !important;
-  border-top-color: #555555 !important;
-  border-left-color: #555555 !important;
-  border-bottom-color: #111111 !important;
-  border-right-color: #111111 !important;
-}
-
-/* Barra de reproducción estilo Hotbar de Minecraft */
-body.auramusic-theme-minecraft ytmusic-player-bar {
-  background: #2b2b2b !important;
-  border-top: 4px solid #3c3c3c !important;
-  border-top-color: #555555 !important;
-  box-shadow: inset 0 2px 0 #666666, 0 -6px 0 #151515 !important;
-}
-
-/* Barra de experiencia verde (XP Bar) */
-body.auramusic-theme-minecraft tp-yt-paper-progress#primaryProgress.tp-yt-paper-progress,
-body.auramusic-theme-minecraft #progressContainer.tp-yt-paper-progress {
-  height: 8px !important;
-  border-radius: 0px !important;
-  border: 1px solid #000000 !important;
-}
-
-body.auramusic-theme-minecraft tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
-  background: #55ff55 !important;
-  box-shadow: inset 0 2px 0 #aaffaa, inset 0 -2px 0 #00aa00 !important;
-}
-
-/* Tirador cuadrado como bloque pixel */
-body.auramusic-theme-minecraft tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
-  background: #ffff55 !important;
-  border-radius: 0px !important;
-  width: 14px !important;
-  height: 14px !important;
-  border: 2px solid #000000 !important;
-  box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #aa5500 !important;
-}
-
-body.auramusic-theme-minecraft .play-pause-button.ytmusic-player-bar {
-  border-radius: 0px !important;
-  background: #3c3c3c !important;
-  border: 2px solid #555555 !important;
-  border-bottom-color: #111 !important;
-  border-right-color: #111 !important;
-  color: #55ff55 !important;
-}
-
-/* ==========================================================
-   DISEÑO 4: 🤖 CYBERPUNK MECHA (Sci-Fi, HUD y Neón Angular)
-   ========================================================== */
-body.auramusic-theme-cyberpunk {
-  --auramusic-primary: #00f2fe;
-  --auramusic-secondary: #ff007f;
-  --auramusic-glow: rgba(0, 242, 254, 0.45);
-}
-
-body.auramusic-theme-cyberpunk ytmusic-app,
-body.auramusic-theme-cyberpunk ytmusic-browse-response {
-  background: #08070f !important;
-}
-
-body.auramusic-theme-cyberpunk ytmusic-nav-bar,
-body.auramusic-theme-cyberpunk ytmusic-guide-renderer {
-  background: rgba(11, 10, 20, 0.95) !important;
-  border-color: rgba(255, 0, 127, 0.2) !important;
-}
-
-body.auramusic-theme-cyberpunk ytmusic-search-box {
-  background: rgba(0, 242, 254, 0.06) !important;
-  border: 1px solid rgba(0, 242, 254, 0.3) !important;
-  box-shadow: 0 0 10px rgba(0, 242, 254, 0.15) !important;
-}
-
-body.auramusic-theme-cyberpunk ytmusic-chip-cloud-chip-renderer {
-  border-radius: 6px !important;
-  background: rgba(255, 0, 127, 0.08) !important;
-  border: 1px solid rgba(255, 0, 127, 0.3) !important;
-  color: #00f2fe !important;
-}
-
-body.auramusic-theme-cyberpunk ytmusic-chip-cloud-chip-renderer[is-selected] {
-  background: #ff007f !important;
-  color: #ffffff !important;
-  border-color: #ff007f !important;
-  box-shadow: 0 0 15px rgba(255, 0, 127, 0.6) !important;
-}
-
-body.auramusic-theme-cyberpunk ytmusic-player-bar {
-  background: #0d0b18 !important;
-  border-top: 2px solid #ff007f !important;
-  box-shadow: 0 -8px 30px rgba(255, 0, 127, 0.3) !important;
-}
-
-body.auramusic-theme-cyberpunk tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
-  background: linear-gradient(90deg, #00f2fe, #ff007f) !important;
-  box-shadow: 0 0 12px #00f2fe !important;
-}
-
-body.auramusic-theme-cyberpunk tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
-  background: #00f2fe !important;
-  border: 2px solid #ff007f !important;
-  border-radius: 4px !important;
-  box-shadow: 0 0 15px #00f2fe !important;
-}
-
-body.auramusic-theme-cyberpunk .play-pause-button.ytmusic-player-bar {
-  background: linear-gradient(135deg, #00f2fe, #ff007f) !important;
-  border-radius: 8px !important;
-  color: #0d0b18 !important;
-  box-shadow: 0 0 20px rgba(0, 242, 254, 0.6) !important;
-}
-
-/* ==========================================================
-   DISEÑO 5: 🖤 OLED PURE BLACK (Negro Absoluto Sin Distracciones)
-   ========================================================== */
-body.auramusic-theme-oled,
 body.auramusic-theme-oled ytmusic-app,
 body.auramusic-theme-oled ytmusic-browse-response,
 body.auramusic-theme-oled ytmusic-player-page,
@@ -454,36 +446,26 @@ body.auramusic-theme-oled ytmusic-guide-renderer,
 body.auramusic-theme-oled ytmusic-player-bar {
   background: #000000 !important;
   background-color: #000000 !important;
-  border-color: #1a1a1a !important;
+  border-color: #1c1c1c !important;
+}
+
+body.auramusic-theme-oled ytmusic-chip-cloud-chip-renderer {
+  border-radius: 14px !important;
+  background: #111111 !important;
+  border: 1px solid #282828 !important;
+  color: #ffffff !important;
 }
 
 body.auramusic-theme-oled tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
   background: #00e5ff !important;
-  box-shadow: 0 0 10px #00e5ff !important;
+  box-shadow: 0 0 12px #00e5ff !important;
 }
 
 body.auramusic-theme-oled tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
   background: #ffffff !important;
   border: 2px solid #00e5ff !important;
+  border-radius: 50% !important;
   box-shadow: 0 0 12px #00e5ff !important;
-}
-
-/* ==========================================================
-   DISEÑO 6: 🎨 AMBIENT COVER DYNAMIC (Color de la Carátula)
-   ========================================================== */
-body.auramusic-theme-dynamic tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
-  background: var(--auramusic-ambient-color) !important;
-  box-shadow: 0 0 12px var(--auramusic-ambient-color) !important;
-}
-
-body.auramusic-theme-dynamic tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
-  border-color: var(--auramusic-ambient-color) !important;
-  box-shadow: 0 0 12px var(--auramusic-ambient-color) !important;
-}
-
-body.auramusic-theme-dynamic .play-pause-button.ytmusic-player-bar {
-  background: var(--auramusic-ambient-color) !important;
-  color: #000 !important;
 }
 
 /* ==========================================================

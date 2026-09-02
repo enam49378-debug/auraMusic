@@ -4,6 +4,18 @@
  */
 
 (function () {
+  // --- 0. INYECTOR DE FUENTES GOOGLE (Minecraft, Aesthetic, Cyberpunk, OLED) ---
+  function injectGoogleFonts() {
+    if (document.getElementById('auramusic-google-fonts')) return;
+    const link = document.createElement('link');
+    link.id = 'auramusic-google-fonts';
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Orbitron:wght@600;800;900&family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@500;700&family=Quicksand:wght@600;700&family=Rajdhani:wght@600;700&family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap';
+    document.head.appendChild(link);
+    console.log('✨ AuraMusic: Fuentes tipográficas temáticas cargadas.');
+  }
+  injectGoogleFonts();
+
   'use strict';
 
   console.log('%c✨ AuraMusic: Inicializando motor de personalización...', 'color: #00e5ff; font-weight: bold; font-size: 14px;');
@@ -251,8 +263,10 @@
       const barWidth = (width / barCount) * 0.65;
       const gap = (width / barCount) * 0.35;
 
+      const activeColor = getComputedStyle(document.documentElement).getPropertyValue('--auramusic-primary').trim() || state.primaryColor;
+
       const grad = ctx.createLinearGradient(0, 0, 0, height);
-      grad.addColorStop(0, state.primaryColor);
+      grad.addColorStop(0, activeColor);
       grad.addColorStop(1, 'rgba(0, 0, 0, 0.1)');
       ctx.fillStyle = grad;
 
@@ -267,7 +281,7 @@
         }
       } else if (state.visualizer === 'wave') {
         ctx.beginPath();
-        ctx.strokeStyle = state.primaryColor;
+        ctx.strokeStyle = activeColor;
         ctx.lineWidth = 2.5;
 
         for (let i = 0; i < barCount; i++) {
