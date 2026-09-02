@@ -73,13 +73,18 @@
     updateUIControls();
   }
 
+  const ALL_THEMES = [
+    'auramusic-theme-oled',
+    'auramusic-theme-cyberpunk',
+    'auramusic-theme-glass',
+    'auramusic-theme-dynamic',
+    'auramusic-theme-youtube',
+    'auramusic-theme-aesthetic',
+    'auramusic-theme-minecraft'
+  ];
+
   function applyTheme(themeName) {
-    document.body.classList.remove(
-      'auramusic-theme-oled',
-      'auramusic-theme-cyberpunk',
-      'auramusic-theme-glass',
-      'auramusic-theme-dynamic'
-    );
+    document.body.classList.remove(...ALL_THEMES);
 
     if (themeName && themeName !== 'default') {
       document.body.classList.add(`auramusic-theme-${themeName}`);
@@ -394,11 +399,13 @@
               <span class="auramusic-label">Estilo de Interfaz</span>
               <span class="auramusic-sublabel">Selecciona el tema que transformará la estética de YouTube Music.</span>
               <div class="auramusic-theme-grid">
+                <button type="button" class="theme-pill-btn" data-theme="youtube">🔴 YouTube Red</button>
+                <button type="button" class="theme-pill-btn" data-theme="aesthetic">🌸 Aesthetic Pastel</button>
+                <button type="button" class="theme-pill-btn" data-theme="minecraft">⛏️ Minecraft Pixel</button>
+                <button type="button" class="theme-pill-btn" data-theme="cyberpunk">🤖 Cyberpunk Mecha</button>
                 <button type="button" class="theme-pill-btn" data-theme="oled">🖤 OLED Pure Black</button>
-                <button type="button" class="theme-pill-btn" data-theme="cyberpunk">🌆 Cyberpunk Neón</button>
-                <button type="button" class="theme-pill-btn" data-theme="glass">❄️ Glassmorphism</button>
                 <button type="button" class="theme-pill-btn" data-theme="dynamic">🎨 Color Dinámico</button>
-                <button type="button" class="theme-pill-btn" data-theme="default">Default YouTube</button>
+                <button type="button" class="theme-pill-btn" data-theme="default">⚙️ Default</button>
               </div>
             </div>
 

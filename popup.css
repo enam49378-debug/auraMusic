@@ -6,7 +6,7 @@
 }
 
 body {
-  width: 260px;
+  width: 280px;
   background: #0d101a;
   color: #ffffff;
 }
@@ -91,7 +91,7 @@ body {
 .theme-buttons {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
+  gap: 8px;
 }
 
 .theme-btn {
@@ -100,10 +100,14 @@ body {
   color: #ffffff;
   padding: 8px 10px;
   border-radius: 10px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .theme-btn:hover {

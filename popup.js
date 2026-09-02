@@ -1,11 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
   const themeBtns = document.querySelectorAll('.theme-btn');
+  const allThemes = [
+    'auramusic-theme-oled',
+    'auramusic-theme-cyberpunk',
+    'auramusic-theme-glass',
+    'auramusic-theme-dynamic',
+    'auramusic-theme-youtube',
+    'auramusic-theme-aesthetic',
+    'auramusic-theme-minecraft'
+  ];
 
   // Cargar estado
   if (chrome.storage && chrome.storage.local) {
     chrome.storage.local.get(['auramusic_settings'], (result) => {
       if (result && result.auramusic_settings) {
-        const theme = result.auramusic_settings.theme || 'oled';
+        const theme = result.auramusic_settings.theme || 'youtube';
         themeBtns.forEach(btn => {
           btn.classList.toggle('active', btn.dataset.theme === theme);
         });
@@ -30,16 +39,11 @@ document.addEventListener('DOMContentLoaded', () => {
               tabs.forEach(tab => {
                 chrome.scripting?.executeScript({
                   target: { tabId: tab.id },
-                  func: (th) => {
-                    document.body.classList.remove(
-                      'auramusic-theme-oled',
-                      'auramusic-theme-cyberpunk',
-                      'auramusic-theme-glass',
-                      'auramusic-theme-dynamic'
-                    );
+                  func: (th, themes) => {
+                    document.body.classList.remove(...themes);
                     if (th !== 'default') document.body.classList.add(`auramusic-theme-${th}`);
                   },
-                  args: [selected]
+                  args: [selected, allThemes]
                 }).catch(() => {});
               });
             });
