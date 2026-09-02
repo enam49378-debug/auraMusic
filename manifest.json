@@ -22,7 +22,8 @@
   ],
   "host_permissions": [
     "*://music.youtube.com/*",
-    "https://lrclib.net/*"
+    "https://lrclib.net/*",
+    "https://api.mymemory.translated.net/*"
   ],
   "content_scripts": [
     {

@@ -65,32 +65,81 @@
   100% { transform: scale(1.05) translate(-20px, 30px); }
 }
 
-/* Botón de Salir */
-.cinema-close-btn {
+/* Barra Superior de Acciones (Traductor y Salir) */
+.cinema-top-bar {
   position: absolute;
   top: 30px;
   right: 40px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 20;
+}
+
+.cinema-header-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   color: #ffffff;
-  padding: 10px 22px;
+  padding: 9px 20px;
   border-radius: 30px;
   font-family: inherit;
   font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
-  z-index: 10;
   backdrop-filter: blur(20px);
-  transition: all 0.25s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
   gap: 8px;
+  user-select: none;
 }
 
-.cinema-close-btn:hover {
+.cinema-header-btn:hover {
   background: rgba(255, 255, 255, 0.25);
-  transform: scale(1.05);
+  transform: scale(1.04);
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.cinema-header-btn.active {
+  background: linear-gradient(135deg, var(--auramusic-primary, #00f2fe), var(--auramusic-secondary, #7c4dff)) !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 25px var(--auramusic-glow, rgba(0, 242, 254, 0.5)) !important;
+}
+
+/* Subtítulo de Frase Original entre Paréntesis */
+.line-original-sub {
+  display: block;
+  font-size: 0.52em;
+  font-weight: 550;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 5px;
+  letter-spacing: 0;
+  font-style: italic;
+  filter: none !important;
+  line-height: 1.2;
+}
+
+.cinema-lyric-line.active-line .line-original-sub {
+  color: rgba(255, 255, 255, 0.8) !important;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.3) !important;
+}
+
+/* En Minecraft: estilo pixelado */
+body.auramusic-theme-minecraft .line-original-sub {
+  font-family: 'Silkscreen', monospace !important;
+  font-style: normal !important;
+  color: #777777 !important;
+}
+
+body.auramusic-theme-minecraft .cinema-lyric-line.active-line .line-original-sub {
+  color: #aaffaa !important;
+}
+
+/* En Cyberpunk: estilo telemetría */
+body.auramusic-theme-cyberpunk .line-original-sub {
+  font-family: 'Rajdhani', sans-serif !important;
+  color: rgba(0, 242, 254, 0.6) !important;
+  letter-spacing: 0.05em !important;
 }
 
 /* Estructura Base: Portada a la Izquierda y Letra a la Derecha */

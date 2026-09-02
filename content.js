@@ -842,6 +842,116 @@
     ];
   }
 
+  // --- SISTEMA DE TRADUCCIÓN SIMULTÁNEA INTELIGENTE ---
+  let isTranslationActive = false;
+  let lyricsTranslationCache = {};
+
+  async function translateLyrics(lyrics, targetLang = 'es') {
+    if (!lyrics || lyrics.length === 0) return lyrics;
+    const cacheKey = `${lastCinemaTrackId}:::${targetLang}`;
+    if (lyricsTranslationCache[cacheKey]) {
+      return lyricsTranslationCache[cacheKey];
+    }
+
+    try {
+      const chunkSize = 12;
+      const translatedList = [];
+
+      for (let i = 0; i < lyrics.length; i += chunkSize) {
+        const chunk = lyrics.slice(i, i + chunkSize);
+        const textToTranslate = chunk.map(l => l.text).join('\n');
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(textToTranslate)}&langpair=autodetect|${targetLang}`;
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Translation request failed');
+        const data = await res.json();
+        const rawTrans = data.responseData?.translatedText || '';
+        const transLines = rawTrans.split('\n');
+
+        chunk.forEach((item, cIdx) => {
+          const trans = (transLines[cIdx] || '').trim();
+          const isDifferent = trans && trans.toLowerCase() !== item.text.toLowerCase() && !trans.includes('PLEASE SELECT TWO DISTINCT LANGUAGES');
+          translatedList.push({
+            ...item,
+            translatedText: isDifferent ? trans : null,
+            originalText: item.text
+          });
+        });
+      }
+
+      lyricsTranslationCache[cacheKey] = translatedList;
+      return translatedList;
+    } catch (e) {
+      console.warn('Traducción no disponible:', e);
+      return lyrics.map(l => ({ ...l, translatedText: null, originalText: l.text }));
+    }
+  }
+
+  function renderCinemaLyricsDOM() {
+    const wrapper = document.getElementById('cinema-lyrics-wrapper');
+    const video = document.querySelector('video');
+    if (!wrapper || !currentLyrics || currentLyrics.length === 0) return;
+
+    wrapper.innerHTML = '';
+    const itemsToRender = currentLyrics;
+
+    itemsToRender.forEach((item, index) => {
+      const lineDiv = document.createElement('div');
+      lineDiv.className = 'cinema-lyric-line';
+      lineDiv.dataset.time = item.time;
+      lineDiv.dataset.index = index;
+
+      // Si la traducción está activa y hay traducción distinta, usarla como texto principal
+      const hasTranslation = isTranslationActive && item.translatedText;
+      const displayText = hasTranslation ? item.translatedText : (item.originalText || item.text);
+
+      const nextItem = itemsToRender[index + 1];
+      const rawDuration = nextItem ? (nextItem.time - item.time) : 3.5;
+      const words = displayText.trim().split(/\s+/).filter(w => w.length > 0);
+      const totalDuration = Math.max(0.8, rawDuration);
+
+      const weights = words.map(w => Math.max(2, w.length));
+      const totalWeight = weights.reduce((a, b) => a + b, 0);
+
+      const mainLineSpan = document.createElement('div');
+      mainLineSpan.className = 'line-primary';
+
+      let currentOffset = 0;
+      words.forEach((w, i) => {
+        const frac = weights[i] / totalWeight;
+        const wDur = frac * totalDuration;
+        const wStart = item.time + currentOffset;
+        const wEnd = wStart + wDur;
+        currentOffset += wDur;
+
+        const span = document.createElement('span');
+        span.className = 'k-word';
+        span.textContent = w;
+        span.dataset.start = wStart.toFixed(2);
+        span.dataset.end = wEnd.toFixed(2);
+        mainLineSpan.appendChild(span);
+        if (i < words.length - 1) {
+          mainLineSpan.appendChild(document.createTextNode(' '));
+        }
+      });
+      lineDiv.appendChild(mainLineSpan);
+
+      // Si está traducido, poner la frase original en paréntesis abajito
+      if (hasTranslation) {
+        const subDiv = document.createElement('div');
+        subDiv.className = 'line-original-sub';
+        subDiv.textContent = `(${item.originalText})`;
+        lineDiv.appendChild(subDiv);
+      }
+
+      lineDiv.addEventListener('click', () => {
+        if (video) video.currentTime = item.time;
+      });
+
+      wrapper.appendChild(lineDiv);
+    });
+  }
+
   function createCinemaOverlay() {
     if (document.getElementById('auramusic-cinema-overlay')) return;
 
@@ -850,9 +960,14 @@
     overlay.innerHTML = `
       <div class="cinema-mesh-bg"></div>
 
-      <button type="button" class="cinema-close-btn" id="cinema-close-btn">
-        <span>✕</span> <span>Salir de Letra Animada</span>
-      </button>
+      <div class="cinema-top-bar">
+        <button type="button" class="cinema-header-btn" id="cinema-translate-btn" title="Traducir letra al idioma de tu sistema">
+          <span>🌐</span> <span id="cinema-translate-text">Traducir</span>
+        </button>
+        <button type="button" class="cinema-header-btn cinema-close-btn" id="cinema-close-btn">
+          <span>✕</span> <span>Salir de Letra Animada</span>
+        </button>
+      </div>
 
       <div class="cinema-content-grid">
         <!-- Columna Izquierda: Portada y Controles -->
@@ -897,6 +1012,25 @@
     // Eventos del Overlay
     const closeBtn = document.getElementById('cinema-close-btn');
     closeBtn.addEventListener('click', closeCinemaMode);
+
+    const translateBtn = document.getElementById('cinema-translate-btn');
+    const translateText = document.getElementById('cinema-translate-text');
+
+    translateBtn.addEventListener('click', async () => {
+      isTranslationActive = !isTranslationActive;
+      translateBtn.classList.toggle('active', isTranslationActive);
+
+      if (isTranslationActive) {
+        if (translateText) translateText.textContent = 'Traduciendo...';
+        const targetLang = (navigator.language || 'es').split('-')[0].toLowerCase();
+        currentLyrics = await translateLyrics(currentLyrics, targetLang);
+        if (translateText) translateText.textContent = `Traducido (${targetLang.toUpperCase()})`;
+      } else {
+        if (translateText) translateText.textContent = 'Traducir';
+      }
+
+      renderCinemaLyricsDOM();
+    });
 
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && isCinemaActive) {
@@ -1035,51 +1169,15 @@
 
       // Descartar si cambió la canción mientras cargaba
       if (curGen !== cinemaTrackGen) return;
-      currentLyrics = lyrics;
 
-      if (wrapper) {
-        wrapper.innerHTML = '';
-        currentLyrics.forEach((item, index) => {
-          const lineDiv = document.createElement('div');
-          lineDiv.className = 'cinema-lyric-line';
-          lineDiv.dataset.time = item.time;
-          lineDiv.dataset.index = index;
-
-          // Cálculo continuo y fluido de cada palabra (sin retrasos artificiales ni espacios extra)
-          const nextItem = currentLyrics[index + 1];
-          const rawDuration = nextItem ? (nextItem.time - item.time) : 3.5;
-          const words = item.text.trim().split(/\s+/).filter(w => w.length > 0);
-          const totalDuration = Math.max(0.8, rawDuration);
-
-          const weights = words.map(w => Math.max(2, w.length));
-          const totalWeight = weights.reduce((a, b) => a + b, 0);
-
-          let currentOffset = 0;
-          words.forEach((w, i) => {
-            const frac = weights[i] / totalWeight;
-            const wDur = frac * totalDuration;
-            const wStart = item.time + currentOffset;
-            const wEnd = wStart + wDur;
-            currentOffset += wDur;
-
-            const span = document.createElement('span');
-            span.className = 'k-word';
-            span.textContent = w;
-            span.dataset.start = wStart.toFixed(2);
-            span.dataset.end = wEnd.toFixed(2);
-            lineDiv.appendChild(span);
-            if (i < words.length - 1) {
-              lineDiv.appendChild(document.createTextNode(' '));
-            }
-          });
-
-          lineDiv.addEventListener('click', () => {
-            if (video) video.currentTime = item.time;
-          });
-
-          wrapper.appendChild(lineDiv);
-        });
+      if (isTranslationActive) {
+        const targetLang = (navigator.language || 'es').split('-')[0].toLowerCase();
+        currentLyrics = await translateLyrics(lyrics, targetLang);
+      } else {
+        currentLyrics = lyrics;
       }
+
+      renderCinemaLyricsDOM();
     } catch (e) {
       console.error('Error actualizando track en modo cine:', e);
     } finally {
