@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AuraMusic - Content Script Injected into music.youtube.com
  * Advanced Customization Suite (Themes, Ambient Glow, Visualizer, EQ, Ad-Free)
  */
@@ -682,13 +682,20 @@
       }
     }
 
-    document.addEventListener('yt-page-data-updated', checkSongChange);
+    function onGlobalSongChange() {
+      checkSongChange();
+      if (typeof checkCinemaTrackChange === 'function') {
+        checkCinemaTrackChange();
+      }
+    }
+
+    document.addEventListener('yt-page-data-updated', onGlobalSongChange);
     const video = document.querySelector('video');
     if (video) {
-      video.addEventListener('loadeddata', checkSongChange);
-      video.addEventListener('play', checkSongChange);
+      video.addEventListener('loadeddata', onGlobalSongChange);
+      video.addEventListener('play', onGlobalSongChange);
     }
-    setInterval(checkSongChange, 2000);
+    setInterval(onGlobalSongChange, 1500);
   }
 
   
@@ -895,6 +902,76 @@
     });
   }
 
+  let lastCinemaTrackId = '';
+  let isUpdatingCinemaTrack = false;
+
+  async function updateCinemaTrack(title, artist) {
+    if (isUpdatingCinemaTrack) return;
+    isUpdatingCinemaTrack = true;
+
+    const trackTitleEl = document.getElementById('cinema-track-title');
+    const trackArtistEl = document.getElementById('cinema-track-artist');
+    const artImg = document.getElementById('cinema-art-img');
+    const wrapper = document.getElementById('cinema-lyrics-wrapper');
+    const video = document.querySelector('video');
+
+    if (trackTitleEl) trackTitleEl.textContent = title || 'Canción';
+    if (trackArtistEl) trackArtistEl.textContent = artist || 'Artista';
+
+    // Transición suave de portada
+    const newCover = getHighResCoverUrl();
+    if (artImg && newCover) {
+      artImg.style.opacity = '0.4';
+      artImg.src = newCover;
+      artImg.onload = () => {
+        artImg.style.opacity = '1';
+        updateDynamicCoverColor(); // Actualiza colores dinámicos del fondo
+      };
+    }
+
+    if (wrapper) {
+      wrapper.innerHTML = '<div class="cinema-lyric-line active-line">Sincronizando letra...</div>';
+    }
+
+    const duration = video ? video.duration : 180;
+    currentLyrics = await fetchSyncedLyrics(title, artist, duration);
+
+    if (wrapper) {
+      wrapper.innerHTML = '';
+      currentLyrics.forEach((item, index) => {
+        const lineDiv = document.createElement('div');
+        lineDiv.className = 'cinema-lyric-line';
+        lineDiv.textContent = item.text;
+        lineDiv.dataset.time = item.time;
+        lineDiv.dataset.index = index;
+
+        lineDiv.addEventListener('click', () => {
+          if (video) video.currentTime = item.time;
+        });
+
+        wrapper.appendChild(lineDiv);
+      });
+    }
+
+    isUpdatingCinemaTrack = false;
+  }
+
+  function checkCinemaTrackChange() {
+    if (!isCinemaActive) return;
+
+    const titleEl = document.querySelector('ytmusic-player-bar .title');
+    const artistEl = document.querySelector('ytmusic-player-bar .byline');
+    const curTitle = titleEl ? titleEl.textContent.trim() : '';
+    const curArtist = artistEl ? artistEl.textContent.trim() : '';
+    const trackId = `${curTitle}:::${curArtist}`;
+
+    if (curTitle && trackId !== lastCinemaTrackId) {
+      lastCinemaTrackId = trackId;
+      console.log('🔄 AuraMusic: Cambio de canción en tiempo real en modo cine:', trackId);
+      updateCinemaTrack(curTitle, curArtist);
+    }
+  }
+
   async function openCinemaMode() {
     createCinemaOverlay();
     const overlay = document.getElementById('auramusic-cinema-overlay');
@@ -902,46 +979,9 @@
 
     isCinemaActive = true;
     overlay.classList.add('active');
+    lastCinemaTrackId = ''; // Forzar actualización
 
-    // Obtener datos actuales de la canción
-    const titleEl = document.querySelector('ytmusic-player-bar .title');
-    const artistEl = document.querySelector('ytmusic-player-bar .byline');
-    const video = document.querySelector('video');
-
-    const title = titleEl ? titleEl.textContent.trim() : 'Canción';
-    const artist = artistEl ? artistEl.textContent.trim() : 'Artista';
-    const imgSrc = getHighResCoverUrl();
-    const duration = video ? video.duration : 180;
-
-    document.getElementById('cinema-track-title').textContent = title;
-    document.getElementById('cinema-track-artist').textContent = artist;
-    document.getElementById('cinema-art-img').src = imgSrc;
-
-    // Obtener letras
-    const wrapper = document.getElementById('cinema-lyrics-wrapper');
-    wrapper.innerHTML = '<div class="cinema-lyric-line active-line">Sincronizando letra...</div>';
-
-    currentLyrics = await fetchSyncedLyrics(title, artist, duration);
-
-    // Renderizar todas las líneas
-    wrapper.innerHTML = '';
-    currentLyrics.forEach((item, index) => {
-      const lineDiv = document.createElement('div');
-      lineDiv.className = `cinema-lyric-line ${index === 0 ? 'active-line' : ''}`;
-      lineDiv.textContent = item.text;
-      lineDiv.dataset.time = item.time;
-      lineDiv.dataset.index = index;
-
-      // Al tocar cualquier línea de la letra: Salto interactivo al segundo exacto (Karaoke)
-      lineDiv.addEventListener('click', () => {
-        if (video) {
-          video.currentTime = item.time;
-        }
-      });
-
-      wrapper.appendChild(lineDiv);
-    });
-
+    checkCinemaTrackChange();
     startCinemaSyncLoop();
   }
 
@@ -955,9 +995,16 @@
 
   function startCinemaSyncLoop() {
     let lastActiveIdx = -1;
+    let frameCounter = 0;
 
     function sync() {
       if (!isCinemaActive) return;
+
+      // Verificar cambio de canción cada 30 cuadros
+      frameCounter++;
+      if (frameCounter % 30 === 0) {
+        checkCinemaTrackChange();
+      }
 
       const video = document.querySelector('video');
       if (video) {
