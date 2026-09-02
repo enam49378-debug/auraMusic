@@ -698,6 +698,26 @@
   let currentLyrics = [];
   let isCinemaActive = false;
 
+    // Obtener carátula en Ultra HD (1200x1200px)
+  function getHighResCoverUrl() {
+    const bigImg = document.querySelector('#song-image img, #main-panel img, ytmusic-player-page .image');
+    let src = (bigImg && bigImg.src) ? bigImg.src : '';
+
+    if (!src) {
+      const barImg = document.querySelector('ytmusic-player-bar .image');
+      src = (barImg && barImg.src) ? barImg.src : '';
+    }
+
+    if (src) {
+      if (src.includes('=w')) {
+        src = src.replace(/=w\d+-h\d+[^?]*/, '=w1200-h1200-l90-rj');
+      } else if (src.includes('=s')) {
+        src = src.replace(/=s\d+[^?]*/, '=s1200');
+      }
+    }
+    return src;
+  }
+
   function parseLrc(lrcString) {
     const lines = lrcString.split('\n');
     const result = [];
@@ -721,23 +741,45 @@
   }
 
   async function fetchSyncedLyrics(title, artist, duration) {
-    // 1. Intentar obtener letras sincronizadas de la API pública LrcLib
-    try {
-      const cleanTitle = title.replace(/\(.*?\)|\[.*?\]/g, '').trim();
-      const cleanArtist = artist.split('•')[0].split(',')[0].trim();
-      const url = `https://lrclib.net/api/get?track_name=${encodeURIComponent(cleanTitle)}&artist_name=${encodeURIComponent(cleanArtist)}&duration=${Math.round(duration || 180)}`;
+    const cleanTitle = title.replace(/\(.*?\)|\[.*?\]/g, '').trim();
+    // Limpiar artista tomando el primer nombre ("J Balvin • Colores • 2020" -> "J Balvin")
+    const cleanArtist = artist.split(/[•·,\/]/)[0].trim();
 
-      const res = await fetch(url);
+    // 1. Búsqueda amplia y robusta en LrcLib (/api/search)
+    try {
+      const searchUrl = `https://lrclib.net/api/search?track_name=${encodeURIComponent(cleanTitle)}&artist_name=${encodeURIComponent(cleanArtist)}`;
+      console.log('🎤 AuraMusic: Buscando letras sincronizadas en LrcLib...', searchUrl);
+
+      const res = await fetch(searchUrl);
       if (res.ok) {
-        const data = await res.json();
-        if (data && data.syncedLyrics) {
-          console.log('🎤 AuraMusic: Letras sincronizadas encontradas en LrcLib!');
-          return parseLrc(data.syncedLyrics);
+        const list = await res.json();
+        if (Array.isArray(list) && list.length > 0) {
+          const withSynced = list.filter(item => item.syncedLyrics);
+          if (withSynced.length > 0) {
+            // Ordenar por cercanía a la duración real para máxima sincronía
+            if (duration > 0) {
+              withSynced.sort((a, b) => Math.abs(a.duration - duration) - Math.abs(b.duration - duration));
+            }
+            console.log('✨ AuraMusic: ¡Letras sincronizadas con éxito para:', withSynced[0].trackName, '!');
+            return parseLrc(withSynced[0].syncedLyrics);
+          }
         }
       }
     } catch (e) {
-      console.log('AuraMusic: Fallback a letras locales de YouTube Music');
+      console.warn('AuraMusic: Fallback en búsqueda LrcLib', e);
     }
+
+    // 2. Intento directo con /api/get si la búsqueda no trajo resultados
+    try {
+      const getUrl = `https://lrclib.net/api/get?track_name=${encodeURIComponent(cleanTitle)}&artist_name=${encodeURIComponent(cleanArtist)}&duration=${Math.round(duration || 180)}`;
+      const res = await fetch(getUrl);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.syncedLyrics) {
+          return parseLrc(data.syncedLyrics);
+        }
+      }
+    } catch (e) {}
 
     // 2. Fallback: Extraer las letras nativas de la pestaña LETRA de YouTube Music
     const localDesc = document.querySelector('ytmusic-description-shelf-renderer .description');
@@ -864,12 +906,11 @@
     // Obtener datos actuales de la canción
     const titleEl = document.querySelector('ytmusic-player-bar .title');
     const artistEl = document.querySelector('ytmusic-player-bar .byline');
-    const coverImg = document.querySelector('ytmusic-player-bar .image');
     const video = document.querySelector('video');
 
     const title = titleEl ? titleEl.textContent.trim() : 'Canción';
     const artist = artistEl ? artistEl.textContent.trim() : 'Artista';
-    const imgSrc = coverImg ? coverImg.src : '';
+    const imgSrc = getHighResCoverUrl();
     const duration = video ? video.duration : 180;
 
     document.getElementById('cinema-track-title').textContent = title;
@@ -934,8 +975,8 @@
         if (totSpan) totSpan.textContent = formatTime(duration);
         if (playBtn) playBtn.textContent = video.paused ? '▶' : '⏸';
 
-        // Buscar línea activa de letra
-        let activeIdx = 0;
+        // Buscar línea activa de letra (-1 si es la intro instrumental)
+        let activeIdx = -1;
         for (let i = 0; i < currentLyrics.length; i++) {
           if (currentTime >= currentLyrics[i].time) {
             activeIdx = i;
