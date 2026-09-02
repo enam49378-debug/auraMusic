@@ -47,27 +47,56 @@
   let isAudioConnected = false;
   let animFrameId = null;
 
-  // --- 2. CARGA Y PERSISTENCIA DE CONFIGURACIÓN ---
-  function loadSettings() {
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get(['auramusic_settings'], (result) => {
-        if (result && result.auramusic_settings) {
-          state = { ...defaultSettings, ...result.auramusic_settings };
-        }
-        applyAllSettings();
-      });
-    } else {
-      try {
-        const saved = localStorage.getItem('auramusic_settings');
-        if (saved) state = { ...defaultSettings, ...JSON.parse(saved) };
-      } catch (e) {}
-      applyAllSettings();
+  // --- 2. CARGA Y PERSISTENCIA SEGURA (INMUNE A EXTENSION CONTEXT INVALIDATED) ---
+  function isExtensionContextValid() {
+    try {
+      return typeof chrome !== 'undefined' && !!chrome.runtime && !!chrome.runtime.id;
+    } catch (e) {
+      return false;
     }
   }
 
+  function fallbackLoadSettings() {
+    try {
+      const saved = localStorage.getItem('auramusic_settings');
+      if (saved) state = { ...defaultSettings, ...JSON.parse(saved) };
+    } catch (e) {}
+    applyAllSettings();
+  }
+
+  function loadSettings() {
+    if (isExtensionContextValid() && chrome.storage && chrome.storage.local) {
+      try {
+        chrome.storage.local.get(['auramusic_settings'], (result) => {
+          try {
+            if (chrome.runtime?.lastError) {
+              fallbackLoadSettings();
+              return;
+            }
+            if (result && result.auramusic_settings) {
+              state = { ...defaultSettings, ...result.auramusic_settings };
+            }
+            applyAllSettings();
+          } catch (e) {
+            fallbackLoadSettings();
+          }
+        });
+        return;
+      } catch (e) {
+        fallbackLoadSettings();
+        return;
+      }
+    }
+    fallbackLoadSettings();
+  }
+
   function saveSettings() {
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.set({ auramusic_settings: state });
+    if (isExtensionContextValid() && chrome.storage && chrome.storage.local) {
+      try {
+        chrome.storage.local.set({ auramusic_settings: state }, () => {
+          if (chrome.runtime?.lastError) {}
+        });
+      } catch (e) {}
     }
     try {
       localStorage.setItem('auramusic_settings', JSON.stringify(state));
@@ -881,14 +910,25 @@
       if (nativePlay) nativePlay.click();
     });
 
+    function triggerQuickTrackPoll() {
+      let count = 0;
+      const intId = setInterval(() => {
+        checkCinemaTrackChange();
+        count++;
+        if (count > 15) clearInterval(intId);
+      }, 250);
+    }
+
     prevBtn.addEventListener('click', () => {
       const nativePrev = document.querySelector('.previous-button.ytmusic-player-bar');
       if (nativePrev) nativePrev.click();
+      triggerQuickTrackPoll();
     });
 
     nextBtn.addEventListener('click', () => {
       const nativeNext = document.querySelector('.next-button.ytmusic-player-bar');
       if (nativeNext) nativeNext.click();
+      triggerQuickTrackPoll();
     });
 
     // Salto en la barra de tiempo
@@ -904,71 +944,115 @@
 
   let lastCinemaTrackId = '';
   let isUpdatingCinemaTrack = false;
+  let cinemaTrackGen = 0;
 
-  async function updateCinemaTrack(title, artist) {
-    if (isUpdatingCinemaTrack) return;
-    isUpdatingCinemaTrack = true;
+  function getCurrentTrackInfo() {
+    let title = '';
+    let artist = '';
 
-    const trackTitleEl = document.getElementById('cinema-track-title');
-    const trackArtistEl = document.getElementById('cinema-track-artist');
-    const artImg = document.getElementById('cinema-art-img');
-    const wrapper = document.getElementById('cinema-lyrics-wrapper');
-    const video = document.querySelector('video');
-
-    if (trackTitleEl) trackTitleEl.textContent = title || 'Canción';
-    if (trackArtistEl) trackArtistEl.textContent = artist || 'Artista';
-
-    // Transición suave de portada
-    const newCover = getHighResCoverUrl();
-    if (artImg && newCover) {
-      artImg.style.opacity = '0.4';
-      artImg.src = newCover;
-      artImg.onload = () => {
-        artImg.style.opacity = '1';
-        updateDynamicCoverColor(); // Actualiza colores dinámicos del fondo
-      };
+    // 1. MediaSession API (Oficial y ultra confiable)
+    if (navigator.mediaSession && navigator.mediaSession.metadata) {
+      title = navigator.mediaSession.metadata.title || '';
+      artist = navigator.mediaSession.metadata.artist || '';
     }
 
-    if (wrapper) {
-      wrapper.innerHTML = '<div class="cinema-lyric-line active-line">Sincronizando letra...</div>';
+    // 2. Selectores de ytmusic-player-bar
+    if (!title) {
+      const titleEl = document.querySelector('ytmusic-player-bar .title, ytmusic-player-bar yt-formatted-string.title');
+      if (titleEl) title = titleEl.textContent.trim();
+    }
+    if (!artist) {
+      const artistEl = document.querySelector('ytmusic-player-bar .byline, ytmusic-player-bar yt-formatted-string.byline');
+      if (artistEl) artist = artistEl.textContent.trim();
     }
 
-    const duration = video ? video.duration : 180;
-    currentLyrics = await fetchSyncedLyrics(title, artist, duration);
-
-    if (wrapper) {
-      wrapper.innerHTML = '';
-      currentLyrics.forEach((item, index) => {
-        const lineDiv = document.createElement('div');
-        lineDiv.className = 'cinema-lyric-line';
-        lineDiv.textContent = item.text;
-        lineDiv.dataset.time = item.time;
-        lineDiv.dataset.index = index;
-
-        lineDiv.addEventListener('click', () => {
-          if (video) video.currentTime = item.time;
-        });
-
-        wrapper.appendChild(lineDiv);
-      });
+    // 3. Document Title
+    if (!title && document.title) {
+      const clean = document.title.replace(' - YouTube Music', '').replace(' | YouTube Music', '').trim();
+      if (clean.includes(' - ')) {
+        const p = clean.split(' - ');
+        title = p[0].trim();
+        artist = p[1] ? p[1].trim() : '';
+      } else {
+        title = clean;
+      }
     }
 
-    isUpdatingCinemaTrack = false;
+    return { title, artist };
   }
 
   function checkCinemaTrackChange() {
     if (!isCinemaActive) return;
 
-    const titleEl = document.querySelector('ytmusic-player-bar .title');
-    const artistEl = document.querySelector('ytmusic-player-bar .byline');
-    const curTitle = titleEl ? titleEl.textContent.trim() : '';
-    const curArtist = artistEl ? artistEl.textContent.trim() : '';
-    const trackId = `${curTitle}:::${curArtist}`;
+    const { title, artist } = getCurrentTrackInfo();
+    const trackId = `${title}:::${artist}`;
 
-    if (curTitle && trackId !== lastCinemaTrackId) {
+    if (title && trackId !== lastCinemaTrackId) {
       lastCinemaTrackId = trackId;
-      console.log('🔄 AuraMusic: Cambio de canción en tiempo real en modo cine:', trackId);
-      updateCinemaTrack(curTitle, curArtist);
+      console.log('🔄 AuraMusic: Cambio de canción en vivo detectado:', trackId);
+      updateCinemaTrack(title, artist);
+    }
+  }
+
+  async function updateCinemaTrack(title, artist) {
+    if (isUpdatingCinemaTrack) return;
+    isUpdatingCinemaTrack = true;
+    const curGen = ++cinemaTrackGen;
+
+    try {
+      const trackTitleEl = document.getElementById('cinema-track-title');
+      const trackArtistEl = document.getElementById('cinema-track-artist');
+      const artImg = document.getElementById('cinema-art-img');
+      const wrapper = document.getElementById('cinema-lyrics-wrapper');
+      const video = document.querySelector('video');
+
+      if (trackTitleEl) trackTitleEl.textContent = title || 'Canción';
+      if (trackArtistEl) trackArtistEl.textContent = artist || 'Artista';
+
+      // Transición suave de portada
+      const newCover = getHighResCoverUrl();
+      if (artImg && newCover) {
+        artImg.style.opacity = '0.3';
+        artImg.style.transform = 'scale(0.96)';
+        artImg.src = newCover;
+        artImg.onload = () => {
+          artImg.style.opacity = '1';
+          artImg.style.transform = 'scale(1)';
+          updateDynamicCoverColor(); // Actualiza colores dinámicos del fondo
+        };
+      }
+
+      if (wrapper) {
+        wrapper.innerHTML = '<div class="cinema-lyric-line active-line">Sincronizando letra...</div>';
+      }
+
+      const duration = video ? video.duration : 180;
+      const lyrics = await fetchSyncedLyrics(title, artist, duration);
+
+      // Descartar si cambió la canción mientras cargaba
+      if (curGen !== cinemaTrackGen) return;
+      currentLyrics = lyrics;
+
+      if (wrapper) {
+        wrapper.innerHTML = '';
+        currentLyrics.forEach((item, index) => {
+          const lineDiv = document.createElement('div');
+          lineDiv.className = 'cinema-lyric-line';
+          lineDiv.textContent = item.text;
+          lineDiv.dataset.time = item.time;
+          lineDiv.dataset.index = index;
+
+          lineDiv.addEventListener('click', () => {
+            if (video) video.currentTime = item.time;
+          });
+
+          wrapper.appendChild(lineDiv);
+        });
+      }
+    } catch (e) {
+      console.error('Error actualizando track en modo cine:', e);
+    } finally {
+      isUpdatingCinemaTrack = false;
     }
   }
 
@@ -1000,9 +1084,9 @@
     function sync() {
       if (!isCinemaActive) return;
 
-      // Verificar cambio de canción cada 30 cuadros
+      // Verificar cambio de canción cada 10 cuadros (tiempo real instantáneo)
       frameCounter++;
-      if (frameCounter % 30 === 0) {
+      if (frameCounter % 10 === 0) {
         checkCinemaTrackChange();
       }
 
