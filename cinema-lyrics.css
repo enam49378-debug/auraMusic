@@ -1,5 +1,6 @@
 /* ==========================================================
-   AURAMUSIC - MODO LETRAS ANIMADAS ESTILO APPLE MUSIC
+   AURAMUSIC - MODO LETRAS ANIMADAS: MULTI-DISEÑOS RADICALES
+   (Apple Music, Spotify, Minecraft Arcade, Cyberpunk HUD, Aesthetic, YouTube)
    ========================================================== */
 
 /* Botón Inyectado en la pestaña de Letra */
@@ -10,11 +11,11 @@
   background: linear-gradient(135deg, var(--auramusic-primary, #00f2fe), var(--auramusic-secondary, #7c4dff));
   color: #ffffff;
   border: none;
-  padding: 8px 18px;
+  padding: 8px 20px;
   border-radius: 24px;
   font-family: inherit;
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   cursor: pointer;
   margin: 12px 0 16px 0;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 15px var(--auramusic-glow, rgba(0, 229, 255, 0.4));
@@ -27,7 +28,7 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 25px var(--auramusic-primary, #00f2fe);
 }
 
-/* Pantalla Completa Cinematográfica */
+/* Pantalla Completa Base */
 #auramusic-cinema-overlay {
   position: fixed;
   inset: 0;
@@ -35,7 +36,7 @@
   z-index: 9999999;
   display: none;
   opacity: 0;
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
   user-select: none;
 }
@@ -45,7 +46,7 @@
   opacity: 1 !important;
 }
 
-/* Fondo Dinámico con Malla de Colores Fluidos (Ambient Mesh Gradient) */
+/* Fondo Dinámico con Malla de Colores Fluidos */
 .cinema-mesh-bg {
   position: absolute;
   inset: -100px;
@@ -92,7 +93,7 @@
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
 }
 
-/* Estructura Principal: Columna Izquierda (Carátula) y Derecha (Letra) */
+/* Estructura Base: Portada a la Izquierda y Letra a la Derecha */
 .cinema-content-grid {
   position: relative;
   z-index: 2;
@@ -132,6 +133,7 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
 .cinema-meta-info {
@@ -140,7 +142,7 @@
 }
 
 .cinema-track-title {
-  font-family: 'Space Grotesk', 'Quicksand', sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Space Grotesk', sans-serif;
   font-size: 2rem;
   font-weight: 800;
   color: #ffffff;
@@ -160,7 +162,7 @@
   text-overflow: ellipsis;
 }
 
-/* Barra de Tiempo del Modo Cine */
+/* Barra de Tiempo */
 .cinema-timeline-box {
   width: 380px;
   margin-bottom: 22px;
@@ -239,14 +241,14 @@
   box-shadow: 0 0 35px #ffffff;
 }
 
-/* Columna Derecha: Letras Cinematográficas Animadas (Karaoke Style) */
+/* Columna Derecha: Letras Cinematográficas */
 .cinema-right {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   height: 100%;
   overflow-y: auto;
-  padding: 20vh 30px 30vh 20px;
+  padding: 22vh 30px 32vh 20px;
   box-sizing: border-box;
   scroll-behavior: smooth;
   scrollbar-width: none;
@@ -262,9 +264,9 @@
   gap: 24px;
 }
 
-/* Líneas de Letra y Palabras Individuales */
+/* Líneas de Letra Base */
 .cinema-lyric-line {
-  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
   font-size: 2.3rem;
   font-weight: 700;
   cursor: pointer;
@@ -288,27 +290,25 @@
   letter-spacing: -0.025em;
 }
 
-/* SISTEMA DE PALABRA POR PALABRA (KARAOKE PRECISO) */
+/* SISTEMA PALABRA POR PALABRA (.k-word) */
 .k-word {
   display: inline-block;
   opacity: 0.35;
   filter: blur(2px);
   color: #ffffff;
-  transition: opacity 0.2s ease, filter 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), text-shadow 0.2s ease;
+  transition: opacity 0.18s ease, filter 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), text-shadow 0.18s ease;
   transform-origin: center bottom;
-  margin-right: 0.15em;
+  margin-right: 0.18em;
 }
 
-/* Palabra cantándose en tiempo real */
 .k-word.active {
   opacity: 1 !important;
   filter: blur(0) !important;
   color: #ffffff !important;
-  transform: scale(1.12) translateY(-2px) !important;
+  transform: scale(1.14) translateY(-3px) !important;
   text-shadow: 0 0 25px rgba(255, 255, 255, 0.9), 0 0 50px var(--auramusic-ambient-color, rgba(255, 143, 163, 0.8)) !important;
 }
 
-/* Palabras ya cantadas */
 .k-word.sung {
   opacity: 0.95 !important;
   filter: blur(0) !important;
@@ -316,39 +316,203 @@
   transform: none !important;
 }
 
-/* Transición suave para cambio de carátula */
-.cinema-artwork-box img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: high-quality;
-  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ==========================================================================
+   1. 🍎 DISEÑO DEDICADO: APPLE MUSIC (OFICIAL ICONIC SING)
+   ========================================================================== */
+body.auramusic-theme-apple #auramusic-cinema-overlay {
+  background: #000000 !important;
+}
+
+body.auramusic-theme-apple .cinema-mesh-bg {
+  filter: blur(90px) !important;
+  opacity: 0.65 !important;
+}
+
+body.auramusic-theme-apple .cinema-lyric-line {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Plus Jakarta Sans", sans-serif !important;
+  letter-spacing: -0.025em !important;
+}
+
+body.auramusic-theme-apple .cinema-lyric-line.active-line {
+  font-size: 3.4rem !important;
+}
+
+body.auramusic-theme-apple .k-word.active {
+  color: #ffffff !important;
+  transform: scale(1.16) translateY(-4px) !important;
+  text-shadow: 0 0 35px rgba(255, 255, 255, 0.95), 0 0 70px var(--auramusic-ambient-color, #ff7eb3) !important;
 }
 
 /* ==========================================================================
-   DISTRIBUCIONES Y ANIMACIONES DIFERENTES POR CADA DISEÑO (LAYOUTS PROPIOS)
+   2. 🟢 DISEÑO DEDICADO: SPOTIFY KARAOKE (PANTALLA COLOR DOCK Y TEXTO CENTRADO)
    ========================================================================== */
-
-/* 1. 🌸 AESTHETIC PASTEL: Estilo Apple Music Líquido Flotante */
-body.auramusic-theme-aesthetic .cinema-lyric-line {
-  font-family: 'Comfortaa', 'Quicksand', sans-serif !important;
-  font-weight: 700 !important;
+body.auramusic-theme-spotify #auramusic-cinema-overlay {
+  background: var(--auramusic-ambient-color, #1db954) !important;
+  background: linear-gradient(180deg, var(--auramusic-ambient-color, #1db954) 0%, #121212 90%) !important;
 }
 
-body.auramusic-theme-aesthetic .k-word.active {
+body.auramusic-theme-spotify .cinema-mesh-bg {
+  display: none !important;
+}
+
+body.auramusic-theme-spotify .cinema-content-grid {
+  grid-template-columns: 34% 66% !important;
+  padding: 50px 60px !important;
+}
+
+body.auramusic-theme-spotify .cinema-artwork-box {
+  width: 280px !important;
+  height: 280px !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8) !important;
+}
+
+body.auramusic-theme-spotify .cinema-meta-info {
+  width: 280px !important;
+}
+
+body.auramusic-theme-spotify .cinema-timeline-box {
+  width: 280px !important;
+}
+
+body.auramusic-theme-spotify .cinema-lyric-line {
+  font-family: 'Circular', 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+  font-size: 2.5rem !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.03em !important;
+}
+
+body.auramusic-theme-spotify .k-word {
+  filter: none !important;
+  opacity: 0.3 !important;
+  color: #000000 !important;
+}
+
+body.auramusic-theme-spotify .k-word.active {
   color: #ffffff !important;
-  transform: scale(1.15) translateY(-3px) !important;
-  text-shadow: 0 0 25px #ff8fa3, 0 0 50px #c77dff !important;
+  opacity: 1 !important;
+  transform: scale(1.08) translateY(-2px) !important;
+  text-shadow: 0 0 25px rgba(255, 255, 255, 0.9) !important;
 }
 
-body.auramusic-theme-aesthetic .k-word.sung {
-  color: #ffccd5 !important;
+body.auramusic-theme-spotify .k-word.sung {
+  color: #ffffff !important;
   opacity: 1 !important;
 }
 
-/* 2. 🤖 CYBERPUNK MECHA: LAYOUT INVERTIDO (Letras a la Izquierda, Cabina a la Derecha) */
+/* ==========================================================================
+   3. ⛏️ DISEÑO DEDICADO: MINECRAFT RETRO (ARCADE GAME SCREEN 8-BIT)
+   ========================================================================== */
+body.auramusic-theme-minecraft #auramusic-cinema-overlay {
+  background-color: #181818 !important;
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.4) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(0,0,0,0.4) 2px, transparent 2px) !important;
+  background-size: 32px 32px !important;
+}
+
+body.auramusic-theme-minecraft .cinema-mesh-bg {
+  display: none !important;
+}
+
+body.auramusic-theme-minecraft .cinema-content-grid {
+  grid-template-columns: 36% 64% !important;
+}
+
+/* Portada estilo Marco de Bloque (Item Frame) */
+body.auramusic-theme-minecraft .cinema-artwork-box {
+  border-radius: 0px !important;
+  border: 5px solid #3c3c3c !important;
+  border-top-color: #555555 !important;
+  border-left-color: #555555 !important;
+  border-bottom-color: #151515 !important;
+  border-right-color: #151515 !important;
+  box-shadow: 0 0 0 4px #000, 0 15px 40px #000 !important;
+  image-rendering: pixelated !important;
+}
+
+/* Controles de piedra con relieve 3D */
+body.auramusic-theme-minecraft .cinema-ctrl-btn,
+body.auramusic-theme-minecraft .cinema-play-btn {
+  border-radius: 0px !important;
+  background: #3c3c3c !important;
+  border: 3px solid #555555 !important;
+  border-bottom-color: #151515 !important;
+  border-right-color: #151515 !important;
+  box-shadow: inset 1px 1px 0 #777 !important;
+  color: #55ff55 !important;
+}
+
+body.auramusic-theme-minecraft .cinema-play-btn {
+  width: 52px !important;
+  height: 52px !important;
+}
+
+/* Barra de experiencia verde oficial de Minecraft */
+body.auramusic-theme-minecraft .cinema-progress-bg {
+  height: 10px !important;
+  border-radius: 0px !important;
+  border: 2px solid #000000 !important;
+  background: #222222 !important;
+}
+
+body.auramusic-theme-minecraft .cinema-progress-fill {
+  border-radius: 0px !important;
+  background: #55ff55 !important;
+  box-shadow: inset 0 2px 0 #aaffaa, inset 0 -2px 0 #00aa00 !important;
+}
+
+/* Letras Arcade 8-Bit (Sin desenfoque, salto de bloque verde) */
+body.auramusic-theme-minecraft .cinema-lyric-line {
+  font-family: 'Silkscreen', monospace !important;
+  font-size: 1.9rem !important;
+  letter-spacing: 0.5px !important;
+}
+
+body.auramusic-theme-minecraft .cinema-lyric-line.active-line {
+  font-size: 2.4rem !important;
+  transform: translateX(12px) !important;
+}
+
+body.auramusic-theme-minecraft .k-word {
+  filter: none !important;
+  opacity: 0.45 !important;
+  color: #777777 !important;
+}
+
+body.auramusic-theme-minecraft .k-word.active {
+  color: #55ff55 !important;
+  opacity: 1 !important;
+  transform: translateY(-4px) scale(1.1) !important;
+  text-shadow: 3px 3px 0 #000, 0 0 25px #55ff55 !important;
+  animation: mcWordJump 0.25s steps(2) !important;
+}
+
+@keyframes mcWordJump {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-6px) scale(1.15); }
+  100% { transform: translateY(-4px) scale(1.1); }
+}
+
+body.auramusic-theme-minecraft .k-word.sung {
+  color: #55ff55 !important;
+  opacity: 1 !important;
+  text-shadow: 2px 2px 0 #000 !important;
+}
+
+/* ==========================================================================
+   4. 🤖 DISEÑO DEDICADO: CYBERPUNK MECHA (HUD INVERTIDO DE CIENCIA FICCIÓN)
+   ========================================================================== */
+body.auramusic-theme-cyberpunk #auramusic-cinema-overlay {
+  background: #06050e !important;
+}
+
+body.auramusic-theme-cyberpunk .cinema-mesh-bg {
+  opacity: 0.4 !important;
+  filter: blur(60px) !important;
+}
+
+/* DISTRIBUCIÓN INVERTIDA: Letras a la IZQUIERDA, Cabina a la DERECHA */
 body.auramusic-theme-cyberpunk .cinema-content-grid {
   grid-template-columns: 58% 42% !important;
 }
@@ -365,27 +529,28 @@ body.auramusic-theme-cyberpunk .cinema-right {
   text-align: left !important;
 }
 
+/* Artwork con corte angular mecha */
+body.auramusic-theme-cyberpunk .cinema-artwork-box {
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px)) !important;
+  border-radius: 0px !important;
+  box-shadow: 0 0 35px rgba(0, 242, 254, 0.4), 0 0 50px rgba(255, 0, 127, 0.3) !important;
+}
+
+body.auramusic-theme-cyberpunk .cinema-play-btn {
+  clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%) !important;
+  border-radius: 0px !important;
+  background: linear-gradient(135deg, #00f2fe, #ff007f) !important;
+  color: #06050e !important;
+}
+
 body.auramusic-theme-cyberpunk .cinema-lyric-line {
   font-family: 'Rajdhani', 'Orbitron', sans-serif !important;
   font-weight: 700 !important;
   letter-spacing: 0.05em !important;
-  color: rgba(0, 242, 254, 0.3) !important;
-  filter: blur(1.5px) !important;
 }
 
 body.auramusic-theme-cyberpunk .cinema-lyric-line.active-line {
   font-size: 3.4rem !important;
-}
-
-body.auramusic-theme-cyberpunk .k-word.active {
-  color: #00f2fe !important;
-  transform: scale(1.12) skewX(-4deg) translateY(-2px) !important;
-  text-shadow: 0 0 20px #00f2fe, 0 0 45px #ff007f !important;
-}
-
-body.auramusic-theme-cyberpunk .k-word.sung {
-  color: #ffffff !important;
-  opacity: 0.95 !important;
 }
 
 body.auramusic-theme-cyberpunk .cinema-lyric-line.active-line::before {
@@ -396,85 +561,70 @@ body.auramusic-theme-cyberpunk .cinema-lyric-line.active-line::before {
   animation: cyberBlink 0.8s steps(2) infinite !important;
 }
 
-@keyframes cyberBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-/* 3. ⛏️ MINECRAFT RETRO: Arcade Karaoke 8-Bit (Sin desenfoque, rebote de bloque y XP verde) */
-body.auramusic-theme-minecraft .cinema-content-grid {
-  grid-template-columns: 38% 62% !important;
+body.auramusic-theme-cyberpunk .k-word {
+  color: rgba(0, 242, 254, 0.35) !important;
+  filter: blur(1.5px) !important;
 }
 
-body.auramusic-theme-minecraft .cinema-lyric-line {
-  font-family: 'Silkscreen', monospace !important;
-  font-size: 1.8rem !important;
-  filter: none !important;
-  letter-spacing: 0.5px !important;
-  color: #666666 !important;
+body.auramusic-theme-cyberpunk .k-word.active {
+  color: #00f2fe !important;
+  transform: scale(1.14) skewX(-4deg) translateY(-2px) !important;
+  text-shadow: 0 0 20px #00f2fe, 0 0 45px #ff007f !important;
 }
 
-body.auramusic-theme-minecraft .cinema-lyric-line.active-line {
-  font-size: 2.4rem !important;
-  transform: scale(1.05) translateX(12px) !important;
-  animation: mcTextBounce 0.35s steps(2) !important;
+body.auramusic-theme-cyberpunk .k-word.sung {
+  color: #ffffff !important;
+  opacity: 0.95 !important;
 }
 
-body.auramusic-theme-minecraft .k-word {
-  filter: none !important;
-  opacity: 0.45 !important;
-  color: #777777 !important;
+/* ==========================================================================
+   5. 🌸 DISEÑO DEDICADO: AESTHETIC PASTEL (NUBE CÁLIDA Y RELAJANTE)
+   ========================================================================== */
+body.auramusic-theme-aesthetic .cinema-lyric-line {
+  font-family: 'Comfortaa', 'Quicksand', sans-serif !important;
+  font-weight: 700 !important;
 }
 
-body.auramusic-theme-minecraft .k-word.active {
-  color: #55ff55 !important;
+body.auramusic-theme-aesthetic .k-word.active {
+  color: #ffffff !important;
+  transform: scale(1.16) translateY(-3px) !important;
+  text-shadow: 0 0 25px #ff8fa3, 0 0 50px #c77dff !important;
+}
+
+body.auramusic-theme-aesthetic .k-word.sung {
+  color: #ffccd5 !important;
   opacity: 1 !important;
-  transform: translateY(-3px) scale(1.08) !important;
-  text-shadow: 3px 3px 0 #000, 0 0 25px #55ff55 !important;
 }
 
-body.auramusic-theme-minecraft .k-word.sung {
-  color: #55ff55 !important;
-  opacity: 1 !important;
-  text-shadow: 2px 2px 0 #000 !important;
+/* ==========================================================================
+   6. 🔴 DISEÑO DEDICADO: YOUTUBE RED (STUDIO TELEPROMPTER)
+   ========================================================================== */
+body.auramusic-theme-youtube #auramusic-cinema-overlay {
+  background: #0f0f0f !important;
 }
 
-@keyframes mcTextBounce {
-  0% { transform: scale(0.96); }
-  50% { transform: scale(1.08); }
-  100% { transform: scale(1.05); }
+body.auramusic-theme-youtube .k-word.active {
+  color: #ff0000 !important;
+  text-shadow: 0 0 30px rgba(255, 0, 0, 0.9) !important;
+  transform: scale(1.1) translateY(-2px) !important;
 }
 
-/* 4. 🖤 OLED / SPOTIFY STYLE: Minimalista Centrado de Alto Contraste */
-body.auramusic-theme-oled .cinema-content-grid {
-  grid-template-columns: 35% 65% !important;
+body.auramusic-theme-youtube .k-word.sung {
+  color: #ffffff !important;
 }
 
-body.auramusic-theme-oled .cinema-lyric-line {
-  font-family: 'Space Grotesk', sans-serif !important;
-  color: rgba(255, 255, 255, 0.25) !important;
+/* ==========================================================================
+   7. 🖤 DISEÑO DEDICADO: OLED PURE BLACK (OBSIDIANA MINIMALISTA)
+   ========================================================================== */
+body.auramusic-theme-oled #auramusic-cinema-overlay {
+  background: #000000 !important;
 }
 
-body.auramusic-theme-oled .cinema-lyric-line.active-line {
-  background: linear-gradient(
-    90deg,
-    #ffffff 0%,
-    #ffffff var(--karaoke-fill, 0%),
-    #555555 var(--karaoke-fill, 0%),
-    #555555 100%
-  ) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
+body.auramusic-theme-oled .cinema-mesh-bg {
+  display: none !important;
+}
+
+body.auramusic-theme-oled .k-word.active {
+  color: #ffffff !important;
   text-shadow: 0 0 35px #ffffff !important;
-}
-
-/* 5. 🔴 YOUTUBE RED: Teleprompter Studio Rojo */
-body.auramusic-theme-youtube .cinema-lyric-line.active-line {
-  background: linear-gradient(
-    90deg,
-    #ffffff 0%,
-    #ffffff var(--karaoke-fill, 0%),
-    rgba(255, 0, 0, 0.4) var(--karaoke-fill, 0%),
-    rgba(255, 0, 0, 0.4) 100%
-  ) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  text-shadow: 0 0 30px rgba(255, 0, 0, 0.8) !important;
 }

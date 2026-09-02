@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   const themeBtns = document.querySelectorAll('.theme-btn');
   const allThemes = [
+    'auramusic-theme-apple',
+    'auramusic-theme-spotify',
     'auramusic-theme-oled',
     'auramusic-theme-cyberpunk',
     'auramusic-theme-glass',
@@ -14,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (chrome.storage && chrome.storage.local) {
     chrome.storage.local.get(['auramusic_settings'], (result) => {
       if (result && result.auramusic_settings) {
-        const theme = result.auramusic_settings.theme || 'youtube';
+        const theme = result.auramusic_settings.theme || 'apple';
         themeBtns.forEach(btn => {
           btn.classList.toggle('active', btn.dataset.theme === theme);
         });

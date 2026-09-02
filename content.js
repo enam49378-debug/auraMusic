@@ -115,6 +115,8 @@
   }
 
   const ALL_THEMES = [
+    'auramusic-theme-apple',
+    'auramusic-theme-spotify',
     'auramusic-theme-oled',
     'auramusic-theme-cyberpunk',
     'auramusic-theme-glass',
@@ -443,12 +445,14 @@
               <span class="auramusic-label">Estilo de Interfaz</span>
               <span class="auramusic-sublabel">Selecciona el tema que transformará la estética de YouTube Music.</span>
               <div class="auramusic-theme-grid">
-                <button type="button" class="theme-pill-btn" data-theme="youtube">🔴 YouTube Red</button>
+                <button type="button" class="theme-pill-btn" data-theme="apple">🍎 Apple Music</button>
+                <button type="button" class="theme-pill-btn" data-theme="spotify">🟢 Spotify</button>
                 <button type="button" class="theme-pill-btn" data-theme="aesthetic">🌸 Aesthetic Pastel</button>
                 <button type="button" class="theme-pill-btn" data-theme="minecraft">⛏️ Minecraft Pixel</button>
                 <button type="button" class="theme-pill-btn" data-theme="cyberpunk">🤖 Cyberpunk Mecha</button>
-                <button type="button" class="theme-pill-btn" data-theme="oled">🖤 OLED Pure Black</button>
-                <button type="button" class="theme-pill-btn" data-theme="dynamic">🎨 Color Dinámico</button>
+                <button type="button" class="theme-pill-btn" data-theme="youtube">🔴 YouTube Red</button>
+                <button type="button" class="theme-pill-btn" data-theme="oled">🖤 OLED Black</button>
+                <button type="button" class="theme-pill-btn" data-theme="dynamic">🎨 Dinámico</button>
                 <button type="button" class="theme-pill-btn" data-theme="default">⚙️ Default</button>
               </div>
             </div>
@@ -1041,22 +1045,39 @@
           lineDiv.dataset.time = item.time;
           lineDiv.dataset.index = index;
 
-          // Cálculo inteligente de tiempo palabra por palabra (Weighted Vocal Pacing)
+          // Cálculo con pausas naturales por puntuación y cadencia vocal (Singing Cadence)
           const nextItem = currentLyrics[index + 1];
-          const rawDuration = nextItem ? (nextItem.time - item.time) : 3.5;
+          const rawDuration = nextItem ? (nextItem.time - item.time) : 4.0;
           const words = item.text.trim().split(/\s+/);
-          const vocalDuration = Math.min(rawDuration * 0.88, Math.max(1.2, words.length * 0.42));
 
-          const weights = words.map(w => Math.max(2, w.length));
+          let pausesTotal = 0;
+          const wordPauses = words.map((w, idx) => {
+            let pause = 0;
+            // Pausa natural para respirar tras comas, guiones o puntos
+            if (/[,;—–]/.test(w) && idx < words.length - 1) {
+              pause = 0.45;
+            } else if (/[.!?…]$/.test(w) && idx < words.length - 1) {
+              pause = 0.65;
+            }
+            pausesTotal += pause;
+            return pause;
+          });
+
+          const maxVocalTime = Math.max(1.0, rawDuration * 0.86);
+          const speechTime = Math.max(0.6, maxVocalTime - pausesTotal);
+
+          const cleanWords = words.map(w => w.replace(/[^\wáéíóúÁÉÍÓÚñÑ]/g, ''));
+          const weights = cleanWords.map(w => Math.max(2, w.length));
           const totalWeight = weights.reduce((a, b) => a + b, 0);
 
           let currentOffset = 0;
           words.forEach((w, i) => {
             const frac = weights[i] / totalWeight;
-            const wDur = frac * vocalDuration;
+            const wDur = frac * speechTime;
             const wStart = item.time + currentOffset;
             const wEnd = wStart + wDur;
-            currentOffset += wDur;
+            const pauseAfter = wordPauses[i];
+            currentOffset += wDur + pauseAfter;
 
             const span = document.createElement('span');
             span.className = 'k-word';

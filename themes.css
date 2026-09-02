@@ -695,3 +695,121 @@ body.auramusic-clean-mode .upgrade-button {
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+/* ==========================================================================
+   DISEÑO 6: 🍎 APPLE MUSIC (ESTILO OFICIAL APPLE MUSIC SING & FROSTED GLASS)
+   ========================================================================== */
+body.auramusic-theme-apple {
+  --auramusic-primary: #fc3c44;
+  --auramusic-secondary: #ff2d55;
+  --auramusic-glow: rgba(252, 60, 68, 0.4);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Plus Jakarta Sans", sans-serif !important;
+}
+
+body.auramusic-theme-apple ytmusic-app,
+body.auramusic-theme-apple ytmusic-browse-response,
+body.auramusic-theme-apple ytmusic-player-page {
+  background: #1c1c1e !important;
+}
+
+body.auramusic-theme-apple ytmusic-nav-bar {
+  background: rgba(28, 28, 30, 0.85) !important;
+  backdrop-filter: blur(25px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+body.auramusic-theme-apple ytmusic-search-box {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 12px !important;
+}
+
+body.auramusic-theme-apple ytmusic-chip-cloud-chip-renderer {
+  border-radius: 10px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+body.auramusic-theme-apple ytmusic-chip-cloud-chip-renderer[is-selected] {
+  background: #fc3c44 !important;
+  color: #ffffff !important;
+}
+
+body.auramusic-theme-apple ytmusic-player-bar {
+  background: rgba(28, 28, 30, 0.94) !important;
+  backdrop-filter: blur(30px) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+body.auramusic-theme-apple tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
+  background: #fc3c44 !important;
+  box-shadow: 0 0 10px rgba(252, 60, 68, 0.5) !important;
+}
+
+body.auramusic-theme-apple tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
+  background: #ffffff !important;
+  border: 2px solid #fc3c44 !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 12px rgba(252, 60, 68, 0.6) !important;
+}
+
+body.auramusic-theme-apple ytmusic-player-bar .play-pause-button {
+  background: #fc3c44 !important;
+  border-radius: 50% !important;
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   DISEÑO 7: 🟢 SPOTIFY (ESTILO OFICIAL SPOTIFY VERDE Y CARBÓN)
+   ========================================================================== */
+body.auramusic-theme-spotify {
+  --auramusic-primary: #1ed760;
+  --auramusic-secondary: #1db954;
+  --auramusic-glow: rgba(30, 215, 96, 0.4);
+  font-family: 'Circular', 'Plus Jakarta Sans', sans-serif !important;
+}
+
+body.auramusic-theme-spotify ytmusic-app,
+body.auramusic-theme-spotify ytmusic-browse-response {
+  background: #121212 !important;
+}
+
+body.auramusic-theme-spotify ytmusic-nav-bar {
+  background: #000000 !important;
+}
+
+body.auramusic-theme-spotify ytmusic-chip-cloud-chip-renderer {
+  border-radius: 20px !important;
+  background: #242424 !important;
+  border: 1px solid #333333 !important;
+  color: #ffffff !important;
+}
+
+body.auramusic-theme-spotify ytmusic-chip-cloud-chip-renderer[is-selected] {
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar {
+  background: #181818 !important;
+  border-top: 1px solid #282828 !important;
+}
+
+body.auramusic-theme-spotify tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
+  background: #1ed760 !important;
+  box-shadow: 0 0 10px rgba(30, 215, 96, 0.5) !important;
+}
+
+body.auramusic-theme-spotify tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
+  background: #ffffff !important;
+  border: 2px solid #1ed760 !important;
+  border-radius: 50% !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .play-pause-button {
+  background: #ffffff !important;
+  border-radius: 50% !important;
+  color: #000000 !important;
+}
