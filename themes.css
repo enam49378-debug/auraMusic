@@ -52,7 +52,7 @@ tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
 }
 
 /* ==========================================================================
-   DISEÑO 1: 🌸 AESTHETIC PASTEL (REPRODUCTOR FLOTANTE "DOCK", NUBES Y REBOTE)
+   DISEÑO 1: 🌸 AESTHETIC PASTEL (REPRODUCTOR FLOTANTE DOCK, FLOTE Y NUBES)
    ========================================================================== */
 body.auramusic-theme-aesthetic {
   --auramusic-primary: #ff8fa3;
@@ -77,19 +77,19 @@ body.auramusic-theme-aesthetic ytmusic-nav-bar {
   border-bottom: 1px solid rgba(255, 143, 163, 0.15) !important;
 }
 
-/* Buscador en forma de nube suave */
+/* Buscador en forma de nube suave con flote elástico */
 body.auramusic-theme-aesthetic ytmusic-search-box {
   background: rgba(255, 143, 163, 0.08) !important;
   border: 1px solid rgba(255, 143, 163, 0.25) !important;
   border-radius: 30px !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
 body.auramusic-theme-aesthetic ytmusic-search-box:focus-within {
-  transform: scale(1.02) !important;
+  transform: scale(1.02) translateY(-2px) !important;
   border-color: #ff8fa3 !important;
-  box-shadow: 0 0 25px rgba(255, 143, 163, 0.35) !important;
+  box-shadow: 0 8px 25px rgba(255, 143, 163, 0.4) !important;
 }
 
 /* Menú lateral: Entradas en forma de píldoras flotantes suaves */
@@ -98,7 +98,7 @@ body.auramusic-theme-aesthetic ytmusic-guide-entry-renderer {
   border: 1px solid rgba(255, 143, 163, 0.1) !important;
   border-radius: 24px !important;
   margin: 6px 12px !important;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
 body.auramusic-theme-aesthetic ytmusic-guide-entry-renderer:hover {
@@ -121,7 +121,7 @@ body.auramusic-theme-aesthetic ytmusic-chip-cloud-chip-renderer {
   color: #ffccd5 !important;
   font-size: 0.9rem !important;
   font-weight: 700 !important;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
 body.auramusic-theme-aesthetic ytmusic-chip-cloud-chip-renderer:hover {
@@ -134,6 +134,34 @@ body.auramusic-theme-aesthetic ytmusic-chip-cloud-chip-renderer[is-selected] {
   background: linear-gradient(135deg, #ff8fa3, #c77dff) !important;
   color: #120e18 !important;
   box-shadow: 0 0 25px rgba(255, 143, 163, 0.5) !important;
+}
+
+/* Tarjetas de álbumes con flote elástico */
+body.auramusic-theme-aesthetic ytmusic-two-row-item-renderer {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s ease !important;
+}
+
+body.auramusic-theme-aesthetic ytmusic-two-row-item-renderer:hover {
+  transform: translateY(-8px) scale(1.03) !important;
+  filter: drop-shadow(0 15px 25px rgba(255, 143, 163, 0.35)) !important;
+}
+
+body.auramusic-theme-aesthetic ytmusic-two-row-item-renderer .image-wrapper.ytmusic-two-row-item-renderer,
+body.auramusic-theme-aesthetic ytmusic-two-row-item-renderer img {
+  border-radius: 22px !important;
+}
+
+/* Filas de canciones con deslizamiento suave de nube */
+body.auramusic-theme-aesthetic ytmusic-responsive-list-item-renderer {
+  border-radius: 18px !important;
+  margin: 3px 0 !important;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+body.auramusic-theme-aesthetic ytmusic-responsive-list-item-renderer:hover {
+  background: rgba(255, 143, 163, 0.12) !important;
+  transform: translateX(6px) scale(1.01) !important;
+  box-shadow: 0 4px 15px rgba(255, 143, 163, 0.2) !important;
 }
 
 /* CAMBIO ESTRUCTURAL: REPRODUCTOR FLOTANTE TIPO "DOCK" EN AESTHETIC */
@@ -154,6 +182,18 @@ body.auramusic-theme-aesthetic ytmusic-player-bar {
   z-index: 1000 !important;
 }
 
+/* Carátula en reproducción con respiración mágica pastel */
+body.auramusic-theme-aesthetic ytmusic-player-bar .image.ytmusic-player-bar {
+  border-radius: 14px !important;
+  animation: aestheticVinylGlow 4s ease-in-out infinite alternate !important;
+}
+
+@keyframes aestheticVinylGlow {
+  0% { box-shadow: 0 4px 15px rgba(255, 143, 163, 0.4), 0 0 15px rgba(199, 125, 255, 0.2); transform: rotate(0deg); }
+  50% { box-shadow: 0 8px 25px rgba(199, 125, 255, 0.6), 0 0 30px rgba(255, 143, 163, 0.4); transform: rotate(1.5deg) translateY(-2px); }
+  100% { box-shadow: 0 4px 15px rgba(255, 143, 163, 0.4), 0 0 15px rgba(199, 125, 255, 0.2); transform: rotate(0deg); }
+}
+
 /* Botones estilo caramelo redondo con rebote elástico */
 body.auramusic-theme-aesthetic ytmusic-player-bar .play-pause-button {
   background: linear-gradient(135deg, #ff8fa3, #c77dff) !important;
@@ -162,16 +202,17 @@ body.auramusic-theme-aesthetic ytmusic-player-bar .play-pause-button {
   height: 52px !important;
   color: #120e18 !important;
   box-shadow: 0 8px 25px rgba(255, 143, 163, 0.5) !important;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  animation: lofiPulse 3.5s ease-in-out infinite alternate !important;
 }
 
 body.auramusic-theme-aesthetic ytmusic-player-bar .play-pause-button:hover {
-  transform: scale(1.15) !important;
+  transform: scale(1.18) !important;
   box-shadow: 0 12px 35px rgba(199, 125, 255, 0.7) !important;
 }
 
 body.auramusic-theme-aesthetic ytmusic-player-bar .play-pause-button:active {
-  transform: scale(0.92) !important;
+  transform: scale(0.9) !important;
 }
 
 body.auramusic-theme-aesthetic ytmusic-player-bar .previous-button,
@@ -188,7 +229,7 @@ body.auramusic-theme-aesthetic ytmusic-player-bar .next-button {
 body.auramusic-theme-aesthetic ytmusic-player-bar .previous-button:hover,
 body.auramusic-theme-aesthetic ytmusic-player-bar .next-button:hover {
   background: rgba(255, 143, 163, 0.25) !important;
-  transform: scale(1.18) !important;
+  transform: scale(1.2) !important;
   color: #ffffff !important;
 }
 
@@ -205,8 +246,17 @@ body.auramusic-theme-aesthetic tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-s
   box-shadow: 0 0 16px rgba(255, 143, 163, 0.8) !important;
 }
 
+body.auramusic-theme-aesthetic #volume-slider tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
+  background: linear-gradient(90deg, #ff8fa3, #c77dff) !important;
+}
+
+@keyframes lofiPulse {
+  0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 143, 163, 0.4); }
+  100% { transform: scale(1.08); box-shadow: 0 0 25px rgba(199, 125, 255, 0.6); }
+}
+
 /* ==========================================================================
-   DISEÑO 2: ⛏️ MINECRAFT PIXEL ART (HOTBAR SLOTS, BOTONES DE PIEDRA Y CLICS 3D)
+   DISEÑO 2: ⛏️ MINECRAFT PIXEL ART (HOTBAR SLOTS, COMPRESIÓN 3D Y PULSO XP)
    ========================================================================== */
 body.auramusic-theme-minecraft {
   --auramusic-primary: #55ff55;
@@ -254,7 +304,8 @@ body.auramusic-theme-minecraft ytmusic-guide-entry-renderer:active,
 body.auramusic-theme-minecraft ytmusic-chip-cloud-chip-renderer:active,
 body.auramusic-theme-minecraft .play-pause-button:active,
 body.auramusic-theme-minecraft .previous-button:active,
-body.auramusic-theme-minecraft .next-button:active {
+body.auramusic-theme-minecraft .next-button:active,
+body.auramusic-theme-minecraft ytmusic-responsive-list-item-renderer:active {
   transform: translate(2px, 2px) !important;
   border-top-color: #141414 !important;
   border-left-color: #141414 !important;
@@ -296,6 +347,38 @@ body.auramusic-theme-minecraft ytmusic-chip-cloud-chip-renderer[is-selected] {
   border-color: #55ff55 !important;
   color: #55ff55 !important;
   text-shadow: 1px 1px 0px #000 !important;
+}
+
+/* Filas de canciones estilo Ranuras de Inventario */
+body.auramusic-theme-minecraft ytmusic-responsive-list-item-renderer {
+  border: 2px solid transparent !important;
+  border-radius: 0px !important;
+  margin: 2px 0 !important;
+  transition: none !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-responsive-list-item-renderer:hover {
+  background: #2c2c2c !important;
+  border-color: #55ff55 !important;
+  border-left-width: 6px !important;
+}
+
+/* Portadas de álbum con marco pixelado biselado */
+body.auramusic-theme-minecraft ytmusic-two-row-item-renderer .image-wrapper.ytmusic-two-row-item-renderer,
+body.auramusic-theme-minecraft ytmusic-two-row-item-renderer img {
+  border-radius: 0px !important;
+  border: 3px solid #3c3c3c !important;
+  border-top-color: #5a5a5a !important;
+  border-left-color: #5a5a5a !important;
+  border-bottom-color: #111111 !important;
+  border-right-color: #111111 !important;
+  image-rendering: pixelated !important;
+  transition: transform 0.1s steps(2) !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-two-row-item-renderer:hover {
+  transform: scale(1.04) !important;
+  filter: drop-shadow(3px 3px 0px #000000) !important;
 }
 
 /* CAMBIO ESTRUCTURAL: REPRODUCTOR TIPO HOTBAR DE 9 SLOTS */
@@ -360,7 +443,7 @@ body.auramusic-theme-minecraft tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-s
 }
 
 /* ==========================================================================
-   DISEÑO 3: 🤖 CYBERPUNK MECHA (CABINA SCI-FI, BOTONES ANGULARES Y CORTE HUD)
+   DISEÑO 3: 🤖 CYBERPUNK MECHA (CABINA SCI-FI, BOTONES ANGULARES Y ESCÁNER HUD)
    ========================================================================== */
 body.auramusic-theme-cyberpunk {
   --auramusic-primary: #00f2fe;
@@ -412,7 +495,7 @@ body.auramusic-theme-cyberpunk ytmusic-chip-cloud-chip-renderer {
 body.auramusic-theme-cyberpunk ytmusic-chip-cloud-chip-renderer:hover {
   background: rgba(0, 242, 254, 0.2) !important;
   border-color: #00f2fe !important;
-  transform: scale(1.06) !important;
+  transform: scale(1.06) skewX(-4deg) !important;
   box-shadow: 0 0 20px rgba(0, 242, 254, 0.5) !important;
 }
 
@@ -420,6 +503,19 @@ body.auramusic-theme-cyberpunk ytmusic-chip-cloud-chip-renderer[is-selected] {
   background: #ff007f !important;
   color: #ffffff !important;
   box-shadow: 0 0 25px rgba(255, 0, 127, 0.8) !important;
+}
+
+/* Filas de canciones con efecto de escáner táctico */
+body.auramusic-theme-cyberpunk ytmusic-responsive-list-item-renderer {
+  border-left: 2px solid transparent !important;
+  transition: all 0.15s ease !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-responsive-list-item-renderer:hover {
+  background: linear-gradient(90deg, rgba(0, 242, 254, 0.15), rgba(255, 0, 127, 0.05), transparent) !important;
+  border-left-color: #00f2fe !important;
+  transform: translateX(6px) !important;
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.2) !important;
 }
 
 /* Botones Mecha con corte trapezoidal */
@@ -432,6 +528,14 @@ body.auramusic-theme-cyberpunk ytmusic-player-bar .play-pause-button {
   color: #07060e !important;
   box-shadow: 0 0 25px rgba(0, 242, 254, 0.6) !important;
   transition: all 0.15s ease !important;
+  animation: mechaHudFlicker 4s infinite alternate !important;
+}
+
+@keyframes mechaHudFlicker {
+  0%, 95% { opacity: 1; filter: drop-shadow(0 0 8px #00f2fe); }
+  96% { opacity: 0.8; filter: drop-shadow(0 0 2px #ff007f); }
+  98% { opacity: 1; filter: drop-shadow(0 0 12px #00f2fe); }
+  100% { opacity: 0.9; filter: drop-shadow(0 0 5px #00f2fe); }
 }
 
 body.auramusic-theme-cyberpunk ytmusic-player-bar .play-pause-button:hover {
@@ -446,6 +550,14 @@ body.auramusic-theme-cyberpunk ytmusic-player-bar .next-button {
   clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%) !important;
   border-radius: 0px !important;
   color: #00f2fe !important;
+  transition: all 0.15s ease !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-player-bar .previous-button:hover,
+body.auramusic-theme-cyberpunk ytmusic-player-bar .next-button:hover {
+  background: rgba(0, 242, 254, 0.25) !important;
+  transform: scale(1.1) skewX(-4deg) !important;
+  box-shadow: 0 0 15px #00f2fe !important;
 }
 
 body.auramusic-theme-cyberpunk tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
@@ -481,7 +593,7 @@ body.auramusic-theme-youtube ytmusic-chip-cloud-chip-renderer {
   color: #f1f1f1 !important;
   border-radius: 18px !important;
   font-weight: 500 !important;
-  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), background 0.2s ease !important;
 }
 
 body.auramusic-theme-youtube ytmusic-chip-cloud-chip-renderer:hover {
@@ -498,6 +610,19 @@ body.auramusic-theme-youtube ytmusic-chip-cloud-chip-renderer[is-selected] {
 body.auramusic-theme-youtube ytmusic-player-bar {
   background: #161616 !important;
   border-top: 1px solid #282828 !important;
+}
+
+body.auramusic-theme-youtube ytmusic-player-bar .play-pause-button {
+  background: #ff0000 !important;
+  color: #ffffff !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.5) !important;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease !important;
+}
+
+body.auramusic-theme-youtube ytmusic-player-bar .play-pause-button:hover {
+  transform: scale(1.12) !important;
+  box-shadow: 0 0 25px rgba(255, 0, 0, 0.8) !important;
 }
 
 body.auramusic-theme-youtube tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
@@ -535,6 +660,12 @@ body.auramusic-theme-oled ytmusic-chip-cloud-chip-renderer {
   background: #111111 !important;
   border: 1px solid #282828 !important;
   color: #ffffff !important;
+  transition: all 0.2s ease !important;
+}
+
+body.auramusic-theme-oled ytmusic-chip-cloud-chip-renderer:hover {
+  background: #222222 !important;
+  border-color: #00e5ff !important;
 }
 
 body.auramusic-theme-oled tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
