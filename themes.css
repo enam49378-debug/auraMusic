@@ -1,5 +1,5 @@
 /* ==========================================================
-   AURAMUSIC - SISTEMA DE TEMAS AVANZADOS PARA YOUTUBE MUSIC
+   AURAMUSIC - SISTEMA DE TEMAS Y REDISEÑO TOTAL DE INTERFAZ
    ========================================================== */
 
 :root {
@@ -13,41 +13,278 @@
 }
 
 /* ==========================================================
-   1. TEMA: OLED PURE BLACK (Negro Puro #000000 y Acentos Neón)
+   1. CORRECCIÓN Y REDISEÑO DE LA LÍNEA DE TIEMPO (PROGRESS BAR)
    ========================================================== */
+
+/* Barra de fondo */
+tp-yt-paper-progress#primaryProgress.tp-yt-paper-progress,
+#progressContainer.tp-yt-paper-progress {
+  height: 4px !important;
+  border-radius: 4px !important;
+  transition: height 0.15s ease;
+}
+
+ytmusic-player-bar:hover #progressContainer.tp-yt-paper-progress {
+  height: 6px !important;
+}
+
+/* Barra de progreso con gradiente y resplandor */
+tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
+  background: linear-gradient(90deg, var(--auramusic-primary), var(--auramusic-secondary, #7c4dff)) !important;
+  box-shadow: 0 0 10px var(--auramusic-primary) !important;
+}
+
+/* Eliminar por completo el cuadro blanco del tirador (Knob) */
+tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  width: 24px !important;
+  height: 24px !important;
+}
+
+/* Tirador circular neón elegante */
+tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider,
+tp-yt-paper-slider .slider-knob-inner {
+  background: #ffffff !important;
+  border: 2px solid var(--auramusic-primary) !important;
+  border-radius: 50% !important;
+  width: 14px !important;
+  height: 14px !important;
+  box-shadow: 0 0 12px var(--auramusic-primary), 0 0 6px #ffffff !important;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease !important;
+  transform: scale(1.1) !important;
+}
+
+tp-yt-paper-slider:hover #sliderKnobInner.tp-yt-paper-slider {
+  transform: scale(1.4) !important;
+  box-shadow: 0 0 20px var(--auramusic-primary), 0 0 8px #ffffff !important;
+}
+
+/* ==========================================================
+   2. REDISEÑO TOTAL DE LA BARRA DE NAVEGACIÓN SUPERIOR
+   ========================================================== */
+ytmusic-nav-bar {
+  background: rgba(10, 12, 20, 0.92) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+}
+
+#nav-bar-background.ytmusic-nav-bar {
+  background: transparent !important;
+}
+
+/* Buscador Futurista */
+ytmusic-search-box {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 24px !important;
+  transition: all 0.25s ease !important;
+}
+
+ytmusic-search-box:focus-within,
+ytmusic-search-box:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: var(--auramusic-primary) !important;
+  box-shadow: 0 0 15px var(--auramusic-glow) !important;
+}
+
+ytmusic-search-box yt-icon {
+  color: var(--auramusic-primary) !important;
+}
+
+/* ==========================================================
+   3. REDISEÑO DEL MENÚ LATERAL Y CHIPS
+   ========================================================== */
+/* Fondo del panel lateral */
+ytmusic-guide-renderer,
+#guide-wrapper.ytmusic-app {
+  background: rgba(8, 10, 16, 0.95) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Entradas del menú con esquinas redondeadas y microanimación */
+ytmusic-guide-entry-renderer {
+  border-radius: 12px !important;
+  margin: 4px 10px !important;
+  transition: transform 0.2s ease, background 0.2s ease !important;
+}
+
+ytmusic-guide-entry-renderer:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  transform: translateX(4px) !important;
+}
+
+/* Elemento seleccionado del menú lateral */
+ytmusic-guide-entry-renderer[is-primary] tp-yt-paper-item,
+ytmusic-guide-entry-renderer[aria-selected="true"] tp-yt-paper-item {
+  background: rgba(0, 229, 255, 0.12) !important;
+  border-left: 3px solid var(--auramusic-primary) !important;
+  border-radius: 0 12px 12px 0 !important;
+}
+
+ytmusic-guide-entry-renderer[is-primary] yt-icon,
+ytmusic-guide-entry-renderer[aria-selected="true"] yt-icon {
+  color: var(--auramusic-primary) !important;
+  filter: drop-shadow(0 0 6px var(--auramusic-primary));
+}
+
+/* Botón de Nueva Playlist */
+ytmusic-guide-signin-promo-renderer,
+#new-playlist-button {
+  border-radius: 20px !important;
+  border: 1px dashed var(--auramusic-primary) !important;
+  transition: all 0.2s ease !important;
+}
+
+#new-playlist-button:hover {
+  background: rgba(0, 229, 255, 0.15) !important;
+  border-style: solid !important;
+  box-shadow: 0 0 15px var(--auramusic-glow) !important;
+}
+
+/* Chips Superiores (Filtros de estado de ánimo) */
+ytmusic-chip-cloud-chip-renderer {
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.2s ease !important;
+}
+
+ytmusic-chip-cloud-chip-renderer:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-color: var(--auramusic-primary) !important;
+  transform: translateY(-2px) !important;
+}
+
+ytmusic-chip-cloud-chip-renderer[is-selected] {
+  background: var(--auramusic-primary) !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 15px var(--auramusic-primary) !important;
+}
+
+/* ==========================================================
+   4. REDISEÑO DE TARJETAS, PORTADAS Y LISTAS (GRID)
+   ========================================================== */
+/* Portadas de álbumes y listas con bordes suaves */
+ytmusic-two-row-item-renderer .image-wrapper.ytmusic-two-row-item-renderer,
+ytmusic-two-row-item-renderer img,
+.thumbnail.ytmusic-responsive-list-item-renderer img {
+  border-radius: 14px !important;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease !important;
+}
+
+/* Elevación y resplandor al posar el ratón */
+ytmusic-two-row-item-renderer:hover .image-wrapper.ytmusic-two-row-item-renderer {
+  transform: translateY(-5px) scale(1.02) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 20px var(--auramusic-glow) !important;
+}
+
+/* Botón de reproducción superpuesto en portadas */
+.play-button.ytmusic-two-row-item-renderer {
+  background: var(--auramusic-primary) !important;
+  color: #000 !important;
+  box-shadow: 0 0 15px var(--auramusic-primary) !important;
+  transform: scale(1.05) !important;
+}
+
+/* ==========================================================
+   5. REDISEÑO DE LA BARRA DE REPRODUCCIÓN (PLAYER BAR)
+   ========================================================== */
+ytmusic-player-bar {
+  background: rgba(12, 15, 24, 0.94) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+#player-bar-background.ytmusic-player-bar {
+  background: transparent !important;
+}
+
+/* Botón Play/Pause principal */
+.play-pause-button.ytmusic-player-bar {
+  background: linear-gradient(135deg, var(--auramusic-primary), var(--auramusic-secondary, #7c4dff)) !important;
+  border-radius: 50% !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 16px var(--auramusic-glow) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.play-pause-button.ytmusic-player-bar:hover {
+  transform: scale(1.12) !important;
+  box-shadow: 0 0 25px var(--auramusic-primary) !important;
+}
+
+/* Botones de Anterior y Siguiente */
+.previous-button.ytmusic-player-bar:hover,
+.next-button.ytmusic-player-bar:hover {
+  color: var(--auramusic-primary) !important;
+  transform: scale(1.15) !important;
+}
+
+/* Carátula en miniatura */
+ytmusic-player-bar .image.ytmusic-player-bar {
+  border-radius: 10px !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Título de la canción activa */
+ytmusic-player-bar .title.ytmusic-player-bar {
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  font-size: 0.95rem !important;
+}
+
+/* Control de Volumen */
+#volume-slider tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
+  background: var(--auramusic-primary) !important;
+}
+
+/* ==========================================================
+   6. PESTAÑAS DE COLA, LETRAS Y RELACIONADOS
+   ========================================================== */
+#side-panel.ytmusic-player-page {
+  background: rgba(10, 13, 20, 0.9) !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  margin: 16px !important;
+  overflow: hidden !important;
+}
+
+ytmusic-tab-header-renderer[selected] {
+  color: var(--auramusic-primary) !important;
+  border-bottom: 2px solid var(--auramusic-primary) !important;
+  text-shadow: 0 0 10px var(--auramusic-glow) !important;
+}
+
+/* ==========================================================
+   7. TEMAS VISUALES EXCLUSIVOS
+   ========================================================== */
+
+/* TEMA OLED PURE BLACK */
 body.auramusic-theme-oled,
 body.auramusic-theme-oled ytmusic-app,
-body.auramusic-theme-oled #nav-bar-background.ytmusic-nav-bar,
-body.auramusic-theme-oled ytmusic-nav-bar,
-body.auramusic-theme-oled ytmusic-player-bar,
 body.auramusic-theme-oled ytmusic-browse-response,
 body.auramusic-theme-oled ytmusic-player-page,
 body.auramusic-theme-oled #main-panel.ytmusic-player-page,
-body.auramusic-theme-oled #side-panel.ytmusic-player-page,
-body.auramusic-theme-oled ytmusic-app-layout,
-body.auramusic-theme-oled #player-bar-background.ytmusic-player-bar {
+body.auramusic-theme-oled ytmusic-app-layout {
   background: #000000 !important;
   background-color: #000000 !important;
 }
 
+body.auramusic-theme-oled ytmusic-nav-bar,
+body.auramusic-theme-oled ytmusic-guide-renderer,
 body.auramusic-theme-oled ytmusic-player-bar {
-  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.8) !important;
+  background: #000000 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-body.auramusic-theme-oled tp-yt-paper-slider #primaryProgress.tp-yt-paper-progress {
-  background: var(--auramusic-primary) !important;
-  box-shadow: 0 0 12px var(--auramusic-primary) !important;
-}
-
-body.auramusic-theme-oled tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
-  background: #ffffff !important;
-  box-shadow: 0 0 10px var(--auramusic-primary) !important;
-}
-
-/* ==========================================================
-   2. TEMA: CYBERPUNK NEON (Violeta, Neón Cian y Resplandores)
-   ========================================================== */
+/* TEMA CYBERPUNK NEON */
 body.auramusic-theme-cyberpunk {
   --auramusic-primary: #00f2fe;
   --auramusic-secondary: #ff007f;
@@ -55,61 +292,25 @@ body.auramusic-theme-cyberpunk {
 }
 
 body.auramusic-theme-cyberpunk ytmusic-app,
-body.auramusic-theme-cyberpunk #nav-bar-background.ytmusic-nav-bar,
-body.auramusic-theme-cyberpunk #player-bar-background.ytmusic-player-bar,
 body.auramusic-theme-cyberpunk ytmusic-browse-response {
-  background: #090812 !important;
-  background-color: #090812 !important;
+  background: #08070e !important;
 }
 
 body.auramusic-theme-cyberpunk ytmusic-player-bar {
-  border-top: 1px solid var(--auramusic-secondary) !important;
-  box-shadow: 0 -5px 30px rgba(255, 0, 127, 0.25) !important;
+  border-top: 1px solid #ff007f !important;
+  box-shadow: 0 -5px 30px rgba(255, 0, 127, 0.3) !important;
 }
 
-body.auramusic-theme-cyberpunk .play-pause-button.ytmusic-player-bar {
-  background: linear-gradient(135deg, #00f2fe, #ff007f) !important;
-  border-radius: 50% !important;
-  box-shadow: 0 0 15px rgba(0, 242, 254, 0.5) !important;
-}
-
-body.auramusic-theme-cyberpunk tp-yt-paper-slider #primaryProgress.tp-yt-paper-progress {
-  background: linear-gradient(90deg, #00f2fe, #ff007f) !important;
-  box-shadow: 0 0 10px #ff007f !important;
-}
-
-/* ==========================================================
-   3. TEMA: GLASSMORPHISM FROST (Cristal Esmerilado Premium)
-   ========================================================== */
-body.auramusic-theme-glass ytmusic-player-bar {
-  background: rgba(14, 18, 28, 0.82) !important;
-  backdrop-filter: blur(20px) saturate(1.4) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5) !important;
-}
-
+/* TEMA GLASSMORPHISM */
+body.auramusic-theme-glass ytmusic-player-bar,
 body.auramusic-theme-glass ytmusic-nav-bar {
-  background: rgba(14, 18, 28, 0.75) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(14, 18, 28, 0.78) !important;
+  backdrop-filter: blur(24px) saturate(1.5) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.5) !important;
 }
 
 /* ==========================================================
-   4. TEMA: AMBIENT COVER DYNAMIC (Color Dinámico de Carátula)
-   ========================================================== */
-body.auramusic-theme-dynamic tp-yt-paper-slider #primaryProgress.tp-yt-paper-progress {
-  background: var(--auramusic-ambient-color) !important;
-  box-shadow: 0 0 12px var(--auramusic-ambient-color) !important;
-}
-
-body.auramusic-theme-dynamic .play-pause-button.ytmusic-player-bar {
-  color: var(--auramusic-ambient-color) !important;
-}
-
-/* ==========================================================
-   5. ELIMINACIÓN DE DISTRACCIONES Y BANNERS (CLEAN MODE)
+   8. LIMPIEZA TOTAL Y ANTI-DISTRACCIONES (0% ANUNCIOS)
    ========================================================== */
 body.auramusic-clean-mode ytmusic-mealbar-promo-renderer,
 body.auramusic-clean-mode ytmusic-upsell-dialog-renderer,
@@ -122,27 +323,4 @@ body.auramusic-clean-mode .upgrade-button {
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
-}
-
-/* ==========================================================
-   ESTILOS GLOBALES DE MEJORA VISUAL
-   ========================================================== */
-/* Barra de desplazamiento futurista */
-::-webkit-scrollbar {
-  width: 8px !important;
-  height: 8px !important;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.4) !important;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18) !important;
-  border-radius: 8px !important;
-  border: 2px solid transparent !important;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--auramusic-primary) !important;
 }

@@ -212,13 +212,19 @@
     const ctx = canvas.getContext('2d');
     const dataArray = new Uint8Array(64);
 
-    function render() {
+    let lastRenderTime = 0;
+    function render(now) {
       animFrameId = requestAnimationFrame(render);
 
       if (state.visualizer === 'off') {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         return;
       }
+
+      // Limitar a 30 FPS para máximo rendimiento y 0% de CPU
+      const curTime = now || performance.now();
+      if (curTime - lastRenderTime < 33) return;
+      lastRenderTime = curTime;
 
       if (analyser && isAudioConnected) {
         analyser.getByteFrequencyData(dataArray);
@@ -637,17 +643,23 @@
     initVisualizerElements();
     initCleanWatchdog();
 
-    // Observar cambio de canción para adaptar el color de carátula dinámico
-    const observer = new MutationObserver(() => {
-      updateDynamicCoverColor();
-    });
-
-    const targetNode = document.querySelector('ytmusic-player-bar');
-    if (targetNode) {
-      observer.observe(targetNode, { childList: true, subtree: true, attributes: true });
-    } else {
-      setTimeout(init, 1000);
+    // Detección ultraliviana de cambio de canción (0% CPU, sin MutationObserver pesado)
+    let lastCoverSrc = '';
+    function checkSongChange() {
+      const img = document.querySelector('ytmusic-player-bar .image, #song-image img');
+      if (img && img.src && img.src !== lastCoverSrc) {
+        lastCoverSrc = img.src;
+        updateDynamicCoverColor();
+      }
     }
+
+    document.addEventListener('yt-page-data-updated', checkSongChange);
+    const video = document.querySelector('video');
+    if (video) {
+      video.addEventListener('loadeddata', checkSongChange);
+      video.addEventListener('play', checkSongChange);
+    }
+    setInterval(checkSongChange, 2000);
   }
 
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
