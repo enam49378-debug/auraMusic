@@ -1038,9 +1038,34 @@
         currentLyrics.forEach((item, index) => {
           const lineDiv = document.createElement('div');
           lineDiv.className = 'cinema-lyric-line';
-          lineDiv.textContent = item.text;
           lineDiv.dataset.time = item.time;
           lineDiv.dataset.index = index;
+
+          // Cálculo inteligente de tiempo palabra por palabra (Weighted Vocal Pacing)
+          const nextItem = currentLyrics[index + 1];
+          const rawDuration = nextItem ? (nextItem.time - item.time) : 3.5;
+          const words = item.text.trim().split(/\s+/);
+          const vocalDuration = Math.min(rawDuration * 0.88, Math.max(1.2, words.length * 0.42));
+
+          const weights = words.map(w => Math.max(2, w.length));
+          const totalWeight = weights.reduce((a, b) => a + b, 0);
+
+          let currentOffset = 0;
+          words.forEach((w, i) => {
+            const frac = weights[i] / totalWeight;
+            const wDur = frac * vocalDuration;
+            const wStart = item.time + currentOffset;
+            const wEnd = wStart + wDur;
+            currentOffset += wDur;
+
+            const span = document.createElement('span');
+            span.className = 'k-word';
+            span.textContent = w;
+            span.dataset.start = wStart.toFixed(2);
+            span.dataset.end = wEnd.toFixed(2);
+            lineDiv.appendChild(span);
+            lineDiv.appendChild(document.createTextNode(' '));
+          });
 
           lineDiv.addEventListener('click', () => {
             if (video) video.currentTime = item.time;
@@ -1125,23 +1150,32 @@
               l.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
               l.classList.remove('active-line');
-              l.style.removeProperty('--karaoke-fill');
+              const words = l.querySelectorAll('.k-word');
+              if (idx < activeIdx) {
+                words.forEach(w => w.className = 'k-word sung');
+              } else {
+                words.forEach(w => w.className = 'k-word');
+              }
             }
           });
         }
 
-        // Relleno suave palabra por palabra (Word-by-word Karaoke Progress)
+        // Actualización precisa palabra por palabra en tiempo real (60 FPS)
         if (activeIdx >= 0 && activeIdx < currentLyrics.length) {
-          const curItem = currentLyrics[activeIdx];
-          const nextItem = currentLyrics[activeIdx + 1];
-          const lineDuration = nextItem ? (nextItem.time - curItem.time) : 4.0;
-          const safeDuration = Math.max(0.8, Math.min(10.0, lineDuration));
-          const elapsed = currentTime - curItem.time;
-          const pct = Math.min(100, Math.max(0, (elapsed / safeDuration) * 100));
-
-          const activeEl = document.querySelector('.cinema-lyric-line.active-line');
-          if (activeEl) {
-            activeEl.style.setProperty('--karaoke-fill', `${pct.toFixed(1)}%`);
+          const activeLineEl = document.querySelector(`.cinema-lyric-line[data-index="${activeIdx}"]`);
+          if (activeLineEl) {
+            const words = activeLineEl.querySelectorAll('.k-word');
+            words.forEach(w => {
+              const start = parseFloat(w.dataset.start);
+              const end = parseFloat(w.dataset.end);
+              if (currentTime >= end) {
+                w.className = 'k-word sung';
+              } else if (currentTime >= start && currentTime < end) {
+                w.className = 'k-word active';
+              } else {
+                w.className = 'k-word';
+              }
+            });
           }
         }
       }

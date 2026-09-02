@@ -262,46 +262,58 @@
   gap: 24px;
 }
 
-/* Líneas de Letra - Calidad Ultra y Relleno Palabra por Palabra */
+/* Líneas de Letra y Palabras Individuales */
 .cinema-lyric-line {
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 2.4rem;
+  font-size: 2.3rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.35);
-  filter: blur(2.5px);
   cursor: pointer;
-  line-height: 1.35;
+  line-height: 1.4;
   letter-spacing: -0.02em;
   -webkit-font-smoothing: antialiased;
-  transition: filter 0.35s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), font-size 0.35s ease;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), font-size 0.35s ease;
   transform-origin: left center;
   padding: 6px 0;
   display: block;
 }
 
 .cinema-lyric-line:hover {
-  color: rgba(255, 255, 255, 0.85);
-  filter: blur(0.5px);
   transform: translateX(10px);
 }
 
-/* LÍNEA ACTIVA: Relleno Palabra por Palabra (Word-by-word Karaoke Sweep) */
 .cinema-lyric-line.active-line {
-  font-size: 3.3rem;
+  font-size: 3.2rem;
   font-weight: 850;
-  filter: blur(0) !important;
   transform: scale(1.05) translateX(14px);
   letter-spacing: -0.025em;
-  background: linear-gradient(
-    90deg,
-    #ffffff 0%,
-    #ffffff var(--karaoke-fill, 0%),
-    rgba(255, 255, 255, 0.35) var(--karaoke-fill, 0%),
-    rgba(255, 255, 255, 0.35) 100%
-  ) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  text-shadow: 0 0 35px rgba(255, 255, 255, 0.4), 0 0 70px var(--auramusic-ambient-color, rgba(255, 143, 163, 0.5));
+}
+
+/* SISTEMA DE PALABRA POR PALABRA (KARAOKE PRECISO) */
+.k-word {
+  display: inline-block;
+  opacity: 0.35;
+  filter: blur(2px);
+  color: #ffffff;
+  transition: opacity 0.2s ease, filter 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), text-shadow 0.2s ease;
+  transform-origin: center bottom;
+  margin-right: 0.15em;
+}
+
+/* Palabra cantándose en tiempo real */
+.k-word.active {
+  opacity: 1 !important;
+  filter: blur(0) !important;
+  color: #ffffff !important;
+  transform: scale(1.12) translateY(-2px) !important;
+  text-shadow: 0 0 25px rgba(255, 255, 255, 0.9), 0 0 50px var(--auramusic-ambient-color, rgba(255, 143, 163, 0.8)) !important;
+}
+
+/* Palabras ya cantadas */
+.k-word.sung {
+  opacity: 0.95 !important;
+  filter: blur(0) !important;
+  color: #ffffff !important;
+  transform: none !important;
 }
 
 /* Transición suave para cambio de carátula */
@@ -325,17 +337,15 @@ body.auramusic-theme-aesthetic .cinema-lyric-line {
   font-weight: 700 !important;
 }
 
-body.auramusic-theme-aesthetic .cinema-lyric-line.active-line {
-  background: linear-gradient(
-    90deg,
-    #ffffff 0%,
-    #ffccd5 var(--karaoke-fill, 0%),
-    rgba(255, 143, 163, 0.3) var(--karaoke-fill, 0%),
-    rgba(255, 143, 163, 0.3) 100%
-  ) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  text-shadow: 0 0 35px rgba(255, 143, 163, 0.8), 0 0 70px rgba(199, 125, 255, 0.6) !important;
+body.auramusic-theme-aesthetic .k-word.active {
+  color: #ffffff !important;
+  transform: scale(1.15) translateY(-3px) !important;
+  text-shadow: 0 0 25px #ff8fa3, 0 0 50px #c77dff !important;
+}
+
+body.auramusic-theme-aesthetic .k-word.sung {
+  color: #ffccd5 !important;
+  opacity: 1 !important;
 }
 
 /* 2. 🤖 CYBERPUNK MECHA: LAYOUT INVERTIDO (Letras a la Izquierda, Cabina a la Derecha) */
@@ -365,16 +375,17 @@ body.auramusic-theme-cyberpunk .cinema-lyric-line {
 
 body.auramusic-theme-cyberpunk .cinema-lyric-line.active-line {
   font-size: 3.4rem !important;
-  background: linear-gradient(
-    90deg,
-    #00f2fe 0%,
-    #00f2fe var(--karaoke-fill, 0%),
-    rgba(0, 242, 254, 0.3) var(--karaoke-fill, 0%),
-    rgba(0, 242, 254, 0.3) 100%
-  ) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  text-shadow: 0 0 25px #00f2fe, 0 0 50px #ff007f !important;
+}
+
+body.auramusic-theme-cyberpunk .k-word.active {
+  color: #00f2fe !important;
+  transform: scale(1.12) skewX(-4deg) translateY(-2px) !important;
+  text-shadow: 0 0 20px #00f2fe, 0 0 45px #ff007f !important;
+}
+
+body.auramusic-theme-cyberpunk .k-word.sung {
+  color: #ffffff !important;
+  opacity: 0.95 !important;
 }
 
 body.auramusic-theme-cyberpunk .cinema-lyric-line.active-line::before {
@@ -402,18 +413,27 @@ body.auramusic-theme-minecraft .cinema-lyric-line {
 
 body.auramusic-theme-minecraft .cinema-lyric-line.active-line {
   font-size: 2.4rem !important;
-  background: linear-gradient(
-    90deg,
-    #55ff55 0%,
-    #55ff55 var(--karaoke-fill, 0%),
-    #255525 var(--karaoke-fill, 0%),
-    #255525 100%
-  ) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  text-shadow: 3px 3px 0px #000, 0 0 25px #55ff55 !important;
   transform: scale(1.05) translateX(12px) !important;
   animation: mcTextBounce 0.35s steps(2) !important;
+}
+
+body.auramusic-theme-minecraft .k-word {
+  filter: none !important;
+  opacity: 0.45 !important;
+  color: #777777 !important;
+}
+
+body.auramusic-theme-minecraft .k-word.active {
+  color: #55ff55 !important;
+  opacity: 1 !important;
+  transform: translateY(-3px) scale(1.08) !important;
+  text-shadow: 3px 3px 0 #000, 0 0 25px #55ff55 !important;
+}
+
+body.auramusic-theme-minecraft .k-word.sung {
+  color: #55ff55 !important;
+  opacity: 1 !important;
+  text-shadow: 2px 2px 0 #000 !important;
 }
 
 @keyframes mcTextBounce {
