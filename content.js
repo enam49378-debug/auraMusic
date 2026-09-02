@@ -1125,8 +1125,24 @@
               l.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
               l.classList.remove('active-line');
+              l.style.removeProperty('--karaoke-fill');
             }
           });
+        }
+
+        // Relleno suave palabra por palabra (Word-by-word Karaoke Progress)
+        if (activeIdx >= 0 && activeIdx < currentLyrics.length) {
+          const curItem = currentLyrics[activeIdx];
+          const nextItem = currentLyrics[activeIdx + 1];
+          const lineDuration = nextItem ? (nextItem.time - curItem.time) : 4.0;
+          const safeDuration = Math.max(0.8, Math.min(10.0, lineDuration));
+          const elapsed = currentTime - curItem.time;
+          const pct = Math.min(100, Math.max(0, (elapsed / safeDuration) * 100));
+
+          const activeEl = document.querySelector('.cinema-lyric-line.active-line');
+          if (activeEl) {
+            activeEl.style.setProperty('--karaoke-fill', `${pct.toFixed(1)}%`);
+          }
         }
       }
 
