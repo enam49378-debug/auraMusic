@@ -846,6 +846,17 @@
   let isTranslationActive = false;
   let lyricsTranslationCache = {};
 
+  function isValidTranslationText(text) {
+    if (!text) return false;
+    const lower = text.toLowerCase();
+    if (lower.includes('query length limit exceeded')) return false;
+    if (lower.includes('mymemory warning')) return false;
+    if (lower.includes('please select two distinct languages')) return false;
+    if (lower.includes('invalid request')) return false;
+    if (lower.includes('error:')) return false;
+    return true;
+  }
+
   async function translateLyrics(lyrics, targetLang = 'es') {
     if (!lyrics || lyrics.length === 0) return lyrics;
     const cacheKey = `${lastCinemaTrackId}:::${targetLang}`;
@@ -854,29 +865,54 @@
     }
 
     try {
-      const chunkSize = 12;
+      // Agrupar con límite estricto de 320 caracteres para JAMÁS superar el límite de 500 chars de la API
+      const chunks = [];
+      let curChunk = [];
+      let curLen = 0;
+
+      lyrics.forEach(item => {
+        const len = item.text.length + 1;
+        if (curLen + len > 320 && curChunk.length > 0) {
+          chunks.push(curChunk);
+          curChunk = [item];
+          curLen = len;
+        } else {
+          curChunk.push(item);
+          curLen += len;
+        }
+      });
+      if (curChunk.length > 0) chunks.push(curChunk);
+
       const translatedList = [];
 
-      for (let i = 0; i < lyrics.length; i += chunkSize) {
-        const chunk = lyrics.slice(i, i + chunkSize);
+      for (const chunk of chunks) {
         const textToTranslate = chunk.map(l => l.text).join('\n');
         const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(textToTranslate)}&langpair=autodetect|${targetLang}`;
 
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Translation request failed');
-        const data = await res.json();
-        const rawTrans = data.responseData?.translatedText || '';
-        const transLines = rawTrans.split('\n');
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error('Translation fetch error');
+          const data = await res.json();
+          const rawTrans = data.responseData?.translatedText || '';
 
-        chunk.forEach((item, cIdx) => {
-          const trans = (transLines[cIdx] || '').trim();
-          const isDifferent = trans && trans.toLowerCase() !== item.text.toLowerCase() && !trans.includes('PLEASE SELECT TWO DISTINCT LANGUAGES');
-          translatedList.push({
-            ...item,
-            translatedText: isDifferent ? trans : null,
-            originalText: item.text
-          });
-        });
+          if (isValidTranslationText(rawTrans)) {
+            const transLines = rawTrans.split('\n');
+            chunk.forEach((item, cIdx) => {
+              const trans = (transLines[cIdx] || '').trim();
+              const isDifferent = isValidTranslationText(trans) && trans.toLowerCase() !== item.text.toLowerCase();
+              translatedList.push({
+                ...item,
+                translatedText: isDifferent ? trans : null,
+                originalText: item.text
+              });
+            });
+          } else {
+            // Descartar respuestas de error y mantener original
+            chunk.forEach(item => translatedList.push({ ...item, translatedText: null, originalText: item.text }));
+          }
+        } catch (e) {
+          chunk.forEach(item => translatedList.push({ ...item, translatedText: null, originalText: item.text }));
+        }
       }
 
       lyricsTranslationCache[cacheKey] = translatedList;
@@ -961,11 +997,11 @@
       <div class="cinema-mesh-bg"></div>
 
       <div class="cinema-top-bar">
-        <button type="button" class="cinema-header-btn" id="cinema-translate-btn" title="Traducir letra al idioma de tu sistema">
-          <span>🌐</span> <span id="cinema-translate-text">Traducir</span>
+        <button type="button" class="cinema-icon-btn" id="cinema-translate-btn" title="Traducir letra (🌐)">
+          🌐
         </button>
-        <button type="button" class="cinema-header-btn cinema-close-btn" id="cinema-close-btn">
-          <span>✕</span> <span>Salir de Letra Animada</span>
+        <button type="button" class="cinema-icon-btn cinema-close-btn" id="cinema-close-btn" title="Cerrar (✕)">
+          ✕
         </button>
       </div>
 
@@ -1014,19 +1050,16 @@
     closeBtn.addEventListener('click', closeCinemaMode);
 
     const translateBtn = document.getElementById('cinema-translate-btn');
-    const translateText = document.getElementById('cinema-translate-text');
 
     translateBtn.addEventListener('click', async () => {
       isTranslationActive = !isTranslationActive;
       translateBtn.classList.toggle('active', isTranslationActive);
 
       if (isTranslationActive) {
-        if (translateText) translateText.textContent = 'Traduciendo...';
+        translateBtn.style.opacity = '0.5';
         const targetLang = (navigator.language || 'es').split('-')[0].toLowerCase();
         currentLyrics = await translateLyrics(currentLyrics, targetLang);
-        if (translateText) translateText.textContent = `Traducido (${targetLang.toUpperCase()})`;
-      } else {
-        if (translateText) translateText.textContent = 'Traducir';
+        translateBtn.style.opacity = '1';
       }
 
       renderCinemaLyricsDOM();
