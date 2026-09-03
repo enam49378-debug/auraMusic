@@ -3,27 +3,22 @@
 **Fecha**: 3 de Septiembre de 2026  
 **De**: Antigravity (Arquitecto Principal)  
 **Para**: Trae AI / Claude (Lead Frontend & Local Developer)  
-**Asunto**: 🚀 Corrección Total de Interfaz, Menú Unificado y Suite de Temas en AuraMusic Desktop
+**Asunto**: 🚀 Diagnóstico y Solución Definitiva: Error TDZ en `content.js` y Desbloqueo CSP en Electron
 
 ---
 
-### 🛠️ Cambios Implementados en `auramusic-desktop`:
+### 🔍 Hallazgo Crítico Solucionado:
+1. **Error de Acceso Temprano (Temporal Dead Zone)**:
+   - Al cargar los ajustes iniciales, `applyTheme` invocaba `destroyJesuluto3D()` antes de que la variable `let isJesuluto3DInitialized` fuese evaluada en la línea 2309.
+   - Esto arrojaba silenciosamente: `Cannot access 'isJesuluto3DInitialized' before initialization`, abortando la inicialización del menú y de las letras.
+   - **Corrección**: Se corrigió el hoisting usando `var` y validación defensiva.
 
-1. **Eliminación de Barra de Reproducción Duplicada**:
-   - Se removió el `footer#player-bar` que duplicaba controles y comprimía la vista de YouTube Music.
-   - YouTube Music ahora ocupa el 100% de la ventana debajo de la barra superior.
+2. **Remoción de CSP en Sesión `persist:auramusic`**:
+   - Se configuró `onHeadersReceived` en Electron para suprimir `content-security-policy` en la sesión de YouTube Music, permitiendo que la inyección DOM de Three.js y los estilos temáticos se ejecuten sin restricciones de origen.
 
-2. **Unificación del Menú en Ventana Única (AuraMusic Hub)**:
-   - Se reemplazaron los 4 botones dispersos por un botón principal en la barra de título: `✨ Menú AuraMusic`.
-   - Al presionarlo (o al hacer clic en el botón flotante inferior), se abre la ventana modal con todas las secciones juntas:
-     - 🎨 **Diseños / Temas** (Komi-san, Apple Music, Cyberpunk, Minecraft, Jesuluto, Spotify, WhatsApp, Aesthetic, OLED, etc.)
-     - 🔀 **Crossfade DJ** (1s - 15s con curvas acústicas)
-     - 🎚️ **Audio & EQ** (Volume Boost 300% y EQ paramétrico de 5 bandas)
-     - 🎤 **Modo Letras** (Cinema Lyrics 3D a pantalla completa)
-     - 📊 **Visualizador** (Luces reactivas al álbum y barras)
-     - 🚫 **Limpieza** (Auto-skip de alertas)
-
-3. **Inyección Directa de la Suite Completa en el Webview**:
-   - `themes.css` (115 KB), `cinema-lyrics.css` (55 KB), `panel.css`, `three.min.js`, `crossfade.js` y `content.js` se inyectan en el webview en cada carga o navegación.
-   - Los temas transforman radicalmente la interfaz completa de YouTube Music (fondos temáticos, fuentes Google, stickers, efectos).
-   - Las letras animadas 3D (Three.js) y el Crossfade DJ funcionan fluidamente en tiempo real.
+3. **Verificación en Vivo**:
+   - `auramusic_runtime.log` confirmó:
+     - `Three.js cargado en window`
+     - `Crossfade.js cargado en window`
+     - `Content.js cargado y ejecutado`
+     - `🎉 Suite Completa de AuraMusic lista en YouTube Music.`
