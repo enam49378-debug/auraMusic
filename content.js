@@ -445,19 +445,33 @@
 
   let _fadeInterval = null;
 
-  // Control universal de volumen: altera video.volume (Hardware HTML5) y gainNode (Web Audio) juntos
+  let _lastUserVolume100 = 100;
+
+  // Control universal de audio triple: movie_player (YTM nativo), video.volume (HTML5) y gainNode (Web Audio)
   function setPlayerVolume(volumeFactor) {
     const vf = Math.max(0, Math.min(1, volumeFactor));
 
-    // 1. Control directo en el elemento <video> (Garantizado al 100% sin importar Web Audio)
+    // 1. YouTube Music Player API interna (#movie_player)
+    try {
+      const player = document.querySelector('#movie_player');
+      if (player && typeof player.setVolume === 'function') {
+        if (!_hasFadedOutThisTrack && !_isTransitioningToNext && typeof player.getVolume === 'function') {
+          const curV = player.getVolume();
+          if (curV > 0) _lastUserVolume100 = curV;
+        }
+        player.setVolume(Math.round(vf * _lastUserVolume100));
+      }
+    } catch (e) {}
+
+    // 2. Control directo en el elemento <video> de HTML5
     const video = document.querySelector('video');
     if (video) {
       try {
-        video.volume = vf;
+        video.volume = vf * (_lastUserVolume100 / 100);
       } catch (e) {}
     }
 
-    // 2. Control en Web Audio GainNode si está disponible
+    // 3. Control en Web Audio GainNode
     if (gainNode && audioCtx && audioCtx.state !== 'closed') {
       try {
         const baseGain = Math.max(0, Math.min(3.0, (state.volumeBoost || 100) / 100));
@@ -475,13 +489,37 @@
     setPlayerVolume(1.0);
   }
 
+  function triggerNextTrack() {
+    _isTransitioningToNext = true;
+    _isProgrammaticSkip = true;
+
+    // 1. YouTube Music API nativa (#movie_player)
+    try {
+      const player = document.querySelector('#movie_player');
+      if (player && typeof player.nextVideo === 'function') {
+        player.nextVideo();
+        console.log('🔀 AuraMusic: Siguiente canción disparada con movie_player.nextVideo()');
+      }
+    } catch (e) {}
+
+    // 2. Click en botón nativo
+    try {
+      const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
+      if (nextBtn) {
+        nextBtn.click();
+        console.log('🔀 AuraMusic: Siguiente canción disparada con nextBtn.click()');
+      }
+    } catch (e) {}
+
+    setTimeout(() => { _isProgrammaticSkip = false; }, 1000);
+  }
+
   // 5. Bucle maestro de detección y disparo de crossfade
   function handleCrossfadeCheck() {
     if (!state.crossfade) return;
     const video = document.querySelector('video');
     if (!video || !video.duration || isNaN(video.duration) || video.paused) return;
 
-    // Si Web Audio no se ha iniciado, intentar conectarlo silenciosamente
     if (!isAudioConnected) {
       initAudioEngine();
     }
@@ -506,9 +544,8 @@
 
       if (_isTransitioningToNext) {
         _isTransitioningToNext = false;
-        console.log(`🔀 AuraMusic: Canción B detectada -> Iniciando Fade-In suave subiendo al 100%...`);
+        console.log(`🔀 AuraMusic: Canción B iniciada -> Iniciando Fade-In suave hacia el 100%...`);
 
-        // Arrancar suavemente en volumen bajo
         setPlayerVolume(0.05);
 
         const inStartTime = performance.now();
@@ -527,9 +564,9 @@
             setPlayerVolume(1.0);
             console.log('🔀 AuraMusic: Fade-In completado. Volumen restaurado al 100%.');
           }
-        }, 40);
+        }, 30);
       } else {
-        // Reproducción manual: 100% de volumen inmediato sin recortes
+        // Reproducción manual: volumen 100% inmediato sin recortes
         setPlayerVolume(1.0);
         console.log('🔀 AuraMusic: Reproducción manual -> Volumen 100% inmediato.');
       }
@@ -541,12 +578,11 @@
     const rem = dur - cur;
 
     // B. FADE-OUT SUAVE DE LA CANCIÓN A (Al tocar rem <= fadeSec)
-    if (rem <= fadeSec && rem > 0.2 && !_hasFadedOutThisTrack) {
+    if (rem <= fadeSec && rem > 0.15 && !_hasFadedOutThisTrack) {
       _hasFadedOutThisTrack = true;
-      console.log(`🔀 AuraMusic: 📉 Iniciando Fade-Out de Canción A (Quedan ${rem.toFixed(1)}s, Duración fade: ${fadeSec}s)...`);
+      console.log(`🔀 AuraMusic: 📉 INICIANDO FADE-OUT de Canción A (Quedan ${rem.toFixed(1)}s, Duración: ${fadeSec}s)...`);
 
       if (_fadeInterval) clearInterval(_fadeInterval);
-      const fadeStartVol = (video.volume !== undefined && !isNaN(video.volume)) ? video.volume : 1.0;
       const startTime = performance.now();
       const fadeDurationMs = Math.max(800, rem * 1000);
       const curve = state.crossfadeCurve || 'equal-power';
@@ -555,38 +591,41 @@
         const elapsed = performance.now() - startTime;
         const progress = Math.min(1, elapsed / fadeDurationMs);
         const { gainA } = calculateGainCurve(progress, curve);
-        setPlayerVolume(gainA * fadeStartVol);
+        setPlayerVolume(gainA);
 
         if (progress >= 1) {
           clearInterval(_fadeInterval);
           _fadeInterval = null;
         }
-      }, 40);
+      }, 30);
     }
 
-    // C. DISPARO DE LA SIGUIENTE PISTA (A falta de 1.2s para absorber la latencia de carga de YouTube)
+    // C. DISPARO DE LA SIGUIENTE PISTA (A falta de 1.2s para enlazar antes de que muera la anterior)
     if (rem <= 1.2 && rem > 0.05 && _hasFadedOutThisTrack && !_isTransitioningToNext) {
       const now = performance.now();
       if (now - _lastSkipTime < 3500) return;
       _lastSkipTime = now;
-
-      const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
-      if (nextBtn) {
-        console.log('🔀 AuraMusic: ⏭️ Disparando siguiente pista en YouTube Music...');
-        _isTransitioningToNext = true;
-        _isProgrammaticSkip = true;
-        nextBtn.click();
-        setTimeout(() => { _isProgrammaticSkip = false; }, 800);
-      }
+      triggerNextTrack();
     }
   }
 
+  let _crossfadeWatchdogInterval = null;
+
   function setupCrossfadeListeners() {
     const video = document.querySelector('video');
-    if (!video) return;
+    if (video) {
+      video.removeEventListener('timeupdate', handleCrossfadeCheck);
+      video.addEventListener('timeupdate', handleCrossfadeCheck);
+    }
 
-    video.removeEventListener('timeupdate', handleCrossfadeCheck);
-    video.addEventListener('timeupdate', handleCrossfadeCheck);
+    // Intervalo continuo de 50ms: Nunca depende de listeners del DOM y se ejecuta con precisión
+    if (!_crossfadeWatchdogInterval) {
+      _crossfadeWatchdogInterval = setInterval(() => {
+        if (state.crossfade) {
+          handleCrossfadeCheck();
+        }
+      }, 50);
+    }
 
     if (video._auramusicXfadeEventsBound) return;
     video._auramusicXfadeEventsBound = true;
@@ -702,16 +741,18 @@
     }
   }
 
-  // Desbloquear AudioContext en la primera interacción del usuario
-  ['click', 'keydown', 'play'].forEach((evt) => {
-    window.addEventListener(evt, () => {
-      if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-      if (!isAudioConnected) {
-        initAudioEngine();
-      }
-    }, { once: true });
+  // Desbloquear y conectar AudioContext en cualquier interacción del usuario
+  function _tryConnectAudio() {
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    if (!isAudioConnected) {
+      initAudioEngine();
+    }
+  }
+
+  ['click', 'keydown', 'pointerdown'].forEach((evt) => {
+    window.addEventListener(evt, _tryConnectAudio, { passive: true });
   });
 
   // --- 5. VISUALIZADOR DE AUDIO INTEGRADO ---
