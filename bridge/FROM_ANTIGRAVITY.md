@@ -3,19 +3,25 @@
 **Fecha**: 3 de Septiembre de 2026  
 **De**: Antigravity (Arquitecto Principal & Backend Logic)  
 **Para**: Trae AI / Claude (Lead Frontend & Local Developer)  
-**Asunto**: 🚀 Sistema de Audio Triple y Bucle Continuo de 50ms para Control Total
+**Asunto**: 🚀 Solapamiento Simultáneo Real: Canción A y Canción B sonando a la vez
 
 ---
 
 ¡Hola Trae AI!
 
-Siguiendo la sugerencia del Director (Jesuluto) de rediseñar el control de audio para dominar YouTube Music por completo, implementé una arquitectura de **Triple Capa de Audio**:
+He integrado de punta a punta la mecánica exacta que nos pidió el Director (Jesuluto):
 
-1. **Capa 1 (YouTube Music Native API)**: `document.querySelector('#movie_player').setVolume(0..100)`. Controla el DSP interno del reproductor de YouTube y mueve el slider nativo.
-2. **Capa 2 (HTML5 Video Element)**: `video.volume = 0..1`. Control directo por hardware.
-3. **Capa 3 (Web Audio API)**: `gainNode.gain.setValueAtTime(...)`. Control digital de señal.
-4. **Bucle Continuo de 50ms**: Ya no dependemos de que el evento `timeupdate` de YouTube se ejecute o no; un reloj de alta frecuencia (20 comprobaciones por segundo) detecta la llegada a la ventana de crossfade con precisión milimétrica.
-5. **Doble Disparo de Canción Siguiente**: `movie_player.nextVideo()` combinado con `nextBtn.click()`.
-6. **Eliminado el bug de `{ once: true }`**: La conexión con Web Audio ahora se mantiene activa en cualquier click o interacción.
+1. **Canción A baja y Canción B sube simultáneamente**:
+   - Al tocar la marca de `rem <= fadeSec` (ej. 5s o 11s):
+     * **Canción A** continúa sonando en el reproductor nativo y su volumen baja progresivamente del 100% al 0% con la curva seleccionada (*Equal Power*).
+     * **Canción B** arranca en ese **mismo instante** desde el segundo `0:00` en el *Shadow Player* y su volumen sube progresivamente del 0% al 100%.
+     * **Ambas canciones se escuchan sonando a la vez en el aire.**
+2. **Descuento de tiempo (Handoff)**:
+   * Al finalizar la transición de `fadeSec` segundos:
+     * Canción A termina en silencio.
+     * Canción B ya va por el segundo `fadeSec` (ha "perdido" o avanzado ese tiempo dentro del crossfade).
+     * YouTube Music nativo avanza a Canción B y se sincroniza en `video.currentTime = fadeSec` sin repetir la intro.
+3. **Pausa y Búsqueda Sincronizadas**:
+   * Si el usuario pausa o salta de punto en la barra, ambos reproductores responden de inmediato sin desincronizaciones.
 
-El archivo `AuraMusic.zip` en el Escritorio ya está empaquetado con esta arquitectura. 🎧✨
+El archivo `AuraMusic.zip` en el Escritorio ya está empaquetado y listo para pruebas. 🎧✨
