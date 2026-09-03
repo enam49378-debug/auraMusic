@@ -393,6 +393,10 @@
     console.log(`🔀 AuraMusic: Crossfade cancelado limpiamente (${reason}).`);
   }
 
+  let _companionAudio = null;
+  let _companionReady = false;
+  let _currentPlayingTrackId = '';
+
   function prepareShadowPlayer(videoId) {
     if (shadowNextVideoId === videoId) return;
     destroyShadowPlayer();
@@ -401,6 +405,32 @@
     shadowIsReady = false;
     _xfadeStatus = XFADE_STATE.PREPARING_NEXT;
 
+    // 1. Intentar pre-descarga ultrarrápida mediante el servidor companion (si está activo)
+    try {
+      fetch(`http://localhost:8080/prefetch?id=${videoId}`).then(res => {
+        if (res.ok) return res.json();
+      }).then(data => {
+        if (data && data.status === 'ready' && data.url) {
+          if (_companionAudio) {
+            _companionAudio.pause();
+            _companionAudio = null;
+          }
+          _companionAudio = new Audio(data.url);
+          _companionAudio.volume = 0;
+          _companionAudio.preload = 'auto';
+          _companionReady = true;
+          shadowIsReady = true;
+          _xfadeStatus = XFADE_STATE.CROSSFADE_READY;
+          console.log(`🔀 AuraMusic Companion: Audio real descargado y listo para crossfade: ${data.url}`);
+        }
+      }).catch(() => {
+        _companionReady = false;
+      });
+    } catch (e) {
+      _companionReady = false;
+    }
+
+    // 2. Preparar el motor Offscreen como respaldo
     try {
       chrome.runtime.sendMessage({
         target: 'offscreen',
@@ -422,19 +452,30 @@
     _xfadeStatus = XFADE_STATE.CROSSFADE_ACTIVE;
 
     const targetId = forcedVideoId || shadowNextVideoId || getNextTrackVideoId();
-    console.log(`🔀 AuraMusic: 🔥 SOLAPAMIENTO SIMULTÁNEO INICIADO (${fadeSec}s) con videoId "${targetId}". Canción A baja, Canción B arranca en 0:00.`);
+    const previousTrackId = _currentPlayingTrackId;
+    _currentPlayingTrackId = targetId;
 
-    // 1. Iniciar Canción B en el motor Offscreen con permisos completos
-    try {
-      chrome.runtime.sendMessage({
-        target: 'offscreen',
-        action: 'START_CROSSFADE',
-        videoId: targetId,
-        duration: fadeSec
-      }).catch(() => {});
-    } catch (e) {}
+    console.log(`🔀 AuraMusic: 🔥 SOLAPAMIENTO SIMULTÁNEO INICIADO (${fadeSec}s) con videoId "${targetId}".`);
 
-    // 2. Fundido suave de Canción A en la página principal
+    // Modo A: Si el companion server descargó el audio real, usarlo directamente
+    if (_companionReady && _companionAudio) {
+      console.log('🔀 AuraMusic: Usando audio real pre-descargado para solapamiento simultáneo!');
+      _companionAudio.currentTime = 0;
+      _companionAudio.volume = 0.0;
+      _companionAudio.play().catch(() => {});
+    } else {
+      // Modo B: Motor Offscreen con permisos de extensión
+      try {
+        chrome.runtime.sendMessage({
+          target: 'offscreen',
+          action: 'START_CROSSFADE',
+          videoId: targetId,
+          duration: fadeSec
+        }).catch(() => {});
+      } catch (e) {}
+    }
+
+    // Fundido suave de Canción A en la página principal
     const startTime = performance.now();
     const durationMs = fadeSec * 1000;
     const curveType = state.crossfadeCurve || 'equal-power';
@@ -443,17 +484,22 @@
     shadowFadeInterval = setInterval(() => {
       const elapsed = performance.now() - startTime;
       const progress = Math.min(1, elapsed / durationMs);
-      const { gainA } = calculateGainCurve(progress, curveType);
+      const { gainA, gainB } = calculateGainCurve(progress, curveType);
 
       // Canción A desciende progresivamente en sus 3 capas de audio
       setPlayerVolume(gainA);
+
+      // Si tenemos audio companion, sube progresivamente de 0% a 100%
+      if (_companionReady && _companionAudio) {
+        _companionAudio.volume = Math.max(0, Math.min(1, gainB));
+      }
 
       if (progress >= 1) {
         clearInterval(shadowFadeInterval);
         shadowFadeInterval = null;
         _xfadeStatus = XFADE_STATE.NEXT_TRACK_ACTIVE;
 
-        console.log(`🔀 AuraMusic: Fin del solapamiento (${fadeSec}s). Canción B va por ${fadeSec}s. Handoff a YouTube Music nativo...`);
+        console.log(`🔀 AuraMusic: Fin del solapamiento (${fadeSec}s). Handoff a YouTube Music nativo...`);
 
         // Handoff: Disparamos la siguiente canción en YouTube Music
         triggerNextTrack();
@@ -468,6 +514,18 @@
             } catch (e) {}
           }
           setPlayerVolume(1.0);
+
+          if (_companionAudio) {
+            _companionAudio.pause();
+            _companionAudio = null;
+            _companionReady = false;
+          }
+
+          // Eliminar archivo de la canción anterior del disco para ahorrar espacio
+          if (previousTrackId) {
+            fetch(`http://localhost:8080/cleanup?id=${previousTrackId}`).catch(() => {});
+          }
+
           destroyShadowPlayer();
           _xfadeStatus = XFADE_STATE.IDLE;
         }, 900);
