@@ -1,110 +1,13 @@
 
-/* AISLAMIENTO TOTAL: Los elementos de WhatsApp NUNCA se muestran en otros temas */
-.whatsapp-msg-meta,
-.whatsapp-top-avatar,
-.whatsapp-top-text,
-#whatsapp-top-controls,
-.whatsapp-action-icon,
-#whatsapp-chatlist-panel,
-.cinema-whatsapp-input-bar,
-.whatsapp-encryption-badge,
-.wa-typing-bubble {
-  display: none !important;
-}
-
-body.auramusic-theme-whatsapp .whatsapp-msg-meta {
-  display: flex !important;
-}
-body.auramusic-theme-whatsapp .whatsapp-top-avatar {
-  display: block !important;
-}
-body.auramusic-theme-whatsapp .whatsapp-top-text {
-  display: flex !important;
-}
-body.auramusic-theme-whatsapp #whatsapp-top-controls {
-  display: flex !important;
-}
-body.auramusic-theme-whatsapp .whatsapp-action-icon {
-  display: inline-flex !important;
-}
-body.auramusic-theme-whatsapp #whatsapp-chatlist-panel {
-  display: flex !important;
-}
-body.auramusic-theme-whatsapp .cinema-whatsapp-input-bar {
-  display: flex !important;
-}
-body.auramusic-theme-whatsapp .whatsapp-encryption-badge {
-  display: block !important;
-}
-
-/* ==========================================================
-   AURAMUSIC - MODO LETRAS ANIMADAS: MULTI-DISEÑOS RADICALES
-   (Apple Music, Spotify, Minecraft Arcade, Cyberpunk HUD, Aesthetic, YouTube)
-   ========================================================== */
-
-/* Botón Inyectado en la pestaña de Letra (Card Flotante Ultra Elegante) */
-#auramusic-cinema-trigger-btn {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 12px !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  backdrop-filter: blur(28px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  color: #ffffff !important;
-  padding: 12px 28px !important;
-  border-radius: 28px !important;
-  font-family: inherit !important;
-  font-weight: 750 !important;
-  font-size: 0.95rem !important;
-  cursor: pointer !important;
-  margin: 16px auto 20px auto !important;
-  width: fit-content !important;
-  min-width: 280px !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.06) !important;
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-  user-select: none !important;
-}
-
-#auramusic-cinema-trigger-btn:hover {
-  background: linear-gradient(135deg, var(--auramusic-primary, #00f2fe), var(--auramusic-secondary, #7c4dff)) !important;
-  transform: translateY(-3px) scale(1.03) !important;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 30px var(--auramusic-glow, rgba(0, 229, 255, 0.5)) !important;
-  border-color: transparent !important;
-  color: #ffffff !important;
-}
-
-/* Botón de Micrófono / Letras directo en la Barra del Reproductor (Estilo Spotify/Apple) */
-.auramusic-bar-lyrics-btn {
-  background: transparent !important;
-  border: none !important;
-  font-size: 1.25rem !important;
-  cursor: pointer !important;
-  padding: 8px !important;
-  margin: 0 4px !important;
-  border-radius: 50% !important;
-  color: rgba(255, 255, 255, 0.75) !important;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.auramusic-bar-lyrics-btn:hover {
-  transform: scale(1.2) !important;
-  color: #ffffff !important;
-  filter: drop-shadow(0 0 10px var(--auramusic-primary, #00f2fe)) !important;
-}
-
-/* Pantalla Completa Base */
 #auramusic-cinema-overlay {
   position: fixed;
   inset: 0;
   background: #080a10;
   z-index: 9999999;
-  display: none;
-  opacity: 0;
-  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
   user-select: none;
 }
@@ -112,6 +15,7 @@ body.auramusic-theme-whatsapp .whatsapp-encryption-badge {
 #auramusic-cinema-overlay.active {
   display: flex !important;
   opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 /* Fondo Dinámico con Malla de Colores Fluidos */
@@ -902,7 +806,7 @@ body.auramusic-theme-oled .k-word.active {
 /* ==========================================================================
    4. 💬 DISEÑO DEDICADO: WHATSAPP CHAT (ESTRUCTURA 1:1 CON WHATSAPP WEB)
    ========================================================================== */
-body.auramusic-theme-whatsapp #auramusic-cinema-overlay {
+body.auramusic-theme-whatsapp #auramusic-cinema-overlay.active {
   background-color: #0b141a !important;
   color: #e9edef !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
@@ -1388,10 +1292,11 @@ body.auramusic-theme-whatsapp .cinema-lyric-line.wa-sent {
 
 
 
+
 /* ==========================================================================
-   🌸 TEMA DEDICADO: EL CUADERNO ESCOLAR DE KOMI-SAN (ESCRITURA A LÁPIZ Y TACHADO) 📒✏️🐾
+   🌸 TEMA DEDICADO: EL CUADERNO ESCOLAR DE KOMI-SAN (ESCRITURA SUAVE Y TACHADO) 📒✏️🐾
    ========================================================================== */
-body.auramusic-theme-komi #auramusic-cinema-overlay {
+body.auramusic-theme-komi #auramusic-cinema-overlay.active {
   background-color: #12151b !important;
   background-image: 
     radial-gradient(#1e242f 1.5px, transparent 1.5px),
@@ -1409,7 +1314,7 @@ body.auramusic-theme-komi .cinema-mesh-bg {
   display: none !important;
 }
 
-/* EL CUADERNO ABIERTO EN 2 PÁGINAS (ESTILO B5 JAPONÉS) */
+/* EL CUADERNO ABIERTO EN 2 PÁGINAS */
 body.auramusic-theme-komi .cinema-content-grid {
   background: #faf7ee !important;
   border-radius: 16px !important;
@@ -1446,7 +1351,7 @@ body.auramusic-theme-komi .cinema-content-grid::after {
   pointer-events: none !important;
 }
 
-/* 1. PÁGINA IZQUIERDA: PORTADA INTERIOR / POLAROID ESCOLAR */
+/* 1. PÁGINA IZQUIERDA: PORTADA / POLAROID ESCOLAR */
 body.auramusic-theme-komi .cinema-left {
   width: 410px !important;
   min-width: 410px !important;
@@ -1463,7 +1368,6 @@ body.auramusic-theme-komi .cinema-left {
   position: relative !important;
 }
 
-/* Carátula del disco como Polaroid pegada con cinta adhesiva */
 body.auramusic-theme-komi .cinema-artwork-box {
   width: 220px !important;
   height: 220px !important;
@@ -1476,7 +1380,6 @@ body.auramusic-theme-komi .cinema-artwork-box {
   position: relative !important;
 }
 
-/* Cinta washi tape rosa pegada arriba de la foto */
 body.auramusic-theme-komi .cinema-artwork-box::before {
   content: '';
   position: absolute !important;
@@ -1502,7 +1405,6 @@ body.auramusic-theme-komi .cinema-track-title {
   color: #1e242d !important;
   font-size: 1.35rem !important;
   font-weight: 800 !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
 body.auramusic-theme-komi .cinema-track-artist {
@@ -1533,7 +1435,7 @@ body.auramusic-theme-komi .cinema-play-btn {
   font-size: 1.2rem !important;
 }
 
-/* 2. PÁGINA DERECHA: HOJA DE RAYAS ESCOLARES CON MARGEN ROJO INTEGRADO */
+/* 2. PÁGINA DERECHA: HOJA DE RAYAS ESCOLARES */
 body.auramusic-theme-komi .cinema-right {
   flex: 1 !important;
   height: 100% !important;
@@ -1544,7 +1446,7 @@ body.auramusic-theme-komi .cinema-right {
   overflow-y: auto !important;
 }
 
-/* Cabecera escolar en la parte superior de la página (No. y Fecha) */
+/* Cabecera escolar en la parte superior */
 body.auramusic-theme-komi .cinema-right::before {
   content: 'No. 01      DATE:  /  / 2026       名前: 古見 硝子 🌸 (Komi Shouko)';
   display: block !important;
@@ -1558,32 +1460,33 @@ body.auramusic-theme-komi .cinema-right::before {
   letter-spacing: 0.5px !important;
 }
 
-/* Contenedor con la línea vertical de margen escolar roja a la izquierda */
+/* Margen vertical rojo/rosa de libreta escolar */
 body.auramusic-theme-komi .cinema-lyrics-wrapper {
   display: flex !important;
   flex-direction: column !important;
   gap: 0 !important;
   width: 100% !important;
-  border-left: 2px solid #ff85a2 !important; /* Margen escolar rojo/rosa vertical */
+  border-left: 2px solid #ff85a2 !important;
   padding-left: 18px !important;
   box-sizing: border-box !important;
 }
 
-/* CADA VERSO SE ASIENTA DIRECTAMENTE SOBRE SU RENGLÓN AZUL */
+/* LÍNEA DE RENGLÓN: CADA FRASE NUNCA ESTÁ VACÍA NI DESFASADA */
 body.auramusic-theme-komi .cinema-lyric-line {
   height: 52px !important;
   min-height: 52px !important;
   line-height: 48px !important;
-  border-bottom: 2px solid #c7d8e8 !important; /* Renglón azul de libreta exacto */
+  border-bottom: 2px solid #c7d8e8 !important; /* Renglón azul escolar */
   margin: 0 !important;
   padding: 0 10px 4px 10px !important;
   box-sizing: border-box !important;
   display: flex !important;
-  align-items: flex-end !important; /* El texto apoya sus pies sobre la línea azul */
+  align-items: flex-end !important;
   font-family: 'Patrick Hand', 'Caveat', 'Comic Sans MS', cursive, sans-serif !important;
   font-size: 1.75rem !important;
-  color: #2b3336 !important; /* Color grafito de lápiz */
+  color: #3b454e !important;
   position: relative !important;
+  opacity: 0.45 !important; /* Versos que aún no se cantan: letra a lápiz visible en el cuaderno */
   transition: opacity 0.3s ease, color 0.3s ease !important;
   letter-spacing: 0.5px !important;
   border-top: none !important;
@@ -1593,57 +1496,42 @@ body.auramusic-theme-komi .cinema-lyric-line {
   box-shadow: none !important;
 }
 
-/* VERSO QUE SE ESTÁ ESCRIBIENDO AHORA EN TIEMPO REAL */
+/* Verso cantándose activamente */
 body.auramusic-theme-komi .cinema-lyric-line.active-line {
+  opacity: 1 !important;
   color: #1a1e24 !important;
-  background: transparent !important;
-  border-bottom: 2px solid #a8b8c8 !important;
+  border-bottom: 2px solid #8ba4bb !important;
 }
 
-/* PALABRAS EN EL VERSO ACTIVO: SE ESCRIBEN CONFORME SE CANTAN */
+/* Las palabras del verso activo se van escribiendo poco a poco */
 body.auramusic-theme-komi .cinema-lyric-line.active-line .k-word {
-  opacity: 0.25 !important; /* Trazos tenues antes de cantarse */
-  transition: opacity 0.12s ease, transform 0.12s ease, color 0.12s ease !important;
+  opacity: 0.28 !important;
+  transition: opacity 0.15s cubic-bezier(0.25, 1, 0.5, 1), transform 0.15s ease, color 0.15s ease !important;
   transform: translateY(2px) !important;
   display: inline-block !important;
 }
 
-/* PALABRA CANTÁNDOSE AHORA MISMO: SE ESCRIBE CON LÁPIZ ✏️ */
+/* Palabra cantándose en este instante: aparece nítida escrita con tinta */
 body.auramusic-theme-komi .cinema-lyric-line.active-line .k-word.active {
   opacity: 1 !important;
-  transform: translateY(0) scale(1.05) !important;
-  color: #111b21 !important;
-  font-weight: 700 !important;
-  position: relative !important;
+  transform: translateY(0) scale(1.04) !important;
+  color: #0b0f14 !important;
+  font-weight: 800 !important;
 }
 
-/* Icono del lápiz animado que dibuja la palabra actual */
-body.auramusic-theme-komi .cinema-lyric-line.active-line .k-word.active::after {
-  content: '✏️' !important;
-  font-size: 0.9rem !important;
-  position: absolute !important;
-  top: -10px !important;
-  right: -14px !important;
-  animation: komiPencilDraw 0.22s infinite alternate ease-in-out !important;
-}
-
-@keyframes komiPencilDraw {
-  0% { transform: translate(0, 0) rotate(0deg); }
-  100% { transform: translate(2px, -3px) rotate(-14deg); }
-}
-
-/* Palabras ya cantadas del verso actual */
+/* Palabras ya escritas del verso actual */
 body.auramusic-theme-komi .cinema-lyric-line.active-line .k-word.sung {
   opacity: 1 !important;
   transform: translateY(0) !important;
-  color: #2b3336 !important;
+  color: #1a1e24 !important;
+  font-weight: 700 !important;
 }
 
 /* ==========================================================================
-   VERSO TERMINADO: SE COLOCA TACHADO CON TRAZO DE LÁPIZ REALISTA ✏️✖️
+   VERSO TERMINADO: TACHADO REALISTA DE IZQUIERDA A DERECHA (SIN LÁPIZ FLOTANTE)
    ========================================================================== */
 body.auramusic-theme-komi .cinema-lyric-line.sung-line {
-  opacity: 0.55 !important;
+  opacity: 0.52 !important;
   color: #63707d !important;
   position: relative !important;
 }
@@ -1654,14 +1542,14 @@ body.auramusic-theme-komi .cinema-lyric-line.sung-line .k-word {
   color: inherit !important;
 }
 
-/* La línea de lápiz que tacha el verso terminado de izquierda a derecha */
+/* Trazo de lápiz continuo que tacha el verso completado */
 body.auramusic-theme-komi .cinema-lyric-line.sung-line::after {
   content: '' !important;
   position: absolute !important;
-  left: 8px !important;
+  left: 6px !important;
   top: 55% !important;
   height: 2.5px !important;
-  background: #2b3336 !important; /* Grafito oscuro de lápiz */
+  background: #2b3336 !important;
   border-radius: 2px !important;
   transform: rotate(-0.5deg) !important;
   opacity: 0.8 !important;
@@ -1670,10 +1558,5 @@ body.auramusic-theme-komi .cinema-lyric-line.sung-line::after {
 
 @keyframes komiPencilStrike {
   0% { width: 0%; opacity: 0; }
-  100% { width: calc(100% - 16px); opacity: 0.8; }
-}
-
-/* Versos futuros aún no alcanzados: escritura tenue de fondo en la hoja */
-body.auramusic-theme-komi .cinema-lyric-line:not(.active-line):not(.sung-line) {
-  opacity: 0.35 !important;
+  100% { width: calc(100% - 12px); opacity: 0.8; }
 }

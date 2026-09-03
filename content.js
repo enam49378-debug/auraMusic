@@ -1443,6 +1443,8 @@
     if (!overlay) return;
 
     isCinemaActive = true;
+    overlay.style.display = 'flex';
+    overlay.style.pointerEvents = 'auto';
     overlay.classList.add('active');
     lastCinemaTrackId = ''; // Forzar actualización
 
@@ -1454,6 +1456,8 @@
     const overlay = document.getElementById('auramusic-cinema-overlay');
     if (overlay) {
       overlay.classList.remove('active');
+      overlay.style.display = 'none';
+      overlay.style.pointerEvents = 'none';
     }
     isCinemaActive = false;
   }
