@@ -417,18 +417,19 @@
     }
   }
 
-  function startShadowCrossfade(fadeSec) {
+  function startShadowCrossfade(fadeSec, forcedVideoId = null) {
     if (_xfadeStatus === XFADE_STATE.CROSSFADE_ACTIVE) return;
     _xfadeStatus = XFADE_STATE.CROSSFADE_ACTIVE;
 
-    console.log(`🔀 AuraMusic: 🔥 SOLAPAMIENTO SIMULTÁNEO INICIADO (${fadeSec}s). Canción A baja, Canción B arranca en 0:00.`);
+    const targetId = forcedVideoId || shadowNextVideoId || getNextTrackVideoId();
+    console.log(`🔀 AuraMusic: 🔥 SOLAPAMIENTO SIMULTÁNEO INICIADO (${fadeSec}s) con videoId "${targetId}". Canción A baja, Canción B arranca en 0:00.`);
 
     // 1. Iniciar Canción B en el motor Offscreen con permisos completos
     try {
       chrome.runtime.sendMessage({
         target: 'offscreen',
         action: 'START_CROSSFADE',
-        videoId: shadowNextVideoId,
+        videoId: targetId,
         duration: fadeSec
       }).catch(() => {});
     } catch (e) {}
@@ -608,40 +609,32 @@
 
     const rem = dur - cur;
 
-    // B. PREPARACIÓN ANTICIPADA DEL SHADOW PLAYER (Faltando entre fadeSec+15s y fadeSec)
-    if (rem <= fadeSec + 15 && rem > fadeSec && _xfadeStatus === XFADE_STATE.IDLE) {
+    // B. PRE-CARGA Y PRE-CALENTAMIENTO DE LA CANCIÓN B (30s antes de terminar)
+    // Esto precarga y pre-almacena los primeros 2-3 segundos de la canción B en memoria RAM para arranque instantáneo
+    if (rem <= fadeSec + 30 && rem > fadeSec && _xfadeStatus === XFADE_STATE.IDLE) {
       const nextId = getNextTrackVideoId();
       if (nextId) {
-        console.log(`🔀 AuraMusic: Precargando Shadow Player B con videoId "${nextId}"...`);
+        console.log(`🔀 AuraMusic: Precargando y pre-calentando Canción B ("${nextId}") en RAM...`);
         prepareShadowPlayer(nextId);
       }
     }
 
-    // C. INICIO DEL SOLAPAMIENTO REAL O FADE (Al tocar rem <= fadeSec)
+    // C. INICIO DEL SOLAPAMIENTO REAL O ADAPTATIVO (Al tocar rem <= fadeSec)
     if (rem <= fadeSec && rem > 0.15 && !_hasFadedOutThisTrack) {
       _hasFadedOutThisTrack = true;
+      const effectiveFadeSec = Math.min(fadeSec, Math.max(1, Math.round(rem * 10) / 10));
 
-      // 1. Si el Shadow Player ya está precargado, lanzamos el SOLAPAMIENTO REAL SIMULTÁNEO:
-      if (shadowPlayerIframe) {
-        startShadowCrossfade(fadeSec);
-        return;
-      }
-
-      // 2. Si no estaba precargado aún (ej. salto rápido a los últimos segundos):
-      const nextId = getNextTrackVideoId();
+      const nextId = shadowNextVideoId || getNextTrackVideoId();
       if (nextId) {
-        prepareShadowPlayer(nextId);
-        setTimeout(() => {
-          startShadowCrossfade(Math.max(1, rem));
-        }, 400);
+        startShadowCrossfade(effectiveFadeSec, nextId);
         return;
       }
 
-      // 3. Si no hay ID de siguiente pista en la cola, ejecutar Fade-Out secuencial suave:
-      console.log(`🔀 AuraMusic: 📉 INICIANDO FADE-OUT de Canción A (Quedan ${rem.toFixed(1)}s, Duración: ${fadeSec}s)...`);
+      // Si no hay siguiente canción en la cola (fin de lista), ejecutar desvanecimiento suave de fin:
+      console.log(`🔀 AuraMusic: 📉 Fin de lista -> Desvanecimiento suave (${effectiveFadeSec}s restantes)...`);
       if (_fadeInterval) clearInterval(_fadeInterval);
       const startTime = performance.now();
-      const fadeDurationMs = Math.max(800, rem * 1000);
+      const fadeDurationMs = effectiveFadeSec * 1000;
       const curve = state.crossfadeCurve || 'equal-power';
 
       _fadeInterval = setInterval(() => {
