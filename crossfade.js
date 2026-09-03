@@ -392,10 +392,10 @@
           _fadeInterval = null;
           _isCrossfading = false;
 
-          // Silenciar y pausar video nativo para evitar auto-avance de YouTube
+          // Silenciar video nativo para evitar interferencias
           const v = document.querySelector('video');
           if (v) {
-            try { v.pause(); v.volume = 0; } catch (e) {}
+            try { v.volume = 0; v.muted = true; } catch (e) {}
           }
 
           _activeDeck = 'deckB';
@@ -535,21 +535,14 @@
       isPaused = _deckA.paused;
     }
 
-    if (isPaused || !dur || dur < 3) return;
+    if (!dur || dur < 3) return;
 
     // Sincronizar la barra de tiempo y el menú de YouTube Music con el Deck que está sonando
     if (_activeDeck !== 'native') {
-      const video = document.querySelector('video');
-      if (video) {
-        if (Math.abs(video.currentTime - cur) > 0.6) {
-          try { video.currentTime = cur; } catch (e) {}
-        }
-        if (video.paused && !isPaused) {
-          try { video.play(); } catch (e) {}
-        }
-        keepNativeVideoSilent();
-      }
+      updatePlayerBarUI(cur, dur);
     }
+
+    if (isPaused) return;
 
     const rem = dur - cur;
     const fadeSec = Math.max(1, Math.min(15, window.state?.crossfadeDuration || 5));
@@ -572,6 +565,39 @@
     }
   }
 
+  // Actualizar directamente la barra de progreso, minutero y slider de YouTube Music
+  function updatePlayerBarUI(cur, dur) {
+    if (!dur || dur <= 0 || isNaN(dur)) return;
+
+    // A. Actualizar texto de tiempo (ej. "0:14 / 2:48")
+    const timeInfo = document.querySelector('ytmusic-player-bar .time-info, ytmusic-player-bar #time-info, .time-info');
+    if (timeInfo) {
+      const formatTime = (sec) => {
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60);
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+      };
+      timeInfo.textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
+    }
+
+    // B. Actualizar barra deslizadora (#progress-bar)
+    const progressBar = document.querySelector('ytmusic-player-bar #progress-bar, #progress-bar');
+    if (progressBar) {
+      progressBar.value = cur;
+      progressBar.max = dur;
+      progressBar.setAttribute('value', cur);
+      progressBar.setAttribute('max', dur);
+    }
+
+    // C. Actualizar relleno visual de la barra de progreso (#primaryProgress)
+    const primaryProgress = document.querySelector('ytmusic-player-bar #primaryProgress, ytmusic-player-bar #sliderBar #primaryProgress');
+    if (primaryProgress) {
+      const pct = Math.max(0, Math.min(1, cur / dur));
+      primaryProgress.style.transform = `scaleX(${pct})`;
+      primaryProgress.style.transformOrigin = 'left center';
+    }
+  }
+
   // 14. Listeners de sincronización: Play, Pausa, Búsqueda y Clics manuales
   function setupListeners() {
     const video = document.querySelector('video');
@@ -586,30 +612,50 @@
       _watchdogInterval = setInterval(handleDualDeckCheck, 50);
     }
 
-    // Sincronizar PAUSA de YouTube Music con el Deck Activo
-    video.addEventListener('pause', () => {
-      if (_activeDeck === 'deckB' && _deckB && !_deckB.paused) {
-        try { _deckB.pause(); } catch (e) {}
-      } else if (_activeDeck === 'deckA' && _deckA && !_deckA.paused) {
-        try { _deckA.pause(); } catch (e) {}
+    // Sincronizar PLAY / PAUSE cuando el usuario hace clic en el botón de YouTube Music
+    document.addEventListener('click', (e) => {
+      const playPauseBtn = e.target.closest('#play-pause-button, ytmusic-player-bar #play-pause-button');
+      if (playPauseBtn) {
+        if (_activeDeck === 'deckB' && _deckB) {
+          if (_deckB.paused) _deckB.play().catch(() => {});
+          else _deckB.pause();
+        } else if (_activeDeck === 'deckA' && _deckA) {
+          if (_deckA.paused) _deckA.play().catch(() => {});
+          else _deckA.pause();
+        }
+      }
+    }, true);
+
+    // Sincronizar PLAY / PAUSE con la barra espaciadora
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !e.target.matches('input, textarea, select, [contenteditable="true"]')) {
+        if (_activeDeck === 'deckB' && _deckB) {
+          if (_deckB.paused) _deckB.play().catch(() => {});
+          else _deckB.pause();
+        } else if (_activeDeck === 'deckA' && _deckA) {
+          if (_deckA.paused) _deckA.play().catch(() => {});
+          else _deckA.pause();
+        }
       }
     });
 
-    // Sincronizar PLAY de YouTube Music con el Deck Activo
-    video.addEventListener('play', () => {
-      if (_activeDeck === 'deckB' && _deckB && _deckB.paused) {
-        try { _deckB.play(); } catch (e) {}
-      } else if (_activeDeck === 'deckA' && _deckA && _deckA.paused) {
-        try { _deckA.play(); } catch (e) {}
+    // Sincronizar cuando el usuario hace clic o arrastra la barra de progreso
+    document.addEventListener('input', (e) => {
+      if (e.target.matches('ytmusic-player-bar #progress-bar, #progress-bar, tp-yt-paper-slider')) {
+        const targetSec = parseFloat(e.target.value);
+        if (!isNaN(targetSec)) {
+          if (_activeDeck === 'deckB' && _deckB) _deckB.currentTime = targetSec;
+          else if (_activeDeck === 'deckA' && _deckA) _deckA.currentTime = targetSec;
+        }
       }
     });
-
-    // Sincronizar ADELANTO/RETROCESO en la barra de tiempo con el Deck Activo
-    video.addEventListener('seeking', () => {
-      if (_activeDeck === 'deckB' && _deckB) {
-        try { _deckB.currentTime = video.currentTime; } catch (e) {}
-      } else if (_activeDeck === 'deckA' && _deckA) {
-        try { _deckA.currentTime = video.currentTime; } catch (e) {}
+    document.addEventListener('change', (e) => {
+      if (e.target.matches('ytmusic-player-bar #progress-bar, #progress-bar, tp-yt-paper-slider')) {
+        const targetSec = parseFloat(e.target.value);
+        if (!isNaN(targetSec)) {
+          if (_activeDeck === 'deckB' && _deckB) _deckB.currentTime = targetSec;
+          else if (_activeDeck === 'deckA' && _deckA) _deckA.currentTime = targetSec;
+        }
       }
     });
 
