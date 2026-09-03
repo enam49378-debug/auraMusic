@@ -599,17 +599,7 @@ body.auramusic-theme-cyberpunk #guide-wrapper {
   box-shadow: 4px 0 30px rgba(0, 245, 255, 0.1) !important;
 }
 
-/* Línea de diagnóstico en la parte superior del sidebar */
-body.auramusic-theme-cyberpunk ytmusic-guide-renderer::before {
-  content: 'SYS://AURAMUSIC.NET  v2.0.77';
-  display: block !important;
-  padding: 8px 16px !important;
-  font-size: 0.68rem !important;
-  letter-spacing: 2px !important;
-  color: rgba(0, 245, 255, 0.5) !important;
-  border-bottom: 1px solid rgba(0, 245, 255, 0.15) !important;
-  font-family: 'Share Tech Mono', 'Rajdhani', monospace !important;
-}
+/* (Diagnóstico SYS eliminado para no romper el sidebar de YTM) */
 
 /* Entradas de menú: paneles de comandos HUD */
 body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer {
@@ -657,13 +647,11 @@ body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer iron-icon {
   filter: drop-shadow(0 0 6px var(--cy-cyan)) !important;
 }
 
-body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer yt-formatted-string,
-body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer span {
+body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer yt-formatted-string {
   color: #a0d8dc !important;
-  letter-spacing: 1.5px !important;
-  font-size: 0.88rem !important;
+  letter-spacing: 1px !important;
+  font-size: 0.9rem !important;
   font-weight: 600 !important;
-  text-transform: uppercase !important;
 }
 
 body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer:hover yt-formatted-string,
@@ -812,33 +800,15 @@ body.auramusic-theme-cyberpunk ytmusic-player-bar {
       rgba(8, 8, 16, 0.97) 0%,
       rgba(12, 10, 24, 0.96) 40%,
       rgba(14, 8, 20, 0.97) 100%) !important;
-  backdrop-filter: blur(30px) saturate(1.5) !important;
-  border-top: 1px solid rgba(0, 245, 255, 0.35) !important;
+  border-top: 2px solid transparent !important;
+  border-image: linear-gradient(90deg, var(--cy-magenta), var(--cy-cyan), var(--cy-magenta)) 1 !important;
   box-shadow:
     0 -4px 40px rgba(0, 245, 255, 0.12),
     0 -1px 0 rgba(255, 45, 120, 0.2),
     inset 0 1px 0 rgba(0, 245, 255, 0.08) !important;
-  position: relative !important;
 }
 
-/* Línea de progreso animada en la parte superior del player */
-body.auramusic-theme-cyberpunk ytmusic-player-bar::before {
-  content: '';
-  position: absolute !important;
-  top: -2px !important;
-  left: 0 !important;
-  height: 2px !important;
-  width: 100% !important;
-  background: linear-gradient(90deg, var(--cy-magenta), var(--cy-cyan), var(--cy-magenta)) !important;
-  background-size: 200% 100% !important;
-  animation: cyberBarPulse 3s linear infinite !important;
-  opacity: 0.7 !important;
-}
-
-@keyframes cyberBarPulse {
-  0% { background-position: 0% 0%; }
-  100% { background-position: 200% 0%; }
-}
+/* (Línea de borde animada integrada via border-image - sin ::before para evitar bugs de layout) */
 
 /* Título de la canción en el player */
 body.auramusic-theme-cyberpunk ytmusic-player-bar .title,
