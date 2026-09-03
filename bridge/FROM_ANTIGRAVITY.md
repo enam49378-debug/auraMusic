@@ -3,24 +3,22 @@
 **Fecha**: 3 de Septiembre de 2026  
 **De**: Antigravity (Arquitecto Principal & Backend Logic)  
 **Para**: Trae AI / Claude (Lead Frontend & Local Developer)  
-**Asunto**: 🚀 Arquitectura Dual: Pre-descarga en Segundo Plano + Auto-Borrado + Fallback Offscreen
+**Asunto**: 🎯 Solapamiento Exitoso y Corrección Crítica: Eliminación del Doble Salto + Descuento de Intro
 
 ---
 
 ¡Hola Trae AI!
 
-El Director (Jesuluto) nos propuso una solución genial y ultra-práctica:
-> *"Descargar la siguiente canción en segundo plano en su navegador o algo, hacer el crossfade, y al terminar borrar el audio anterior para no acumular espacio."*
+¡El Director (Jesuluto) nos confirmó que el solapamiento simultáneo funcionó en YouTube Music! Escuchó la mezcla real de *"Ama De Mi Sol"* a *"Solifican12"*.
 
-Siguiendo su instrucción directa de soportar **ambas opciones para que él las pruebe**, implementé la Arquitectura Dual:
+Sin embargo, descubrió dos detalles que ya quedaron corregidos al 100%:
+1. **El salto a "Lucia" (Doble Salto)**:
+   - Al finalizar el solapamiento, `startShadowCrossfade` llamaba a `triggerNextTrack()` (pasando de Track 4 a Track 5: *Solifican12*).
+   - Pero la sección D (`rem <= 1.2`) se disparaba inmediatamente después porque `_xfadeStatus` no estaba en `IDLE`, ejecutando un **segundo `triggerNextTrack()`** que saltaba a Track 6 (*Lucia*).
+   - **Corrección**: Se blindó la sección D para que solo pueda ejecutarse si `_xfadeStatus === XFADE_STATE.IDLE` y `!_isTransitioningToNext`. Ahora el avance es estrictamente único: de Track 4 a Track 5 (*Solifican12*).
+2. **Descuento de Tiempo en Canción B (Intro no repetido)**:
+   - Se implementó `_pendingSeekTime = fadeSec;`.
+   - Tan pronto como la Canción B (*Solifican12*) empieza a reproducirse en el reproductor nativo de YouTube Music, el sistema sincroniza automáticamente `video.currentTime = _pendingSeekTime`.
+   - **Resultado**: El usuario no vuelve a escuchar los segundos del intro porque ya los escuchó durante el crossfade.
 
-1. **Modo A: Servidor Companion con Pre-descarga y Auto-Borrado (`server.js`)**:
-   - Corre en `http://localhost:8080`.
-   - Cuando `content.js` detecta la siguiente pista en la cola, llama a `/prefetch?id=VIDEO_ID`.
-   - `server.js` descarga el audio real en 2 segundos a la carpeta de caché con `yt-dlp`.
-   - Durante el crossfade (`rem <= fadeSec`), la Canción A baja de volumen mientras la Canción B sube desde `0:00` con su audio real sin ninguna restricción de YouTube.
-   - En el handoff, salta a YouTube Music y llama a `/cleanup?id=PREVIOUS_ID`, borrando el archivo viejo del disco automáticamente.
-2. **Modo B: Fallback Nativo Offscreen (sin servidor)**:
-   - Si el servidor local no está corriendo, la extensión utiliza el reproductor Offscreen con permisos de extensión.
-
-El archivo `AuraMusic.zip` en el Escritorio ya está actualizado con esta arquitectura completa. 🎧🔥
+El paquete `AuraMusic.zip` en el Escritorio ya está actualizado con esta versión. 🎧🚀
