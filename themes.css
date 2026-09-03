@@ -83,17 +83,7 @@ tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
   background: var(--auramusic-primary, #00f2fe) !important;
 }
 
-/* CONTENCIÓN GLOBAL: PÁGINA Y MENÚ LATERAL */
-html,
-body {
-  overflow-x: hidden !important;
-  max-width: 100vw !important;
-}
-
-/* 1. EN EL INICIO: RESTAURAR EL DISEÑO NATIVO COMPLETO DE LOS CARRUSELES */
-#items.ytmusic-carousel {
-  scrollbar-width: thin;
-}
+/* CONTENCIÓN ESTRICTA EXCLUSIVAMENTE EN EL MENÚ LATERAL */
 
 /* 2. EN LOS BOTONES DE AL LADO (MENÚ LATERAL): CERO DESBORDE Y CERO SCROLL HORIZONTAL */
 #guide-wrapper,
