@@ -904,7 +904,9 @@
   // --- 9. INICIALIZACIÓN GLOBAL CUANDO EL DOM ESTÉ LISTO ---
   function init() {
     loadSettings();
-    injectMainWorldBridge();
+    if (window.AuraCrossfade) {
+      window.AuraCrossfade.init();
+    }
     injectLauncherAndHub();
     initAmbientGlowElements();
     initVisualizerElements();
