@@ -50,6 +50,22 @@
       (function() {
         function scanQueue() {
           try {
+            const player = document.querySelector('#movie_player');
+            if (player && typeof player.getPlaylist === 'function') {
+              const list = player.getPlaylist();
+              const curId = player.getVideoData?.()?.video_id;
+              const idx = (Array.isArray(list) && curId) ? list.indexOf(curId) : (typeof player.getPlaylistIndex === 'function' ? player.getPlaylistIndex() : -1);
+              if (Array.isArray(list) && idx >= 0 && idx + 1 < list.length) {
+                const nextId = list[idx + 1];
+                if (nextId && typeof nextId === 'string' && nextId.length === 11) {
+                  document.documentElement.dataset.auramusicNextVideoId = nextId;
+                  return;
+                }
+              }
+            }
+          } catch (e) {}
+
+          try {
             const page = document.querySelector('ytmusic-player-page') || document.querySelector('ytmusic-app');
             const pq = page?.playerQueue || document.querySelector('ytmusic-player-queue');
             const q = pq?.queue || page?.playerQueue?.queue;
@@ -65,20 +81,8 @@
               }
             }
           } catch (e) {}
-
-          try {
-            const player = document.querySelector('#movie_player');
-            if (player && typeof player.getPlaylist === 'function') {
-              const list = player.getPlaylist();
-              const idx = player.getPlaylistIndex();
-              if (Array.isArray(list) && idx >= 0 && idx + 1 < list.length) {
-                document.documentElement.dataset.auramusicNextVideoId = list[idx + 1];
-                return;
-              }
-            }
-          } catch (e) {}
         }
-        setInterval(scanQueue, 350);
+        setInterval(scanQueue, 300);
         scanQueue();
       })();
     `;
@@ -87,7 +91,7 @@
 
   // 3. Extracción del ID de la siguiente canción real de la lista
   function getNextTrackVideoId() {
-    // A. Del puente del contexto principal (Polymer Memory)
+    // A. Del puente del contexto principal (Polymer Memory / movie_player playlist)
     const fromBridge = document.documentElement.dataset.auramusicNextVideoId;
     if (fromBridge && typeof fromBridge === 'string' && fromBridge.length === 11) {
       return fromBridge;
@@ -96,9 +100,10 @@
     // B. De la API interna #movie_player
     try {
       const player = document.querySelector('#movie_player');
-      if (player && typeof player.getPlaylist === 'function' && typeof player.getPlaylistIndex === 'function') {
+      if (player && typeof player.getPlaylist === 'function') {
         const list = player.getPlaylist();
-        const idx = player.getPlaylistIndex();
+        const curId = player.getVideoData?.()?.video_id;
+        const idx = (Array.isArray(list) && curId) ? list.indexOf(curId) : (typeof player.getPlaylistIndex === 'function' ? player.getPlaylistIndex() : -1);
         if (Array.isArray(list) && idx >= 0 && idx + 1 < list.length) {
           const id = list[idx + 1];
           if (id && typeof id === 'string' && id.length === 11) return id;
@@ -106,7 +111,29 @@
       }
     } catch (e) {}
 
-    // C. De los elementos visibles de la cola en el DOM
+    // C. De la lista de canciones en pantalla (Álbumes / Responsive Tracklist)
+    try {
+      const allRows = Array.from(document.querySelectorAll('ytmusic-responsive-list-item-renderer'));
+      let playingIndex = -1;
+      for (let i = 0; i < allRows.length; i++) {
+        const row = allRows[i];
+        const isPlaying = row.querySelector('[play-button-state="playing"], [aria-selected="true"], .playing-icon, ytmusic-play-button-renderer[state="playing"]');
+        if (isPlaying || row.classList.contains('selected')) {
+          playingIndex = i;
+          break;
+        }
+      }
+      if (playingIndex >= 0 && playingIndex + 1 < allRows.length) {
+        const nextRow = allRows[playingIndex + 1];
+        const link = nextRow.querySelector('a[href*="watch?v="]');
+        if (link && link.href) {
+          const m = link.href.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+          if (m) return m[1];
+        }
+      }
+    } catch (e) {}
+
+    // D. De los elementos visibles de la cola en el DOM
     try {
       const currentQueueItem = document.querySelector('ytmusic-player-queue-item[play-button-state="playing"], ytmusic-player-queue-item.selected, ytmusic-player-queue-item[selected]');
       if (currentQueueItem && currentQueueItem.nextElementSibling) {
@@ -355,7 +382,7 @@
           }
 
           // Eliminar archivo de la pista anterior del disco para no ocupar espacio
-          if (previousId) {
+          if (previousId && previousId !== targetVideoId) {
             fetch(`http://localhost:8080/cleanup?id=${previousId}`).catch(() => {});
           }
 
@@ -528,6 +555,16 @@
         stopAndDestroySecondaryPlayer('crossfade_desactivado');
         setPlayerVolume(1.0);
       }
+    },
+    setDuration: function(sec) {
+      if (!window.state) window.state = {};
+      window.state.crossfadeDuration = sec;
+      console.log(`🔀 AuraMusic Crossfade: Duración actualizada a ${sec}s.`);
+    },
+    setCurve: function(curve) {
+      if (!window.state) window.state = {};
+      window.state.crossfadeCurve = curve;
+      console.log(`🔀 AuraMusic Crossfade: Curva actualizada a "${curve}".`);
     },
     setVolume: setPlayerVolume,
     stop: stopAndDestroySecondaryPlayer

@@ -43,6 +43,7 @@
   };
 
   let state = { ...defaultSettings };
+  window.state = state;
   let audioCtx = null;
   let sourceNode = null;
   let analyser = null;
@@ -843,7 +844,11 @@
     if (crossfadeSlider) {
       crossfadeSlider.addEventListener('input', (e) => {
         state.crossfadeDuration = parseInt(e.target.value, 10) || 5;
+        window.state = state;
         if (crossfadeVal) crossfadeVal.textContent = `${state.crossfadeDuration}s`;
+        if (window.AuraCrossfade) {
+          window.AuraCrossfade.setDuration(state.crossfadeDuration);
+        }
         saveSettings();
       });
     }
@@ -851,6 +856,7 @@
     if (crossfadeModeSelect) {
       crossfadeModeSelect.addEventListener('change', (e) => {
         state.crossfadeMode = e.target.value || 'real';
+        window.state = state;
         saveSettings();
         console.log(`🔀 AuraMusic: Modo de Crossfade cambiado a "${state.crossfadeMode}".`);
       });
@@ -859,6 +865,10 @@
     if (crossfadeCurveSelect) {
       crossfadeCurveSelect.addEventListener('change', (e) => {
         state.crossfadeCurve = e.target.value || 'equal-power';
+        window.state = state;
+        if (window.AuraCrossfade) {
+          window.AuraCrossfade.setCurve(state.crossfadeCurve);
+        }
         saveSettings();
         console.log(`🔀 AuraMusic: Curva de Crossfade cambiada a "${state.crossfadeCurve}".`);
       });
@@ -943,7 +953,6 @@
       onGlobalSongChange();
       runCleanWatchdog();
       checkAndInjectLyricsButton();
-      setupCrossfadeListeners();
 
       if (state.theme === 'spotify' || document.getElementById('auramusic-spotify-logo')) {
         updateSpotifyBrandElements();
