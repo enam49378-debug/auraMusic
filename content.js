@@ -230,8 +230,58 @@
     return `${src}||${text}`;
   }
 
+  // Puente inyectado en el contexto principal para leer la cola de YouTube Music directamente
+  function injectMainWorldBridge() {
+    if (document.getElementById('auramusic-main-bridge')) return;
+    const script = document.createElement('script');
+    script.id = 'auramusic-main-bridge';
+    script.textContent = `
+      (function() {
+        function scanQueue() {
+          try {
+            const page = document.querySelector('ytmusic-player-page') || document.querySelector('ytmusic-app');
+            const pq = page?.playerQueue || document.querySelector('ytmusic-player-queue');
+            const q = pq?.queue || page?.playerQueue?.queue;
+            if (q && Array.isArray(q.items) && typeof q.selectedItemIndex === 'number') {
+              const nextItem = q.items[q.selectedItemIndex + 1];
+              const renderer = nextItem?.playlistPanelVideoRenderer || 
+                               nextItem?.data?.playlistPanelVideoRenderer ||
+                               nextItem?.data?.playlistPanelVideoWrapperRenderer?.primaryRenderer?.playlistPanelVideoRenderer;
+              const vid = renderer?.videoId || nextItem?.videoId;
+              if (vid && typeof vid === 'string' && vid.length === 11) {
+                document.documentElement.dataset.auramusicNextVideoId = vid;
+                return;
+              }
+            }
+          } catch (e) {}
+
+          try {
+            const player = document.querySelector('#movie_player');
+            if (player && typeof player.getPlaylist === 'function') {
+              const list = player.getPlaylist();
+              const idx = player.getPlaylistIndex();
+              if (Array.isArray(list) && idx >= 0 && idx + 1 < list.length) {
+                document.documentElement.dataset.auramusicNextVideoId = list[idx + 1];
+                return;
+              }
+            }
+          } catch (e) {}
+        }
+        setInterval(scanQueue, 400);
+        scanQueue();
+      })();
+    `;
+    (document.head || document.documentElement).appendChild(script);
+  }
+
   // 2. Extracción del ID de la siguiente canción de la cola de YouTube Music
   function getNextTrackVideoId() {
+    // 0. ID directo obtenido desde el puente en el mundo principal de YouTube Music
+    const fromBridge = document.documentElement.dataset.auramusicNextVideoId;
+    if (fromBridge && typeof fromBridge === 'string' && fromBridge.length === 11) {
+      return fromBridge;
+    }
+
     // A. API oficial interna de YouTube (#movie_player)
     try {
       const player = document.querySelector('#movie_player');
@@ -1402,6 +1452,7 @@
   // --- 9. INICIALIZACIÓN GLOBAL CUANDO EL DOM ESTÉ LISTO ---
   function init() {
     loadSettings();
+    injectMainWorldBridge();
     injectLauncherAndHub();
     initAmbientGlowElements();
     initVisualizerElements();

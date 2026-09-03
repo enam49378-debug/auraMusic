@@ -1,21 +1,31 @@
 // AuraMusic Background Service Worker
 // Administra el documento de audio Offscreen para reproducción simultánea sin bloqueos de Autoplay
 
-async function ensureOffscreenDocument() {
-  try {
-    const existingContexts = await chrome.runtime.getContexts({
-      contextTypes: ['OFFSCREEN_DOCUMENT']
-    });
-    if (existingContexts.length > 0) return true;
+let creatingOffscreenPromise = null;
 
-    await chrome.offscreen.createDocument({
+async function ensureOffscreenDocument() {
+  if (await chrome.offscreen.hasDocument?.()) {
+    return true;
+  }
+  if (creatingOffscreenPromise) {
+    await creatingOffscreenPromise;
+    return true;
+  }
+  try {
+    creatingOffscreenPromise = chrome.offscreen.createDocument({
       url: 'offscreen.html',
       reasons: ['AUDIO_PLAYBACK'],
       justification: 'Reproducción simultánea de audio de la siguiente canción para crossfade sin restricciones de autoplay'
     });
+    await creatingOffscreenPromise;
+    creatingOffscreenPromise = null;
     return true;
-  } catch (e) {
-    console.warn('AuraMusic: Error al crear offscreen document:', e);
+  } catch (err) {
+    creatingOffscreenPromise = null;
+    if (err.message && err.message.includes('Only a single offscreen document')) {
+      return true;
+    }
+    console.warn('AuraMusic: Warning al crear offscreen document:', err);
     return false;
   }
 }

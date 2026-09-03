@@ -57,10 +57,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       setupShadowPlayer(msg.videoId);
     }
 
-    sendCommand('unMute');
-    sendCommand('seekTo', [0, true]);
-    sendCommand('setVolume', [0]);
-    sendCommand('playVideo');
+    // Bucle de reintento de arranque (10 intentos cada 150ms) para garantizar que el iframe reciba la orden en cuanto cargue
+    let playAttempts = 0;
+    const playTimer = setInterval(() => {
+      sendCommand('unMute');
+      sendCommand('seekTo', [0, true]);
+      sendCommand('playVideo');
+      playAttempts++;
+      if (playAttempts >= 12) clearInterval(playTimer);
+    }, 150);
 
     const durationMs = (msg.duration || 5) * 1000;
     const startTime = performance.now();
@@ -76,11 +81,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
       sendCommand('unMute');
       sendCommand('setVolume', [vol]);
-      sendCommand('playVideo');
 
       if (progress >= 1) {
         clearInterval(shadowFadeInterval);
         shadowFadeInterval = null;
+        clearInterval(playTimer);
         sendCommand('setVolume', [100]);
       }
     }, 35);
