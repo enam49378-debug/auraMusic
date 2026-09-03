@@ -51,6 +51,52 @@ tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
   height: 24px !important;
 }
 
+/* BARRAS DE DESPLAZAMIENTO ULTRA ELEGANTES Y DISCRETAS EN TODOS LOS MENÚS */
+::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-radius: 10px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--auramusic-primary, #00f2fe) !important;
+}
+
+/* MENÚ LATERAL Y CAJÓN DE NAVEGACIÓN: CERO DOBLES BARRAS NI ESPACIOS ROTOS */
+#guide-wrapper,
+#guide-content {
+  overflow-x: hidden !important;
+}
+
+#guide-builder-item,
+ytmusic-guide-signin-promo-renderer {
+  border-radius: 18px !important;
+  margin: 10px 12px !important;
+  padding: 8px !important;
+  transition: all 0.25s ease !important;
+}
+
+/* ESPACIADO LIMPIO EN TIEMPOS DEL REPRODUCTOR */
+ytmusic-player-bar .time-info.ytmusic-player-bar {
+  margin: 0 16px !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  white-space: nowrap !important;
+}
+
+ytmusic-player-bar #progress-bar {
+  border-radius: 8px 8px 0 0 !important;
+}
+
 /* ==========================================================================
    DISEÑO 1: 🌸 AESTHETIC PASTEL (REPRODUCTOR FLOTANTE DOCK, FLOTE Y NUBES)
    ========================================================================== */
@@ -812,4 +858,92 @@ body.auramusic-theme-spotify ytmusic-player-bar .play-pause-button {
   background: #ffffff !important;
   border-radius: 50% !important;
   color: #000000 !important;
+}
+
+/* ==========================================================================
+   MENÚS CONTEXTUALES Y DROPDOWNS PERSONALIZADOS POR CADA DISEÑO
+   ========================================================================== */
+
+/* 1. 🌸 Aesthetic Dropdowns */
+body.auramusic-theme-aesthetic ytmusic-menu-popup-renderer,
+body.auramusic-theme-aesthetic tp-yt-paper-listbox {
+  background: rgba(26, 18, 40, 0.94) !important;
+  backdrop-filter: blur(28px) !important;
+  border: 1px solid rgba(255, 143, 163, 0.35) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 143, 163, 0.3) !important;
+  padding: 8px !important;
+}
+
+body.auramusic-theme-aesthetic tp-yt-paper-item:hover {
+  background: rgba(255, 143, 163, 0.18) !important;
+  border-radius: 16px !important;
+  transform: translateX(4px) !important;
+}
+
+/* 2. ⛏️ Minecraft Dropdowns */
+body.auramusic-theme-minecraft ytmusic-menu-popup-renderer,
+body.auramusic-theme-minecraft tp-yt-paper-listbox {
+  background: #282828 !important;
+  border: 3px solid #555555 !important;
+  border-bottom-color: #151515 !important;
+  border-right-color: #151515 !important;
+  border-radius: 0px !important;
+  box-shadow: 0 10px 30px #000 !important;
+  padding: 4px !important;
+}
+
+body.auramusic-theme-minecraft tp-yt-paper-item:hover {
+  background: #3c3c3c !important;
+  color: #55ff55 !important;
+  border-radius: 0px !important;
+}
+
+/* 3. 🤖 Cyberpunk Dropdowns */
+body.auramusic-theme-cyberpunk ytmusic-menu-popup-renderer,
+body.auramusic-theme-cyberpunk tp-yt-paper-listbox {
+  background: rgba(10, 8, 20, 0.96) !important;
+  border: 1px solid #00f2fe !important;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px)) !important;
+  border-radius: 0px !important;
+  box-shadow: 0 0 25px rgba(0, 242, 254, 0.4) !important;
+  padding: 6px !important;
+}
+
+body.auramusic-theme-cyberpunk tp-yt-paper-item:hover {
+  background: rgba(0, 242, 254, 0.15) !important;
+  color: #00f2fe !important;
+  border-left: 3px solid #ff007f !important;
+}
+
+/* 4. 🍎 Apple Music Dropdowns */
+body.auramusic-theme-apple ytmusic-menu-popup-renderer,
+body.auramusic-theme-apple tp-yt-paper-listbox {
+  background: rgba(36, 36, 38, 0.92) !important;
+  backdrop-filter: blur(30px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6) !important;
+  padding: 6px !important;
+}
+
+body.auramusic-theme-apple tp-yt-paper-item:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+}
+
+/* 5. 🟢 Spotify Dropdowns */
+body.auramusic-theme-spotify ytmusic-menu-popup-renderer,
+body.auramusic-theme-spotify tp-yt-paper-listbox {
+  background: #282828 !important;
+  border: 1px solid #383838 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8) !important;
+  padding: 6px !important;
+}
+
+body.auramusic-theme-spotify tp-yt-paper-item:hover {
+  background: #3e3e3e !important;
+  color: #1ed760 !important;
+  border-radius: 8px !important;
 }
