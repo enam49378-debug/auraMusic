@@ -243,21 +243,21 @@
       _currentTrackCanonicalId = trackKey;
       _hasFadedOutThisTrack = false;
 
-      // Si venimos de la transición automática (la canción entra adelantada antes del final de la anterior):
+      // Si venimos de una transición automática entre canciones:
       if (_isTransitioningToNext) {
         _isTransitioningToNext = false;
         try {
           gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-          // Entrada suave y limpia desde 5% hasta el 100% durante el fade
+          // La nueva canción entra suave (desde 5%) y sube en rampa al 100%
           gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
-          const inTime = Math.min(fadeSec, 3.0);
+          const inTime = Math.min(fadeSec, 2.8);
           gainNode.gain.linearRampToValueAtTime(baseGain, audioCtx.currentTime + inTime);
-          console.log(`🔀 AuraMusic: Entrada en Fade-In (${inTime}s) de la canción que viene adelantada.`);
+          console.log(`🔀 AuraMusic: Entrada en Fade-In (${inTime}s) de la nueva canción.`);
         } catch (e) {
           restoreVideoFullGain(true);
         }
       } else {
-        // Reproducción manual (usuario pone una canción suelta): volumen 100% inmediato sin cortes
+        // Reproducción manual (usuario elige canción): volumen 100% inmediato sin cortes
         restoreVideoFullGain(true);
         console.log('🔀 AuraMusic: Reproducción manual -> Volumen 100% inmediato.');
       }
@@ -268,26 +268,29 @@
 
     const rem = dur - cur;
 
-    // 2. DISPARO DEL CROSSFADE: Adelantar la canción que viene para que empiece ANTES de que termine la actual
-    // Faltando exactamente fadeSec segundos, iniciamos el desvanecimiento de salida y pedimos la siguiente pista ya
-    if (rem <= fadeSec && rem > 0.4 && !_hasFadedOutThisTrack) {
+    // 2. FADE-OUT SUAVE DE LA CANCIÓN ACTUAL (Faltando fadeSec segundos)
+    // Dejamos que la canción A se desvanezca naturalmente hacia el final sin cortarla de golpe
+    if (rem <= fadeSec && rem > 1.2 && !_hasFadedOutThisTrack) {
       _hasFadedOutThisTrack = true;
-      const now = performance.now();
-      if (now - _lastSkipTime < 3500) return;
-      _lastSkipTime = now;
-
       try {
         gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
         const curGain = Math.max(0.01, gainNode.gain.value);
         gainNode.gain.setValueAtTime(curGain, audioCtx.currentTime);
-        // Atenuación suave de salida (1.2s) para dar paso inmediato a la canción entrante
-        gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
-        console.log(`🔀 AuraMusic: Adelantando la siguiente canción (${rem.toFixed(1)}s antes del final)...`);
+        // Desvanecimiento suave y progresivo hasta el final de la pista
+        gainNode.gain.linearRampToValueAtTime(0.02, audioCtx.currentTime + rem);
+        console.log(`🔀 AuraMusic: Fade-Out suave de ${fadeSec}s activo (${rem.toFixed(1)}s restantes).`);
       } catch (e) {}
+    }
 
-      // Disparar la siguiente pista inmediatamente en YouTube Music
+    // 3. CAMBIO SIN HUECOS (Disparar a falta de 1.1s cuando el volumen ya es tenue para absorber la carga de YouTube)
+    if (rem <= 1.1 && rem > 0.05 && _hasFadedOutThisTrack && !_isTransitioningToNext) {
+      const now = performance.now();
+      if (now - _lastSkipTime < 3500) return;
+      _lastSkipTime = now;
+
       const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
       if (nextBtn) {
+        console.log('🔀 AuraMusic: Conectando con la siguiente canción...');
         _isTransitioningToNext = true;
         _isProgrammaticSkip = true;
         nextBtn.click();
@@ -295,7 +298,7 @@
       }
     }
 
-    // 3. MANTENER VOLUMEN NOMINAL AL 100% DURANTE LA REPRODUCCIÓN NORMAL
+    // 4. MANTENER VOLUMEN NOMINAL AL 100% DURANTE LA REPRODUCCIÓN NORMAL
     if (!_hasFadedOutThisTrack && !_isTransitioningToNext && rem > fadeSec && cur > 1.5) {
       const curGain = gainNode.gain.value;
       if (Math.abs(curGain - baseGain) > 0.05) {
