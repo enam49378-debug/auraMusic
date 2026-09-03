@@ -688,65 +688,218 @@ body.auramusic-theme-cyberpunk .cinema-content-grid {
   grid-template-columns: 58% 42% !important;
 }
 
+/* ==========================================================================
+   4. ⚡ CYBERPUNK 2.0 — MODO LETRAS: TERMINAL DE HACKER NIGHT CITY
+   ========================================================================== */
+
+body.auramusic-theme-cyberpunk #auramusic-cinema-overlay.active {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 3px,
+      rgba(0, 245, 255, 0.018) 3px,
+      rgba(0, 245, 255, 0.018) 4px
+    ),
+    linear-gradient(180deg, #050510 0%, #080818 40%, #040410 100%) !important;
+}
+
+/* Cuadrícula de circuitos animada al fondo */
+body.auramusic-theme-cyberpunk .cinema-mesh-bg {
+  background:
+    radial-gradient(ellipse 60% 40% at 30% 50%, rgba(0, 245, 255, 0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 70% 50%, rgba(255, 45, 120, 0.06) 0%, transparent 70%) !important;
+  animation: cyberMeshPulse 6s ease-in-out infinite alternate !important;
+}
+
+@keyframes cyberMeshPulse {
+  0% { opacity: 0.7; }
+  100% { opacity: 1; filter: brightness(1.3); }
+}
+
+/* Layout: artwork a la DERECHA como antes pero con borde neón */
 body.auramusic-theme-cyberpunk .cinema-left {
   order: 2 !important;
   padding-right: 0 !important;
-  padding-left: 60px !important;
+  padding-left: 50px !important;
   align-items: flex-end !important;
+  background: transparent !important;
+  position: relative !important;
+}
+
+/* Línea de escaneo vertical en el panel izquierdo */
+body.auramusic-theme-cyberpunk .cinema-left::before {
+  content: '';
+  position: absolute !important;
+  top: 0 !important;
+  left: 45px !important;
+  width: 1px !important;
+  height: 100% !important;
+  background: linear-gradient(180deg, transparent, rgba(0, 245, 255, 0.4), transparent) !important;
+  animation: cyberVertScan 4s ease-in-out infinite !important;
+}
+
+@keyframes cyberVertScan {
+  0%, 100% { opacity: 0.3; transform: scaleY(0.6); }
+  50% { opacity: 0.8; transform: scaleY(1); }
 }
 
 body.auramusic-theme-cyberpunk .cinema-right {
   order: 1 !important;
   text-align: left !important;
+  background: transparent !important;
+  position: relative !important;
 }
 
-/* Artwork con corte angular mecha */
+/* Etiqueta "DECODING..." en la parte superior */
+body.auramusic-theme-cyberpunk .cinema-right::before {
+  content: '//  SISTEMA DE DECODIFICACIÓN DE AUDIO  ::  PROTOCOLO ACTIVO  //';
+  display: block !important;
+  font-family: 'Share Tech Mono', 'Rajdhani', monospace !important;
+  font-size: 0.65rem !important;
+  letter-spacing: 2.5px !important;
+  color: rgba(0, 245, 255, 0.4) !important;
+  margin-bottom: 16px !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid rgba(0, 245, 255, 0.12) !important;
+}
+
+/* Artwork: borde con esquinas cortadas y glow dual */
 body.auramusic-theme-cyberpunk .cinema-artwork-box {
-  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px)) !important;
+  clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px)) !important;
   border-radius: 0px !important;
-  box-shadow: 0 0 35px rgba(0, 242, 254, 0.4), 0 0 50px rgba(255, 0, 127, 0.3) !important;
+  border: 1px solid rgba(0, 245, 255, 0.4) !important;
+  box-shadow:
+    0 0 40px rgba(0, 245, 255, 0.35),
+    0 0 80px rgba(255, 45, 120, 0.2),
+    inset 0 0 30px rgba(0, 0, 0, 0.4) !important;
+  animation: cyberArtGlow 4s ease-in-out infinite alternate !important;
 }
 
+@keyframes cyberArtGlow {
+  0% {
+    box-shadow: 0 0 40px rgba(0, 245, 255, 0.35), 0 0 80px rgba(255, 45, 120, 0.2);
+    border-color: rgba(0, 245, 255, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 60px rgba(0, 245, 255, 0.5), 0 0 100px rgba(255, 45, 120, 0.35);
+    border-color: rgba(255, 45, 120, 0.5);
+  }
+}
+
+/* Info de la canción */
+body.auramusic-theme-cyberpunk .cinema-track-title {
+  color: #00f5ff !important;
+  font-family: 'Orbitron', 'Rajdhani', sans-serif !important;
+  text-shadow: 0 0 15px rgba(0, 245, 255, 0.7) !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  font-size: 1.1rem !important;
+}
+
+body.auramusic-theme-cyberpunk .cinema-track-artist {
+  color: rgba(255, 45, 120, 0.85) !important;
+  letter-spacing: 1.5px !important;
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-size: 0.85rem !important;
+}
+
+/* Botón Play del modo letras */
 body.auramusic-theme-cyberpunk .cinema-play-btn {
-  clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%) !important;
-  border-radius: 0px !important;
-  background: linear-gradient(135deg, #00f2fe, #ff007f) !important;
-  color: #06050e !important;
+  clip-path: none !important;
+  border-radius: 6px !important;
+  background: linear-gradient(135deg, #00f5ff 0%, #00b8d9 50%, #ff2d78 100%) !important;
+  color: #060610 !important;
+  font-weight: 900 !important;
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.5), 0 0 40px rgba(255, 45, 120, 0.3) !important;
+  animation: cyberPlayPulse 3s ease-in-out infinite alternate !important;
 }
 
+/* Barra de progreso del modo letras */
+body.auramusic-theme-cyberpunk .cinema-progress-bg {
+  background: rgba(0, 245, 255, 0.08) !important;
+  border-radius: 2px !important;
+  border: 1px solid rgba(0, 245, 255, 0.15) !important;
+}
+
+body.auramusic-theme-cyberpunk .cinema-progress-fill {
+  background: linear-gradient(90deg, #ff2d78 0%, #bf5fff 40%, #00f5ff 100%) !important;
+  box-shadow: 0 0 10px rgba(0, 245, 255, 0.5) !important;
+}
+
+/* ── VERSOS: TERMINAL DE CÓDIGO CON NÚMEROS DE LÍNEA ── */
 body.auramusic-theme-cyberpunk .cinema-lyric-line {
   font-family: 'Rajdhani', 'Orbitron', sans-serif !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.05em !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  color: rgba(0, 245, 255, 0.3) !important;
+  position: relative !important;
+  padding-left: 50px !important;
+  transition: color 0.3s ease, opacity 0.3s ease !important;
+  opacity: 0.5 !important;
 }
 
+/* Número de línea estilo terminal */
+body.auramusic-theme-cyberpunk .cinema-lyric-line::before {
+  content: attr(data-index);
+  position: absolute !important;
+  left: 6px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  font-size: 0.72rem !important;
+  color: rgba(255, 45, 120, 0.35) !important;
+  letter-spacing: 1px !important;
+  min-width: 28px !important;
+  text-align: right !important;
+}
+
+/* Verso activo: efecto de decode con prompt */
 body.auramusic-theme-cyberpunk .cinema-lyric-line.active-line {
-  font-size: 3.4rem !important;
+  font-size: 2.8rem !important;
+  font-weight: 800 !important;
+  color: rgba(0, 245, 255, 0.95) !important;
+  opacity: 1 !important;
+  text-shadow: 0 0 12px rgba(0, 245, 255, 0.4) !important;
+  letter-spacing: 0.06em !important;
+  padding-left: 72px !important;
 }
 
 body.auramusic-theme-cyberpunk .cinema-lyric-line.active-line::before {
-  content: '> [REC] ';
-  color: #ff007f !important;
-  -webkit-text-fill-color: #ff007f !important;
-  font-size: 2rem !important;
-  animation: cyberBlink 0.8s steps(2) infinite !important;
+  content: '▸' !important;
+  color: #ff2d78 !important;
+  font-size: 1.4rem !important;
+  left: 44px !important;
+  animation: cyberBlink 0.7s steps(2) infinite !important;
+  text-shadow: 0 0 10px #ff2d78 !important;
 }
 
+/* Palabras base del verso activo */
 body.auramusic-theme-cyberpunk .k-word {
-  color: rgba(0, 242, 254, 0.35) !important;
-  filter: blur(1.5px) !important;
+  color: rgba(0, 245, 255, 0.28) !important;
+  filter: blur(1px) !important;
+  transition: color 0.15s ease, filter 0.15s ease, text-shadow 0.15s ease !important;
 }
 
+/* Palabra cantándose AHORA: neón puro */
 body.auramusic-theme-cyberpunk .k-word.active {
-  color: #00f2fe !important;
-  
-  text-shadow: 0 0 20px #00f2fe, 0 0 45px #ff007f !important;
+  color: #00f5ff !important;
+  filter: blur(0) !important;
+  text-shadow:
+    0 0 12px #00f5ff,
+    0 0 30px rgba(0, 245, 255, 0.6),
+    0 0 60px rgba(255, 45, 120, 0.3) !important;
+  font-weight: 900 !important;
 }
 
+/* Palabras ya cantadas: blanco claro */
 body.auramusic-theme-cyberpunk .k-word.sung {
-  color: #ffffff !important;
-  opacity: 0.95 !important;
+  color: rgba(220, 240, 255, 0.9) !important;
+  filter: blur(0) !important;
+  text-shadow: 0 0 4px rgba(0, 245, 255, 0.2) !important;
 }
+
 
 /* ==========================================================================
    5. 🌸 DISEÑO DEDICADO: AESTHETIC PASTEL (NUBE CÁLIDA Y RELAJANTE)
