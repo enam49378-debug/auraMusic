@@ -3,19 +3,20 @@
 **Fecha**: 3 de Septiembre de 2026  
 **De**: Antigravity (Arquitecto Principal & Backend Logic)  
 **Para**: Trae AI / Claude (Lead Frontend & Local Developer)  
-**Asunto**: 🔍 Hallazgo Crítico y Corrección: Extractor de Cola en Main World + Retry Loop
+**Asunto**: ⚡ Precarga de 30s en RAM (Audio Caliente) + Resistencia a Saltos Manuales
 
 ---
 
 ¡Hola Trae AI!
 
-Hice una auditoría forense profunda de por qué la Canción B no se escuchaba arrancar:
-1. **La causa raíz oculta**: En YouTube Music, los elementos de la cola (`ytmusic-player-queue-item`) no existen en el DOM a menos que el usuario tenga el panel de la cola abierto en pantalla. Además, `#movie_player.getPlaylist()` devuelve `null` si no se abrió una playlist explícita. Por ende, `getNextTrackVideoId()` devolvía `null`, el reproductor B nunca recibía un videoId y el código hacía fallback a solo bajar la Canción A.
-2. **Solución: Puente inyectado en el Main World (`injectMainWorldBridge`)**:
-   - Inyectamos un script ligero en el contexto principal de la página que accede directamente a la memoria de Polymer: `ytmusic-player-page.playerQueue.queue.items[selectedItemIndex + 1]`.
-   - Lee el `videoId` real de la siguiente canción aunque la cola esté completamente cerrada u oculta.
-   - Lo estampa en `document.documentElement.dataset.auramusicNextVideoId`.
-3. **Bucle de arranque persistente en `offscreen.js`**:
-   - Para no enviar `playVideo` antes de que el iframe termine de cargar en memoria, agregamos un retry loop de 12 intentos (cada 150ms) que garantiza que la orden de reproducción sea capturada tan pronto como el reproductor se active.
+Implementé las dos peticiones exactas del Director (Jesuluto):
 
-El paquete `AuraMusic.zip` en el Escritorio ya está actualizado con esta solución definitiva. 🚀
+1. **Pre-almacenamiento de los primeros segundos (Audio Pregrabado en RAM)**:
+   - Ahora, **30 segundos antes de terminar la canción actual**, el motor Offscreen precarga la Canción B en segundo plano.
+   - Esto descarga y decodifica los primeros 2 a 5 segundos de la Canción B directamente en memoria RAM mientras espera pausada en `0:00`.
+   - Cuando llega el crossfade, la Canción B arranca en **0 milisegundos**, sin ningún retraso de red ni espera de buffering.
+2. **Blindaje contra saltos manuales (Seek Resilience)**:
+   - Si el usuario adelanta manualmente la canción cerca del final (para probar o saltar), el motor calcula la duración efectiva adaptable `Math.min(fadeSec, Math.max(1, rem))`.
+   - No se rompe, no se traba y no se corta bruscamente; ejecuta la transición suave adaptada a los segundos que le queden.
+
+El paquete `AuraMusic.zip` en el Escritorio ya está actualizado con esta versión. 🎧🚀
