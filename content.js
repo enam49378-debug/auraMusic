@@ -1003,11 +1003,19 @@
       const rawDuration = nextItem ? (nextItem.time - item.time) : 3.5;
       const words = displayText.trim().split(/\s+/).filter(w => w.length > 0);
 
-      // Sincronización vocal realista: un cantante pronuncia a ~0.4s por palabra.
-      // La animación TERMINA cuando el cantante termina de cantar, NUNCA se arrastra por silencios largos.
-      const estimatedVocalTime = words.length * 0.42;
-      const maxAllowedVocalTime = rawDuration > 2.0 ? (rawDuration * 0.65) : (rawDuration * 0.9);
-      const totalDuration = Math.min(rawDuration, Math.max(0.8, Math.min(estimatedVocalTime, maxAllowedVocalTime)));
+      // Motor vocal auto-adaptativo inteligente:
+      // Se adapta con fidelidad tanto a baladas lentas con notas sostenidas (como Chachachá) como a temas rápidos
+      let totalDuration;
+      if (rawDuration <= 4.8) {
+        // En flujo de canto normal, acompaña la voz del cantante durante el 90% del intervalo
+        totalDuration = Math.max(0.8, rawDuration * 0.90);
+      } else if (rawDuration <= 7.0) {
+        // Pausa intermedia: acompaña hasta el 80% del intervalo o ritmo de 0.52s por palabra
+        totalDuration = Math.max(words.length * 0.52, rawDuration * 0.80);
+      } else {
+        // Instrumental largo (> 7s): ritmo vocal natural holgado (0.62s por palabra), nunca apresurado
+        totalDuration = Math.min(rawDuration * 0.65, Math.max(3.2, words.length * 0.62));
+      }
 
       const weights = words.map(w => Math.max(2, w.length));
       const totalWeight = weights.reduce((a, b) => a + b, 0);
