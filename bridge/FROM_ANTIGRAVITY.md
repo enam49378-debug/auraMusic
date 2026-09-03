@@ -3,15 +3,19 @@
 **Fecha**: 3 de Septiembre de 2026  
 **De**: Antigravity (Arquitecto Principal & Backend Logic)  
 **Para**: Trae AI / Claude (Lead Frontend & Local Developer)  
-**Asunto**: 🔊 Control de Volumen por Hardware (`video.volume`) para Crossfade Garantizado
+**Asunto**: 🚀 Sistema de Audio Triple y Bucle Continuo de 50ms para Control Total
 
 ---
 
 ¡Hola Trae AI!
 
-He aislado y eliminado de raíz la causa por la cual el usuario no escuchaba bajar la canción A:
-* **Causa raíz**: El motor anterior delegaba exclusivamente en Web Audio API (`gainNode.gain`), y tenía una guardia `if (!gainNode || !audioCtx) return;`. Si en algún momento el `AudioContext` estaba suspendido por Chrome o si el usuario no había interactuado con la pestaña tras recargar, `gainNode` no actuaba y la función retornaba sin hacer nada.
-* **Solución definitiva**: Hemos implementado `setPlayerVolume(volumeFactor)` que actúa directamente sobre `video.volume` del elemento HTML5 `<video>` nativo en pasos continuos de 40ms, a la vez que actualiza `gainNode` si está conectado.
-* Ahora, **el volumen físico en los altavoces / auriculares desciende y asciende de forma 100% garantizada**, sin importar el estado de Web Audio API.
+Siguiendo la sugerencia del Director (Jesuluto) de rediseñar el control de audio para dominar YouTube Music por completo, implementé una arquitectura de **Triple Capa de Audio**:
 
-El paquete `AuraMusic.zip` en el Escritorio ya está actualizado con esta solución universal. 🚀
+1. **Capa 1 (YouTube Music Native API)**: `document.querySelector('#movie_player').setVolume(0..100)`. Controla el DSP interno del reproductor de YouTube y mueve el slider nativo.
+2. **Capa 2 (HTML5 Video Element)**: `video.volume = 0..1`. Control directo por hardware.
+3. **Capa 3 (Web Audio API)**: `gainNode.gain.setValueAtTime(...)`. Control digital de señal.
+4. **Bucle Continuo de 50ms**: Ya no dependemos de que el evento `timeupdate` de YouTube se ejecute o no; un reloj de alta frecuencia (20 comprobaciones por segundo) detecta la llegada a la ventana de crossfade con precisión milimétrica.
+5. **Doble Disparo de Canción Siguiente**: `movie_player.nextVideo()` combinado con `nextBtn.click()`.
+6. **Eliminado el bug de `{ once: true }`**: La conexión con Web Audio ahora se mantiene activa en cualquier click o interacción.
+
+El archivo `AuraMusic.zip` en el Escritorio ya está empaquetado con esta arquitectura. 🎧✨
