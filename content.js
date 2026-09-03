@@ -1732,14 +1732,18 @@
 
 
 
-// --- MODELO 3D BLOCKBENCH Y MOTOR DE ANIMACIÓN PARA EL TEMA JESULUTO ---
-const JESULUTO_DANCE_DATA = {"pose:torso": [{"tick": 60.0, "r": [0.0, 0.0, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 63.0, "r": [0.0, -0.17453294, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 67.0, "r": [0.0, 0.24434611, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 71.0, "r": [0.0, 0.052359883, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 77.0, "r": [0.0, -0.24434611, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 83.0, "r": [0.0, -0.122173056, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 101.0, "r": [0.0, 0.0, 0.0], "t": [0.0, 0.0, 0.0]}], "pose:head": [{"tick": 60.0, "r": [-0.19198622, 0.06981319, -0.017453294], "t": [0.0, 0.0, 0.0]}, {"tick": 63.0, "r": [0.03490659, -0.40142575, -0.017453294], "t": [0.0, 0.0, 0.0]}, {"tick": 65.0, "r": [0.19198622, -0.3141593, -0.122173056], "t": [0.0, 0.0, 0.0]}, {"tick": 71.0, "r": [-0.017453285, 0.122173056, 0.13962635], "t": [0.0, 0.0, 0.0]}, {"tick": 74.0, "r": [0.06981318, 0.0, 0.13962635], "t": [0.0, 0.0, 0.0]}, {"tick": 77.0, "r": [0.06981318, -0.22689281, 0.13962635], "t": [0.0, 0.0, 0.0]}, {"tick": 80.0, "r": [0.19198622, -0.5061455, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 83.0, "r": [0.20943953, -0.33161253, -0.087266445], "t": [0.0, 0.0, 0.0]}, {"tick": 86.0, "r": [0.17453295, -0.33161253, -0.03490657], "t": [0.0, 0.0, 0.0]}, {"tick": 89.0, "r": [0.052359894, 0.10471979, -0.087266445], "t": [0.0, 0.0, 0.0]}, {"tick": 92.0, "r": [0.052359894, 0.10471979, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 95.0, "r": [0.052359894, 0.0698132, 0.12217308], "t": [0.0, 0.0, 0.0]}, {"tick": 101.0, "r": [-0.17453294, -0.08726647, 0.122173056], "t": [0.0, 0.0, 0.0]}], "pose:right_arm": [{"tick": 60.0, "r": [1.1693707, 0.8028515, 0.0], "t": [0.0, -1.375, -2.25]}, {"tick": 63.0, "r": [1.1693707, 0.4188791, 0.0], "t": [0.0, -1.375, -2.25]}, {"tick": 65.0, "r": [0.9250245, 0.052359946, 0.31415927], "t": [0.0, -1.375, -2.25]}, {"tick": 67.0, "r": [0.62831855, 0.052359946, 0.31415927], "t": [0.0, -1.375, -2.25]}, {"tick": 71.0, "r": [-0.03490659, 0.052359946, 0.6632251], "t": [-0.59375, -0.78125, -1.0625]}, {"tick": 74.0, "r": [-0.03490659, 0.052359946, 0.26179934], "t": [-0.59375, -0.78125, -1.0625]}, {"tick": 77.0, "r": [0.41887906, -0.15707964, 0.45378563], "t": [0.0, 0.0, 0.0]}, {"tick": 80.0, "r": [0.7679449, -0.45378563, 0.45378563], "t": [0.0, 0.0, 0.0]}, {"tick": 83.0, "r": [1.134464, 0.03490655, 0.19198626], "t": [0.0, 0.0, 0.0]}, {"tick": 86.0, "r": [1.3613569, 0.22689277, 0.19198626], "t": [0.0, 0.0, 0.0]}, {"tick": 92.0, "r": [0.36651915, -0.20943953, 0.31415927], "t": [0.0, 0.0, 0.0]}, {"tick": 95.0, "r": [0.17453294, -0.20943953, 0.50614554], "t": [0.0, 0.0, 0.0]}, {"tick": 101.0, "r": [0.0, 0.0, 0.33161256], "t": [0.0, 0.0, 0.0]}], "pose:left_arm": [{"tick": 60.0, "r": [0.0, 0.34906587, -0.47123894], "t": [0.0, 0.0, -0.34375]}, {"tick": 63.0, "r": [0.0, 0.34906587, -0.64577186], "t": [0.0, 0.0, -0.34375]}, {"tick": 65.0, "r": [0.593412, 0.7330383, -0.40142575], "t": [0.0, 0.0, -0.34375]}, {"tick": 67.0, "r": [0.8552114, 0.8552114, -0.40142575], "t": [0.0, 0.0, -0.34375]}, {"tick": 71.0, "r": [1.3439035, 0.0, 0.0], "t": [0.96875, 0.0, 0.0]}, {"tick": 74.0, "r": [1.4486233, -0.104719765, 0.0], "t": [0.96875, 0.0, 0.0]}, {"tick": 77.0, "r": [0.5235988, 0.5585054, -0.296706], "t": [0.0, 0.0, 0.0]}, {"tick": 80.0, "r": [0.22689281, 0.33161265, -0.5585054], "t": [0.0, 0.0, 0.0]}, {"tick": 83.0, "r": [-0.087266445, 0.1919863, -0.6981318], "t": [0.0, 0.0, 0.0]}, {"tick": 86.0, "r": [-0.087266445, 0.1919863, -0.8203049], "t": [0.0, 0.0, 0.0]}, {"tick": 89.0, "r": [1.1170108, 0.6981318, -0.31415936], "t": [0.0, 0.0, 0.0]}, {"tick": 95.0, "r": [1.2566372, 0.052359946, -0.31415936], "t": [0.0, 0.0, 0.0]}, {"tick": 101.0, "r": [1.2217306, -0.38397238, -0.17453302], "t": [0.0, -0.65625, 0.0]}], "pose:low_body": [{"tick": 60.0, "r": [0.0, 0.0, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 64.0, "r": [0.104719765, -0.13962635, -0.104719765], "t": [0.0, -0.9375, 0.0]}, {"tick": 67.0, "r": [0.0, -0.13962635, -0.052359886], "t": [0.0, 0.0, 0.0]}, {"tick": 71.0, "r": [0.0, 0.2094395, 0.06981316], "t": [0.875, 0.0, 0.0]}, {"tick": 74.0, "r": [0.0, 0.0, 0.0], "t": [0.0, -0.6875, 0.0]}, {"tick": 80.0, "r": [0.0, 0.0, 0.0], "t": [-0.8125, -0.75, 0.0]}, {"tick": 83.0, "r": [-0.122173056, -0.15707964, -0.15707964], "t": [-0.8125, -0.5, 0.0]}, {"tick": 86.0, "r": [0.0, -0.052359883, 0.052359883], "t": [0.0, 0.0, 0.0]}, {"tick": 89.0, "r": [0.0, 0.104719765, 0.052359883], "t": [0.21875, -0.625, 0.0]}, {"tick": 95.0, "r": [-0.06981318, 0.22689281, 0.052359883], "t": [0.21875, -0.78125, 0.0]}, {"tick": 101.0, "r": [0.0, 0.03490659, -0.122173056], "t": [0.0, 0.0, 0.0]}], "pose:right_leg": [{"tick": 60.0, "r": [0.06981318, -0.33161253, 0.24434611], "t": [-0.125, 1.21875, -2.6875]}, {"tick": 65.0, "r": [0.34906587, 0.0, -0.2617994], "t": [0.0, 0.0, 0.0]}, {"tick": 71.0, "r": [-0.104719765, 0.0, 0.2617994], "t": [-0.3125, 0.0, -0.96875]}, {"tick": 74.0, "r": [-0.2617994, 0.0, 0.0], "t": [0.0, 0.0, -0.78125]}, {"tick": 80.0, "r": [0.0, 0.0, 0.15707964], "t": [-1.1875, 0.0, -1.6875]}, {"tick": 83.0, "r": [-0.08726647, 0.0, 0.15707964], "t": [-1.1875, 0.0, -3.15625]}, {"tick": 86.0, "r": [0.34906587, 0.0, -0.20943953], "t": [0.0, 0.0, 0.0]}, {"tick": 89.0, "r": [-0.052359883, 0.0, 0.12217303], "t": [0.0, 0.0, -2.21875]}, {"tick": 95.0, "r": [-0.052359883, 0.0, 0.40142575], "t": [-0.59375, -0.125, -2.21875]}, {"tick": 101.0, "r": [-0.13962635, 0.0, -0.296706], "t": [0.0, 0.0, 0.0]}], "pose:left_leg": [{"tick": 60.0, "r": [0.19198622, 0.45378563, -0.2792527], "t": [0.65625, 0.0, -1.5625]}, {"tick": 65.0, "r": [-0.19198622, 0.0, 0.19198622], "t": [0.0, 0.0, 0.0]}, {"tick": 71.0, "r": [-0.19198622, 0.15707964, -0.122173056], "t": [1.15625, 0.0, -0.90625]}, {"tick": 74.0, "r": [0.0, 0.0, 0.104719765], "t": [0.0, 0.34375, -2.71875]}, {"tick": 80.0, "r": [-0.03490659, 0.40142575, -0.24434611], "t": [0.6875, -0.625, -1.4375]}, {"tick": 83.0, "r": [-0.03490659, 0.40142575, -0.40142575], "t": [0.6875, -0.625, -1.4375]}, {"tick": 86.0, "r": [0.0, 0.0, 0.19198622], "t": [0.0, 0.0, 0.0]}, {"tick": 89.0, "r": [-0.38397244, 0.0, 0.19198622], "t": [0.0, 0.0, -1.34375]}, {"tick": 95.0, "r": [-0.15707964, 0.22689281, -0.052359883], "t": [1.03125, -0.25, -2.34375]}, {"tick": 101.0, "r": [-0.122173056, 0.15707964, 0.017453294], "t": [0.0, 0.0, -3.0]}]};
+
+
+// ==========================================================================
+// ⚡ MOTOR 3D BLOCKBENCH V2: RIG COMPLETO (12 CUBOS + CAPAS 3D + SKINS CUSTOM)
+// ==========================================================================
+const JESULUTO_DANCE_DATA = {"transform_overlay2": [{"tick": 60.0, "r": [0.0, 0.0, 0.17453294], "t": [0.0, 0.0, 0.0]}, {"tick": 63.0, "r": [0.0, 0.0, 0.17453294], "t": [0.0, 0.0, 0.0]}, {"tick": 65.0, "r": [0.0, 0.0, 0.06981318], "t": [0.0, 0.0, 0.0]}, {"tick": 67.0, "r": [0.0, 0.0, -0.08726645], "t": [0.0, 0.03125, 0.0]}, {"tick": 71.0, "r": [0.0, 0.0, -0.08726645], "t": [0.0, 0.0, 0.0]}, {"tick": 74.0, "r": [0.0, 0.0, 0.0], "t": [-0.03125, 0.0, 0.0]}, {"tick": 77.0, "r": [0.0, 0.0, 0.13962635], "t": [-0.03125, 0.0, 0.0]}, {"tick": 80.0, "r": [0.0, 0.0, 0.13962635], "t": [-0.03125, 0.0, 0.0]}, {"tick": 83.0, "r": [0.0, 0.0, 0.13962635], "t": [-0.03125, 0.0, 0.0]}, {"tick": 86.0, "r": [0.0, 0.0, 0.13962635], "t": [-0.03125, 0.0, 0.0]}, {"tick": 89.0, "r": [0.0, 0.0, -0.03490657], "t": [-0.03125, 0.0, 0.0]}, {"tick": 101.0, "r": [0.0, 0.0, -0.03490657], "t": [-0.03125, 0.0, 0.0]}], "pose:low_body": [{"tick": 60.0, "r": [0.0, 0.0, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 64.0, "r": [0.104719765, -0.13962635, -0.104719765], "t": [0.0, -0.9375, 0.0]}, {"tick": 67.0, "r": [0.0, -0.13962635, -0.052359886], "t": [0.0, 0.0, 0.0]}, {"tick": 71.0, "r": [0.0, 0.2094395, 0.06981316], "t": [0.875, 0.0, 0.0]}, {"tick": 74.0, "r": [0.0, 0.0, 0.0], "t": [0.0, -0.6875, 0.0]}, {"tick": 80.0, "r": [0.0, 0.0, 0.0], "t": [-0.8125, -0.75, 0.0]}, {"tick": 83.0, "r": [-0.122173056, -0.15707964, -0.15707964], "t": [-0.8125, -0.5, 0.0]}, {"tick": 86.0, "r": [0.0, -0.052359883, 0.052359883], "t": [0.0, 0.0, 0.0]}, {"tick": 89.0, "r": [0.0, 0.104719765, 0.052359883], "t": [0.21875, -0.625, 0.0]}, {"tick": 92.0, "r": [0.0, 0.104719765, 0.052359883], "t": [0.21875, 0.0, 0.0]}, {"tick": 95.0, "r": [-0.06981318, 0.22689281, 0.052359883], "t": [0.21875, -0.78125, 0.0]}, {"tick": 98.0, "r": [0.0, 0.15707964, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 101.0, "r": [0.0, 0.03490659, -0.122173056], "t": [0.0, 0.0, 0.0]}], "pose:torso": [{"tick": 60.0, "r": [0.0, 0.0, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 63.0, "r": [0.0, -0.17453294, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 67.0, "r": [0.0, 0.24434611, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 71.0, "r": [0.0, 0.052359883, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 77.0, "r": [0.0, -0.24434611, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 83.0, "r": [0.0, -0.122173056, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 101.0, "r": [0.0, 0.0, 0.0], "t": [0.0, 0.0, 0.0]}], "pose:head": [{"tick": 60.0, "r": [-0.19198622, 0.06981319, -0.017453294], "t": [0.0, 0.0, 0.0]}, {"tick": 63.0, "r": [0.03490659, -0.40142575, -0.017453294], "t": [0.0, 0.0, 0.0]}, {"tick": 65.0, "r": [0.19198622, -0.3141593, -0.122173056], "t": [0.0, 0.0, 0.0]}, {"tick": 71.0, "r": [-0.017453285, 0.122173056, 0.13962635], "t": [0.0, 0.0, 0.0]}, {"tick": 74.0, "r": [0.06981318, 0.0, 0.13962635], "t": [0.0, 0.0, 0.0]}, {"tick": 77.0, "r": [0.06981318, -0.22689281, 0.13962635], "t": [0.0, 0.0, 0.0]}, {"tick": 80.0, "r": [0.19198622, -0.5061455, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 83.0, "r": [0.20943953, -0.33161253, -0.087266445], "t": [0.0, 0.0, 0.0]}, {"tick": 86.0, "r": [0.17453295, -0.33161253, -0.03490657], "t": [0.0, 0.0, 0.0]}, {"tick": 89.0, "r": [0.052359894, 0.10471979, -0.087266445], "t": [0.0, 0.0, 0.0]}, {"tick": 92.0, "r": [0.052359894, 0.10471979, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 95.0, "r": [0.052359894, 0.0698132, 0.12217308], "t": [0.0, 0.0, 0.0]}, {"tick": 101.0, "r": [-0.17453294, -0.08726647, 0.122173056], "t": [0.0, 0.0, 0.0]}], "pose:right_arm": [{"tick": 60.0, "r": [1.1693707, 0.8028515, 0.0], "t": [0.0, -1.375, -2.25]}, {"tick": 63.0, "r": [1.1693707, 0.4188791, 0.0], "t": [0.0, -1.375, -2.25]}, {"tick": 65.0, "r": [0.9250245, 0.052359946, 0.31415927], "t": [0.0, -1.375, -2.25]}, {"tick": 67.0, "r": [0.62831855, 0.052359946, 0.31415927], "t": [0.0, -1.375, -2.25]}, {"tick": 71.0, "r": [-0.03490659, 0.052359946, 0.6632251], "t": [-0.59375, -0.78125, -1.0625]}, {"tick": 74.0, "r": [-0.03490659, 0.052359946, 0.26179934], "t": [-0.59375, -0.78125, -1.0625]}, {"tick": 77.0, "r": [0.41887906, -0.15707964, 0.45378563], "t": [0.0, 0.0, 0.0]}, {"tick": 80.0, "r": [0.7679449, -0.45378563, 0.45378563], "t": [0.0, 0.0, 0.0]}, {"tick": 83.0, "r": [1.134464, 0.03490655, 0.19198626], "t": [0.0, 0.0, 0.0]}, {"tick": 86.0, "r": [1.3613569, 0.22689277, 0.19198626], "t": [0.0, 0.0, 0.0]}, {"tick": 92.0, "r": [0.36651915, -0.20943953, 0.31415927], "t": [0.0, 0.0, 0.0]}, {"tick": 95.0, "r": [0.17453294, -0.20943953, 0.50614554], "t": [0.0, 0.0, 0.0]}, {"tick": 101.0, "r": [0.0, 0.0, 0.33161256], "t": [0.0, 0.0, 0.0]}], "pose:left_arm": [{"tick": 60.0, "r": [0.0, 0.34906587, -0.47123894], "t": [0.0, 0.0, -0.34375]}, {"tick": 63.0, "r": [0.0, 0.34906587, -0.64577186], "t": [0.0, 0.0, -0.34375]}, {"tick": 65.0, "r": [0.593412, 0.7330383, -0.40142575], "t": [0.0, 0.0, -0.34375]}, {"tick": 67.0, "r": [0.8552114, 0.8552114, -0.40142575], "t": [0.0, 0.0, -0.34375]}, {"tick": 71.0, "r": [1.3439035, 0.0, 0.0], "t": [0.96875, 0.0, 0.0]}, {"tick": 74.0, "r": [1.4486233, -0.104719765, 0.0], "t": [0.96875, 0.0, 0.0]}, {"tick": 77.0, "r": [0.5235988, 0.5585054, -0.296706], "t": [0.0, 0.0, 0.0]}, {"tick": 80.0, "r": [0.22689281, 0.33161265, -0.5585054], "t": [0.0, 0.0, 0.0]}, {"tick": 83.0, "r": [-0.087266445, 0.1919863, -0.6981318], "t": [0.0, 0.0, 0.0]}, {"tick": 86.0, "r": [-0.087266445, 0.1919863, -0.8203049], "t": [0.0, 0.0, 0.0]}, {"tick": 89.0, "r": [1.1170108, 0.6981318, -0.31415936], "t": [0.0, 0.0, 0.0]}, {"tick": 95.0, "r": [1.2566372, 0.052359946, -0.31415936], "t": [0.0, 0.0, 0.0]}, {"tick": 101.0, "r": [1.2217306, -0.38397238, -0.17453302], "t": [0.0, -0.65625, 0.0]}], "pose:right_leg": [{"tick": 60.0, "r": [0.06981318, -0.33161253, 0.24434611], "t": [-0.125, 1.21875, -2.6875]}, {"tick": 65.0, "r": [0.34906587, 0.0, -0.2617994], "t": [0.0, 0.0, 0.0]}, {"tick": 71.0, "r": [-0.104719765, 0.0, 0.2617994], "t": [-0.3125, 0.0, -0.96875]}, {"tick": 74.0, "r": [-0.2617994, 0.0, 0.0], "t": [0.0, 0.0, -0.78125]}, {"tick": 80.0, "r": [0.0, 0.0, 0.15707964], "t": [-1.1875, 0.0, -1.6875]}, {"tick": 83.0, "r": [-0.08726647, 0.0, 0.15707964], "t": [-1.1875, 0.0, -3.15625]}, {"tick": 86.0, "r": [0.34906587, 0.0, -0.20943953], "t": [0.0, 0.0, 0.0]}, {"tick": 89.0, "r": [-0.052359883, 0.0, 0.12217303], "t": [0.0, 0.0, -2.21875]}, {"tick": 95.0, "r": [-0.052359883, 0.0, 0.40142575], "t": [-0.59375, -0.125, -2.21875]}, {"tick": 101.0, "r": [-0.13962635, 0.0, -0.296706], "t": [0.0, 0.0, 0.0]}], "pose:left_leg": [{"tick": 60.0, "r": [0.19198622, 0.45378563, -0.2792527], "t": [0.65625, 0.0, -1.5625]}, {"tick": 65.0, "r": [-0.19198622, 0.0, 0.19198622], "t": [0.0, 0.0, 0.0]}, {"tick": 71.0, "r": [-0.19198622, 0.15707964, -0.122173056], "t": [1.15625, 0.0, -0.90625]}, {"tick": 74.0, "r": [0.0, 0.0, 0.104719765], "t": [0.0, 0.34375, -2.71875]}, {"tick": 80.0, "r": [-0.03490659, 0.40142575, -0.24434611], "t": [0.6875, -0.625, -1.4375]}, {"tick": 83.0, "r": [-0.03490659, 0.40142575, -0.40142575], "t": [0.6875, -0.625, -1.4375]}, {"tick": 86.0, "r": [0.0, 0.0, 0.19198622], "t": [0.0, 0.0, 0.0]}, {"tick": 89.0, "r": [-0.38397244, 0.0, 0.19198622], "t": [0.0, 0.0, -1.34375]}, {"tick": 95.0, "r": [-0.15707964, 0.22689281, -0.052359883], "t": [1.03125, -0.25, -2.34375]}, {"tick": 101.0, "r": [-0.122173056, 0.15707964, 0.017453294], "t": [0.0, 0.0, -3.0]}]};
 
 let jesulutoScene = null;
 let jesulutoCamera = null;
 let jesulutoRenderer = null;
 let jesulutoRig = null;
-let jesulutoSkinTexture = null;
+let jesulutoCurrentSkinImg = null;
 let isJesuluto3DInitialized = false;
 
 function initJesuluto3D() {
@@ -1748,158 +1752,285 @@ function initJesuluto3D() {
   if (isJesuluto3DInitialized && jesulutoRenderer) return;
 
   const width = container.clientWidth || 320;
-  const height = container.clientHeight || 460;
+  const height = container.clientHeight || 480;
 
   jesulutoScene = new THREE.Scene();
-  jesulutoCamera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
-  jesulutoCamera.position.set(0, 16, 45);
-  jesulutoCamera.lookAt(0, 14, 0);
+  jesulutoCamera = new THREE.PerspectiveCamera(38, width / height, 0.1, 1000);
+  jesulutoCamera.position.set(0, 15, 64);
+  jesulutoCamera.lookAt(0, 13, 0);
 
   jesulutoRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
   jesulutoRenderer.setSize(width, height);
   jesulutoRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  
+  // Limpiar e insertar canvas + controles de skin
   container.innerHTML = '';
   container.appendChild(jesulutoRenderer.domElement);
 
+  // Pedestal holográfico
+  const ped = document.createElement('div');
+  ped.className = 'jesuluto-stage-pedestal';
+  container.appendChild(ped);
+
+  // Botón para subir skins personalizadas
+  setupJesulutoSkinUpload(container);
+
   // Iluminación Mecha / Cyber Verde
-  const ambient = new THREE.AmbientLight(0xffffff, 0.85);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.9);
   jesulutoScene.add(ambient);
 
-  const dirLight = new THREE.DirectionalLight(0x00ff88, 0.9);
-  dirLight.position.set(10, 30, 20);
+  const dirLight = new THREE.DirectionalLight(0x00ff77, 1.1);
+  dirLight.position.set(15, 35, 25);
   jesulutoScene.add(dirLight);
 
-  const backLight = new THREE.DirectionalLight(0x00e5ff, 0.5);
-  backLight.position.set(-10, 10, -20);
+  const backLight = new THREE.DirectionalLight(0x00e5ff, 0.6);
+  backLight.position.set(-15, 15, -25);
   jesulutoScene.add(backLight);
 
-  // Cargar textura Skin de David (Minecraft)
-  const loader = new THREE.TextureLoader();
-  const skinUrl = chrome.runtime?.getURL('assets/jesuluto_skin.png') || 'assets/jesuluto_skin.png';
-
-  loader.load(skinUrl, (texture) => {
-    texture.magFilter = THREE.NearestFilter;
-    texture.minFilter = THREE.NearestFilter;
-    jesulutoSkinTexture = texture;
-    buildJesulutoMinecraftRig(texture);
-  });
+  // Cargar textura inicial (Skin guardada o David por defecto)
+  const savedSkin = localStorage.getItem('auramusic_custom_skin');
+  const defaultSkinUrl = chrome.runtime?.getURL('assets/jesuluto_skin.png') || 'assets/jesuluto_skin.png';
+  loadSkinAndBuildRig(savedSkin || defaultSkinUrl);
 
   isJesuluto3DInitialized = true;
 }
 
-function createBoxFaceMaterial(image, x, y, w, h) {
+function setupJesulutoSkinUpload(container) {
+  let controls = document.getElementById('jesuluto-skin-controls');
+  if (!controls) {
+    controls = document.createElement('div');
+    controls.id = 'jesuluto-skin-controls';
+    controls.className = 'jesuluto-skin-controls';
+    controls.innerHTML = `
+      <input type="file" id="jesuluto-skin-file-input" accept="image/png" style="display:none;">
+      <button type="button" id="jesuluto-skin-upload-btn" class="jesuluto-skin-action-btn">
+        <span>👕</span> Subir Skin (.png)
+      </button>
+      <button type="button" id="jesuluto-skin-reset-btn" class="jesuluto-skin-action-btn" style="display:none;" title="Volver a la skin original">
+        <span>↺</span>
+      </button>
+    `;
+    container.appendChild(controls);
+
+    const fileInput = controls.querySelector('#jesuluto-skin-file-input');
+    const uploadBtn = controls.querySelector('#jesuluto-skin-upload-btn');
+    const resetBtn = controls.querySelector('#jesuluto-skin-reset-btn');
+
+    uploadBtn.onclick = () => fileInput.click();
+
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const dataUrl = evt.target.result;
+        try {
+          localStorage.setItem('auramusic_custom_skin', dataUrl);
+        } catch(err) {}
+        loadSkinAndBuildRig(dataUrl);
+        if (resetBtn) resetBtn.style.display = 'inline-flex';
+      };
+      reader.readAsDataURL(file);
+    };
+
+    if (resetBtn) {
+      if (localStorage.getItem('auramusic_custom_skin')) resetBtn.style.display = 'inline-flex';
+      resetBtn.onclick = () => {
+        localStorage.removeItem('auramusic_custom_skin');
+        const defaultSkinUrl = chrome.runtime?.getURL('assets/jesuluto_skin.png') || 'assets/jesuluto_skin.png';
+        loadSkinAndBuildRig(defaultSkinUrl);
+        resetBtn.style.display = 'none';
+      };
+    }
+  }
+}
+
+function loadSkinAndBuildRig(urlOrData) {
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    jesulutoCurrentSkinImg = img;
+    buildJesulutoMinecraftRig(img);
+  };
+  img.src = urlOrData;
+}
+
+function createBoxFaceMaterial(image, x, y, w, h, isOuterLayer = false) {
   const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = Math.max(1, Math.abs(w));
+  canvas.height = Math.max(1, Math.abs(h));
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(image, x, y, w, h, 0, 0, w, h);
+
+  const sx = Math.min(x, x + w);
+  const sy = Math.min(y, y + h);
+  const sw = Math.abs(w);
+  const sh = Math.abs(h);
+
+  ctx.drawImage(image, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
   const tex = new THREE.CanvasTexture(canvas);
   tex.magFilter = THREE.NearestFilter;
   tex.minFilter = THREE.NearestFilter;
-  return new THREE.MeshLambertMaterial({ map: tex, transparent: true, alphaTest: 0.1 });
+
+  return new THREE.MeshLambertMaterial({
+    map: tex,
+    transparent: true,
+    alphaTest: isOuterLayer ? 0.35 : 0.05,
+    side: THREE.FrontSide
+  });
 }
 
-function buildJesulutoMinecraftRig(texture) {
-  const img = texture.image;
-  if (!img) return;
+function buildJesulutoMinecraftRig(img) {
+  if (!jesulutoScene) return;
+
+  // Si ya existía un rig, eliminarlo de la escena
+  if (jesulutoRig && jesulutoRig.root) {
+    jesulutoScene.remove(jesulutoRig.root);
+  }
 
   const root = new THREE.Group();
-  root.position.y = 0;
+  root.position.set(0, 0, 0);
 
-  // Helper para crear caja con 6 caras desde coordenadas de skin
-  function makePart(w, h, d, uvMap) {
-    // uvMap: [east, west, up, down, south, north]
-    // en Blockbench: [right, left, top, bottom, front, back]
+  function makePart(w, h, d, uvMap, inflate = 0, isOuter = false) {
     const mats = [
-      createBoxFaceMaterial(img, uvMap.east[0], uvMap.east[1], uvMap.east[2]-uvMap.east[0], uvMap.east[3]-uvMap.east[1]),
-      createBoxFaceMaterial(img, uvMap.west[0], uvMap.west[1], uvMap.west[2]-uvMap.west[0], uvMap.west[3]-uvMap.west[1]),
-      createBoxFaceMaterial(img, uvMap.up[0], uvMap.up[1], uvMap.up[2]-uvMap.up[0], uvMap.up[3]-uvMap.up[1]),
-      createBoxFaceMaterial(img, uvMap.down[0], uvMap.down[1], uvMap.down[2]-uvMap.down[0], uvMap.down[3]-uvMap.down[1]),
-      createBoxFaceMaterial(img, uvMap.north[0], uvMap.north[1], uvMap.north[2]-uvMap.north[0], uvMap.north[3]-uvMap.north[1]),
-      createBoxFaceMaterial(img, uvMap.south[0], uvMap.south[1], uvMap.south[2]-uvMap.south[0], uvMap.south[3]-uvMap.south[1])
+      createBoxFaceMaterial(img, uvMap.east[0], uvMap.east[1], uvMap.east[2]-uvMap.east[0], uvMap.east[3]-uvMap.east[1], isOuter),
+      createBoxFaceMaterial(img, uvMap.west[0], uvMap.west[1], uvMap.west[2]-uvMap.west[0], uvMap.west[3]-uvMap.west[1], isOuter),
+      createBoxFaceMaterial(img, uvMap.up[0], uvMap.up[1], uvMap.up[2]-uvMap.up[0], uvMap.up[3]-uvMap.up[1], isOuter),
+      createBoxFaceMaterial(img, uvMap.down[0], uvMap.down[1], uvMap.down[2]-uvMap.down[0], uvMap.down[3]-uvMap.down[1], isOuter),
+      createBoxFaceMaterial(img, uvMap.north[0], uvMap.north[1], uvMap.north[2]-uvMap.north[0], uvMap.north[3]-uvMap.north[1], isOuter),
+      createBoxFaceMaterial(img, uvMap.south[0], uvMap.south[1], uvMap.south[2]-uvMap.south[0], uvMap.south[3]-uvMap.south[1], isOuter)
     ];
-    const geom = new THREE.BoxGeometry(w, h, d);
+    const geom = new THREE.BoxGeometry(w + inflate * 2, h + inflate * 2, d + inflate * 2);
     return new THREE.Mesh(geom, mats);
   }
 
-  // 1. Torso
-  const torsoGroup = new THREE.Group();
-  torsoGroup.position.set(0, 12, 0);
+  // 1. PELVIS / LOW_BODY (Pivote de animación en y = 12)
+  const lowBodyGroup = new THREE.Group();
+  lowBodyGroup.position.set(0, 12, 0);
 
-  const torsoMesh = makePart(8, 12, 4, {
+  // 2. TORSO (Cuerpo y Chaqueta 3D)
+  const torsoGroup = new THREE.Group();
+  torsoGroup.position.set(0, 0, 0);
+
+  // Capa base torso
+  const torsoBase = makePart(8, 12, 4, {
     north: [20, 20, 28, 32], east: [16, 20, 20, 32], south: [32, 20, 40, 32],
     west: [28, 20, 32, 32], up: [20, 16, 28, 20], down: [28, 16, 36, 20]
   });
-  torsoMesh.position.set(0, 6, 0);
-  torsoGroup.add(torsoMesh);
+  torsoBase.position.set(0, 6, 0);
+  torsoGroup.add(torsoBase);
 
-  // 2. Cabeza (pivote arriba del torso en y = 12)
+  // Capa exterior torso (Chaqueta / Bufanda / Armor)
+  const torsoOuter = makePart(8, 12, 4, {
+    north: [20, 36, 28, 48], east: [16, 36, 20, 48], south: [32, 36, 40, 48],
+    west: [28, 36, 32, 48], up: [20, 32, 28, 36], down: [28, 32, 36, 36]
+  }, 0.35, true);
+  torsoOuter.position.set(0, 6, 0);
+  torsoGroup.add(torsoOuter);
+
+  // 3. CABEZA (Base + Headwear / Pelo 3D con 0.5 inflate)
   const headGroup = new THREE.Group();
-  headGroup.position.set(0, 12, 0);
+  headGroup.position.set(0, 12, 0); // Encima del torso
 
-  const headMesh = makePart(8, 8, 8, {
+  const headBase = makePart(8, 8, 8, {
     north: [8, 8, 16, 16], east: [0, 8, 8, 16], south: [24, 8, 32, 16],
     west: [16, 8, 24, 16], up: [8, 0, 16, 8], down: [16, 0, 24, 8]
   });
-  headMesh.position.set(0, 4, 0);
-  headGroup.add(headMesh);
+  headBase.position.set(0, 4, 0);
+  headGroup.add(headBase);
+
+  const headOuter = makePart(8, 8, 8, {
+    north: [40, 8, 48, 16], east: [32, 8, 40, 16], south: [56, 8, 64, 16],
+    west: [48, 8, 56, 16], up: [40, 0, 48, 8], down: [48, 0, 56, 8]
+  }, 0.55, true);
+  headOuter.position.set(0, 4, 0);
+  headGroup.add(headOuter);
   torsoGroup.add(headGroup);
 
-  // 3. Brazo Derecho (Alex 3px slim, pivote en [5, 10, 0])
+  // 4. BRAZO DERECHO (Base + Manga exterior 3D)
   const rightArmGroup = new THREE.Group();
   rightArmGroup.position.set(5.5, 10, 0);
 
-  const rightArmMesh = makePart(3, 12, 4, {
+  const rightArmBase = makePart(3, 12, 4, {
     north: [44, 20, 47, 32], east: [40, 20, 44, 32], south: [51, 20, 54, 32],
     west: [47, 20, 51, 32], up: [44, 16, 47, 20], down: [47, 16, 50, 20]
   });
-  rightArmMesh.position.set(0, -5, 0);
-  rightArmGroup.add(rightArmMesh);
+  rightArmBase.position.set(0, -5, 0);
+  rightArmGroup.add(rightArmBase);
+
+  const rightArmOuter = makePart(3, 12, 4, {
+    north: [44, 36, 47, 48], east: [40, 36, 44, 48], south: [51, 36, 54, 48],
+    west: [47, 36, 51, 48], up: [44, 32, 47, 36], down: [47, 32, 50, 36]
+  }, 0.3, true);
+  rightArmOuter.position.set(0, -5, 0);
+  rightArmGroup.add(rightArmOuter);
   torsoGroup.add(rightArmGroup);
 
-  // 4. Brazo Izquierdo (Alex 3px slim, pivote en [-5.5, 10, 0])
+  // 5. BRAZO IZQUIERDO (Base + Manga exterior 3D)
   const leftArmGroup = new THREE.Group();
   leftArmGroup.position.set(-5.5, 10, 0);
 
-  const leftArmMesh = makePart(3, 12, 4, {
+  const leftArmBase = makePart(3, 12, 4, {
     north: [36, 52, 39, 64], east: [32, 52, 36, 64], south: [43, 52, 46, 64],
     west: [39, 52, 43, 64], up: [36, 48, 39, 52], down: [39, 48, 42, 52]
   });
-  leftArmMesh.position.set(0, -5, 0);
-  leftArmGroup.add(leftArmMesh);
+  leftArmBase.position.set(0, -5, 0);
+  leftArmGroup.add(leftArmBase);
+
+  const leftArmOuter = makePart(3, 12, 4, {
+    north: [52, 52, 55, 64], east: [48, 52, 52, 64], south: [59, 52, 62, 64],
+    west: [55, 52, 59, 64], up: [52, 48, 55, 52], down: [55, 48, 58, 52]
+  }, 0.3, true);
+  leftArmOuter.position.set(0, -5, 0);
+  leftArmGroup.add(leftArmOuter);
   torsoGroup.add(leftArmGroup);
 
-  root.add(torsoGroup);
+  lowBodyGroup.add(torsoGroup);
 
-  // 5. Pierna Derecha (pivote en [2, 12, 0])
+  // 6. PIERNA DERECHA (Base + Pantalón exterior 3D)
   const rightLegGroup = new THREE.Group();
-  rightLegGroup.position.set(2, 12, 0);
+  rightLegGroup.position.set(1.9, 0, 0);
 
-  const rightLegMesh = makePart(4, 12, 4, {
+  const rightLegBase = makePart(4, 12, 4, {
     north: [4, 20, 8, 32], east: [0, 20, 4, 32], south: [12, 20, 16, 32],
     west: [8, 20, 12, 32], up: [4, 16, 8, 20], down: [8, 16, 12, 20]
   });
-  rightLegMesh.position.set(0, -6, 0);
-  rightLegGroup.add(rightLegMesh);
-  root.add(rightLegGroup);
+  rightLegBase.position.set(0, -6, 0);
+  rightLegGroup.add(rightLegBase);
 
-  // 6. Pierna Izquierda (pivote en [-2, 12, 0])
+  const rightLegOuter = makePart(4, 12, 4, {
+    north: [4, 36, 8, 48], east: [0, 36, 4, 48], south: [12, 36, 16, 48],
+    west: [8, 36, 12, 48], up: [4, 32, 8, 36], down: [8, 32, 12, 36]
+  }, 0.3, true);
+  rightLegOuter.position.set(0, -6, 0);
+  rightLegGroup.add(rightLegOuter);
+  lowBodyGroup.add(rightLegGroup);
+
+  // 7. PIERNA IZQUIERDA (Base + Pantalón exterior 3D)
   const leftLegGroup = new THREE.Group();
-  leftLegGroup.position.set(-2, 12, 0);
+  leftLegGroup.position.set(-1.9, 0, 0);
 
-  const leftLegMesh = makePart(4, 12, 4, {
+  const leftLegBase = makePart(4, 12, 4, {
     north: [20, 52, 24, 64], east: [16, 52, 20, 64], south: [28, 52, 32, 64],
     west: [24, 52, 28, 64], up: [20, 48, 24, 52], down: [24, 48, 28, 52]
   });
-  leftLegMesh.position.set(0, -6, 0);
-  leftLegGroup.add(leftLegMesh);
-  root.add(leftLegGroup);
+  leftLegBase.position.set(0, -6, 0);
+  leftLegGroup.add(leftLegBase);
 
+  const leftLegOuter = makePart(4, 12, 4, {
+    north: [4, 52, 8, 64], east: [0, 52, 4, 64], south: [12, 52, 16, 64],
+    west: [8, 52, 12, 64], up: [4, 48, 8, 52], down: [8, 48, 12, 52]
+  }, 0.3, true);
+  leftLegOuter.position.set(0, -6, 0);
+  leftLegGroup.add(leftLegOuter);
+  lowBodyGroup.add(leftLegGroup);
+
+  root.add(lowBodyGroup);
   jesulutoScene.add(root);
 
   jesulutoRig = {
     root,
+    lowBody: lowBodyGroup,
     torso: torsoGroup,
     head: headGroup,
     rightArm: rightArmGroup,
@@ -1908,26 +2039,28 @@ function buildJesulutoMinecraftRig(texture) {
     leftLeg: leftLegGroup
   };
 
-  console.log('✅ AuraMusic: Rig 3D de Jesuluto construido con éxito!');
+  console.log('✅ AuraMusic: Rig 3D completo de Jesuluto (12 cubos + capas exteriores) cargado!');
+  if (jesulutoRenderer && jesulutoScene && jesulutoCamera) {
+    jesulutoRenderer.render(jesulutoScene, jesulutoCamera);
+  }
 }
 
 function updateJesulutoAnimation(currentTime, isPlaying) {
   if (!jesulutoRig || !isJesuluto3DInitialized) return;
 
   if (!isPlaying) {
-    // Idle suave si está pausado
-    jesulutoRig.root.rotation.y = Math.sin(currentTime * 1.5) * 0.1;
+    jesulutoRig.root.rotation.y = 0.2 + Math.sin(currentTime * 1.5) * 0.08;
     if (jesulutoRenderer && jesulutoScene && jesulutoCamera) {
       jesulutoRenderer.render(jesulutoScene, jesulutoCamera);
     }
     return;
   }
 
-  // Mapear tiempo al baile de 41 ticks (tick 60.0 a 101.0)
+  // Baile de 41 ticks (tick 60.0 a 101.0)
   const animLen = 41.0;
   const currentTick = 60.0 + ((currentTime * 20.0) % animLen);
 
-  function sampleKeyframe(channelName) {
+  function sampleKf(channelName) {
     const kfs = JESULUTO_DANCE_DATA[channelName];
     if (!kfs || kfs.length === 0) return { r: [0, 0, 0], t: [0, 0, 0] };
 
@@ -1960,25 +2093,41 @@ function updateJesulutoAnimation(currentTime, isPlaying) {
     return { r, t };
   }
 
-  const torsoKf = sampleKeyframe('pose:torso');
-  const headKf = sampleKeyframe('pose:head');
-  const rArmKf = sampleKeyframe('pose:right_arm');
-  const lArmKf = sampleKeyframe('pose:left_arm');
-  const rLegKf = sampleKeyframe('pose:right_leg');
-  const lLegKf = sampleKeyframe('pose:left_leg');
-  const lowBodyKf = sampleKeyframe('pose:low_body');
+  const overlayKf = sampleKf('transform_overlay2');
+  const lowBodyKf = sampleKf('pose:low_body');
+  const torsoKf = sampleKf('pose:torso');
+  const headKf = sampleKf('pose:head');
+  const rArmKf = sampleKf('pose:right_arm');
+  const lArmKf = sampleKf('pose:left_arm');
+  const rLegKf = sampleKf('pose:right_leg');
+  const lLegKf = sampleKf('pose:left_leg');
 
-  // Aplicar rotaciones
+  // 1. Inclinación y balanceo corporal completo (transform_overlay2)
+  jesulutoRig.root.rotation.z = overlayKf.r[2];
+  jesulutoRig.root.rotation.y = 0.22 + Math.sin(currentTime * 2) * 0.12;
+
+  // 2. Rebote y pelvis (low_body)
+  jesulutoRig.lowBody.position.y = 12 + (lowBodyKf.t[1] || 0) * 0.6;
+  jesulutoRig.lowBody.position.x = (lowBodyKf.t[0] || 0) * 0.6;
+  jesulutoRig.lowBody.rotation.set(lowBodyKf.r[0], lowBodyKf.r[1], lowBodyKf.r[2]);
+
+  // 3. Torso y Cabeza
   jesulutoRig.torso.rotation.set(torsoKf.r[0], torsoKf.r[1], torsoKf.r[2]);
   jesulutoRig.head.rotation.set(headKf.r[0], headKf.r[1], headKf.r[2]);
-  jesulutoRig.rightArm.rotation.set(rArmKf.r[0], rArmKf.r[1], rArmKf.r[2]);
-  jesulutoRig.leftArm.rotation.set(lArmKf.r[0], lArmKf.r[1], lArmKf.r[2]);
-  jesulutoRig.rightLeg.rotation.set(rLegKf.r[0], rLegKf.r[1], rLegKf.r[2]);
-  jesulutoRig.leftLeg.rotation.set(lLegKf.r[0], lLegKf.r[1], lLegKf.r[2]);
 
-  // Desplazamiento del cuerpo
-  jesulutoRig.root.position.y = (lowBodyKf.t[1] || 0) * 0.5;
-  jesulutoRig.root.rotation.y = 0.2 + Math.sin(currentTime * 2) * 0.15; // Ligero giro cinemático hacia la cámara
+  // 4. Brazos (Rotación + Desplazamiento de baile)
+  jesulutoRig.rightArm.rotation.set(rArmKf.r[0], rArmKf.r[1], rArmKf.r[2]);
+  jesulutoRig.rightArm.position.set(5.5 + (rArmKf.t[0] || 0) * 0.4, 10 + (rArmKf.t[1] || 0) * 0.4, (rArmKf.t[2] || 0) * 0.4);
+
+  jesulutoRig.leftArm.rotation.set(lArmKf.r[0], lArmKf.r[1], lArmKf.r[2]);
+  jesulutoRig.leftArm.position.set(-5.5 + (lArmKf.t[0] || 0) * 0.4, 10 + (lArmKf.t[1] || 0) * 0.4, (lArmKf.t[2] || 0) * 0.4);
+
+  // 5. Piernas (Rotación + Desplazamiento de pasos)
+  jesulutoRig.rightLeg.rotation.set(rLegKf.r[0], rLegKf.r[1], rLegKf.r[2]);
+  jesulutoRig.rightLeg.position.set(1.9 + (rLegKf.t[0] || 0) * 0.3, (rLegKf.t[1] || 0) * 0.3, (rLegKf.t[2] || 0) * 0.3);
+
+  jesulutoRig.leftLeg.rotation.set(lLegKf.r[0], lLegKf.r[1], lLegKf.r[2]);
+  jesulutoRig.leftLeg.position.set(-1.9 + (lLegKf.t[0] || 0) * 0.3, (lLegKf.t[1] || 0) * 0.3, (lLegKf.t[2] || 0) * 0.3);
 
   if (jesulutoRenderer && jesulutoScene && jesulutoCamera) {
     jesulutoRenderer.render(jesulutoScene, jesulutoCamera);

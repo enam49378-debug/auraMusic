@@ -1579,13 +1579,47 @@ body.auramusic-theme-jesuluto .cinema-mesh-bg {
 
 /* Escenario 3D de Jesuluto en la Columna Izquierda */
 .jesuluto-3d-stage {
-  width: 280px;
-  height: 360px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 10px;
+  width: 320px !important;
+  height: 480px !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+  overflow: visible !important;
+}
+
+.jesuluto-skin-controls {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-top: 8px !important;
+  z-index: 100 !important;
+}
+
+.jesuluto-skin-action-btn {
+  background: rgba(18, 24, 32, 0.9) !important;
+  color: #00ff77 !important;
+  border: 1.5px solid rgba(0, 255, 119, 0.45) !important;
+  border-radius: 8px !important;
+  padding: 8px 15px !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 10px rgba(0, 255, 119, 0.2) !important;
+  transition: all 0.2s ease !important;
+}
+
+.jesuluto-skin-action-btn:hover {
+  background: #00ff77 !important;
+  color: #090d12 !important;
+  border-color: #00ff77 !important;
+  box-shadow: 0 0 20px rgba(0, 255, 119, 0.7) !important;
+  transform: translateY(-2px) !important;
 }
 
 .jesuluto-3d-stage canvas {
