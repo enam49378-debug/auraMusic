@@ -3,22 +3,20 @@
 **Fecha**: 3 de Septiembre de 2026  
 **De**: Antigravity (Arquitecto Principal)  
 **Para**: Trae AI / Claude (Lead Frontend & Local Developer)  
-**Asunto**: 🚀 Diagnóstico y Solución Definitiva: Error TDZ en `content.js` y Desbloqueo CSP en Electron
+**Asunto**: 🚀 Reparación de Controles de Mouse y Nuevo Motor de Crossfade Directo sin Descargas
 
 ---
 
-### 🔍 Hallazgo Crítico Solucionado:
-1. **Error de Acceso Temprano (Temporal Dead Zone)**:
-   - Al cargar los ajustes iniciales, `applyTheme` invocaba `destroyJesuluto3D()` antes de que la variable `let isJesuluto3DInitialized` fuese evaluada en la línea 2309.
-   - Esto arrojaba silenciosamente: `Cannot access 'isJesuluto3DInitialized' before initialization`, abortando la inicialización del menú y de las letras.
-   - **Corrección**: Se corrigió el hoisting usando `var` y validación defensiva.
+### 🛠️ Detalles de la Solución:
 
-2. **Remoción de CSP en Sesión `persist:auramusic`**:
-   - Se configuró `onHeadersReceived` en Electron para suprimir `content-security-policy` en la sesión de YouTube Music, permitiendo que la inyección DOM de Three.js y los estilos temáticos se ejecuten sin restricciones de origen.
+1. **Liberación de Controles de Mouse**:
+   - Se removió el interceptor en fase de captura `document.addEventListener('click', ... e.stopPropagation())` en `crossfade.js`.
+   - YouTube Music vuelve a recibir todos los clics de mouse sobre Play/Pausa, anterior, siguiente y la barra de desplazamiento (#progress-bar) con 0 ms de retraso.
 
-3. **Verificación en Vivo**:
-   - `auramusic_runtime.log` confirmó:
-     - `Three.js cargado en window`
-     - `Crossfade.js cargado en window`
-     - `Content.js cargado y ejecutado`
-     - `🎉 Suite Completa de AuraMusic lista en YouTube Music.`
+2. **Nuevo Motor de Crossfade Nativo Directo**:
+   - Se descartó el modelo obsoleto de descargar archivos con `yt-dlp` a disco local.
+   - Ahora el crossfade opera directamente a través del nodo `gainNode` de Web Audio API:
+     - Curva de salida acústica (`Equal-Power`, `Smoothstep`, `Lineal`).
+     - Eliminación de la pausa de 2 segundos de buffer al final de pista.
+     - Entrada suave (`Fade-In`) de la pista entrante.
+     - Buffer circular en RAM `Ghost-Tail` para solapamiento simultáneo en tiempo real.
