@@ -232,7 +232,7 @@
 
   // 2. Extracción del ID de la siguiente canción de la cola de YouTube Music
   function getNextTrackVideoId() {
-    // A. API interna del reproductor de YouTube si está disponible
+    // A. API oficial interna de YouTube (#movie_player)
     try {
       const player = document.querySelector('#movie_player');
       if (player && typeof player.getPlaylist === 'function' && typeof player.getPlaylistIndex === 'function') {
@@ -245,30 +245,45 @@
       }
     } catch (e) {}
 
-    // B. Elementos de la cola en el DOM
+    // B. Elemento siguiente en la cola visual de YouTube Music
     try {
-      const items = document.querySelectorAll('ytmusic-player-queue-item, ytmusic-responsive-list-item-renderer');
-      let foundCurrent = false;
-      for (const item of items) {
-        const isSelected = item.hasAttribute('selected') || 
-                           item.classList.contains('selected') || 
-                           item.getAttribute('aria-selected') === 'true' ||
-                           item.querySelector('[aria-selected="true"]');
-        if (isSelected) {
-          foundCurrent = true;
-          continue;
+      const currentQueueItem = document.querySelector('ytmusic-player-queue-item[play-button-state="playing"], ytmusic-player-queue-item.selected, ytmusic-player-queue-item[selected]');
+      if (currentQueueItem && currentQueueItem.nextElementSibling) {
+        const link = currentQueueItem.nextElementSibling.querySelector('a[href*="watch?v="]');
+        if (link && link.href) {
+          const m = link.href.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+          if (m) return m[1];
         }
-        if (foundCurrent) {
-          const link = item.querySelector('a[href*="watch?v="]');
-          if (link && link.href) {
-            const m = link.href.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-            if (m) return m[1];
-          }
-          const img = item.querySelector('img[src*="/vi/"]');
-          if (img && img.src) {
-            const m = img.src.match(/\/vi\/([a-zA-Z0-9_-]{11})\//);
-            if (m) return m[1];
-          }
+        const img = currentQueueItem.nextElementSibling.querySelector('img[src*="/vi/"]');
+        if (img && img.src) {
+          const m = img.src.match(/\/vi\/([a-zA-Z0-9_-]{11})\//);
+          if (m) return m[1];
+        }
+      }
+    } catch (e) {}
+
+    // C. Búsqueda secuencial en los elementos de la cola del DOM
+    try {
+      const items = Array.from(document.querySelectorAll('ytmusic-player-queue-item, ytmusic-responsive-list-item-renderer, [role="listitem"]'));
+      let curIndex = -1;
+      for (let i = 0; i < items.length; i++) {
+        const el = items[i];
+        if (el.hasAttribute('selected') || el.classList.contains('selected') || el.getAttribute('play-button-state') === 'playing' || el.querySelector('[aria-selected="true"]')) {
+          curIndex = i;
+          break;
+        }
+      }
+      if (curIndex >= 0 && curIndex + 1 < items.length) {
+        const nextItem = items[curIndex + 1];
+        const link = nextItem.querySelector('a[href*="watch?v="]');
+        if (link && link.href) {
+          const m = link.href.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+          if (m) return m[1];
+        }
+        const img = nextItem.querySelector('img[src*="/vi/"]');
+        if (img && img.src) {
+          const m = img.src.match(/\/vi\/([a-zA-Z0-9_-]{11})\//);
+          if (m) return m[1];
         }
       }
     } catch (e) {}
@@ -334,7 +349,7 @@
     _xfadeStatus = XFADE_STATE.IDLE;
     _hasFadedOutThisTrack = false;
     _isTransitioningToNext = false;
-    restoreVideoFullGain(true);
+    setPlayerVolume(1.0);
     console.log(`🔀 AuraMusic: Crossfade cancelado limpiamente (${reason}).`);
   }
 
@@ -350,15 +365,15 @@
     if (!host) {
       host = document.createElement('div');
       host.id = 'auramusic-shadow-host';
-      host.style.cssText = 'position:fixed;bottom:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-9999;';
+      host.style.cssText = 'position:fixed;bottom:0;right:0;width:250px;height:250px;opacity:0.001;pointer-events:none;z-index:-10;';
       document.body.appendChild(host);
     }
 
     const iframe = document.createElement('iframe');
     iframe.id = 'auramusic-shadow-iframe';
     iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&controls=0&mute=1&playsinline=1&origin=${encodeURIComponent(window.location.origin)}`;
-    iframe.style.cssText = 'width:1px;height:1px;border:none;';
-    iframe.allow = 'autoplay';
+    iframe.style.cssText = 'width:250px;height:250px;border:none;';
+    iframe.allow = 'autoplay *; encrypted-media *;';
 
     shadowPlayerIframe = iframe;
     host.appendChild(iframe);
@@ -376,22 +391,25 @@
     window.addEventListener('message', onMsg);
     shadowMsgHandler = onMsg;
 
-    // Timeout de seguridad: si no responde en 4 segundos, asumir listo para no bloquear
+    // Timeout de seguridad: asumir listo tras 2 segundos para no bloquear la reproducción
     setTimeout(() => {
+      shadowIsReady = true;
       if (_xfadeStatus === XFADE_STATE.PREPARING_NEXT) {
-        shadowIsReady = true;
         _xfadeStatus = XFADE_STATE.CROSSFADE_READY;
       }
-    }, 4000);
+      _sendShadowCommand('pauseVideo');
+      _sendShadowCommand('seekTo', [0, true]);
+      _sendShadowCommand('setVolume', [0]);
+    }, 2000);
   }
 
-  function startShadowCrossfade(fadeSec, baseGain) {
+  function startShadowCrossfade(fadeSec) {
     if (_xfadeStatus === XFADE_STATE.CROSSFADE_ACTIVE) return;
     _xfadeStatus = XFADE_STATE.CROSSFADE_ACTIVE;
 
-    console.log(`🔀 AuraMusic: 🔥 SOLAPAMIENTO REAL INICIADO (${fadeSec}s). Player A baja, Player B arranca desde 0:00.`);
+    console.log(`🔀 AuraMusic: 🔥 SOLAPAMIENTO REAL INICIADO (${fadeSec}s). Canción A baja, Canción B arranca desde 0:00.`);
 
-    // Iniciar Player B en segundo 0 con volumen 0
+    // Iniciar Canción B en segundo 0 con volumen 0
     _sendShadowCommand('unMute');
     _sendShadowCommand('seekTo', [0, true]);
     _sendShadowCommand('setVolume', [0]);
@@ -407,40 +425,40 @@
       const progress = Math.min(1, elapsed / durationMs);
       const { gainA, gainB } = calculateGainCurve(progress, curveType);
 
-      // Player A (Nativo YTM): Web Audio GainNode
-      if (gainNode && audioCtx) {
-        try {
-          gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-          gainNode.gain.setValueAtTime(gainA * baseGain, audioCtx.currentTime);
-        } catch (e) {}
-      }
+      // Canción A: desciende suavemente en todas sus capas de audio
+      setPlayerVolume(gainA);
 
-      // Player B (Shadow): Volumen 0 a 100
-      const shadowVol = Math.round(gainB * 100 * Math.min(1, baseGain));
+      // Canción B: asciende suavemente en el Shadow Player (0% a 100%)
+      const shadowVol = Math.round(gainB * 100);
+      _sendShadowCommand('unMute');
       _sendShadowCommand('setVolume', [shadowVol]);
+      _sendShadowCommand('playVideo');
 
       if (progress >= 1) {
         clearInterval(shadowFadeInterval);
         shadowFadeInterval = null;
         _xfadeStatus = XFADE_STATE.NEXT_TRACK_ACTIVE;
 
-        console.log(`🔀 AuraMusic: Fin del solapamiento (${fadeSec}s). Handoff a YouTube Music nativo...`);
-        // Handoff: Player A terminó, Player B ya va por el segundo fadeSec
-        const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
-        if (nextBtn) {
-          _isTransitioningToNext = true;
-          _isProgrammaticSkip = true;
-          nextBtn.click();
-          setTimeout(() => { _isProgrammaticSkip = false; }, 800);
-        }
+        console.log(`🔀 AuraMusic: Fin del solapamiento (${fadeSec}s). Canción B va por ${fadeSec}s. Handoff a YouTube Music nativo...`);
 
-        // Mantener Player B activo 1.2s más mientras YouTube carga la pista para evitar huecos
+        // Handoff: Disparamos la siguiente canción en YouTube Music
+        triggerNextTrack();
+
+        // Tras el salto, sincronizamos el video nativo en el segundo fadeSec para no repetir la intro
         setTimeout(() => {
+          const video = document.querySelector('video');
+          if (video && isFinite(video.duration) && video.duration > fadeSec) {
+            try {
+              video.currentTime = fadeSec;
+              console.log(`🔀 AuraMusic: Handoff exitoso -> Video nativo sincronizado en el segundo ${fadeSec}s.`);
+            } catch (e) {}
+          }
+          setPlayerVolume(1.0);
           destroyShadowPlayer();
           _xfadeStatus = XFADE_STATE.IDLE;
-        }, 1200);
+        }, 900);
       }
-    }, 35);
+    }, 30);
   }
 
   let _fadeInterval = null;
@@ -577,11 +595,37 @@
 
     const rem = dur - cur;
 
-    // B. FADE-OUT SUAVE DE LA CANCIÓN A (Al tocar rem <= fadeSec)
+    // B. PREPARACIÓN ANTICIPADA DEL SHADOW PLAYER (Faltando entre fadeSec+15s y fadeSec)
+    if (rem <= fadeSec + 15 && rem > fadeSec && _xfadeStatus === XFADE_STATE.IDLE) {
+      const nextId = getNextTrackVideoId();
+      if (nextId) {
+        console.log(`🔀 AuraMusic: Precargando Shadow Player B con videoId "${nextId}"...`);
+        prepareShadowPlayer(nextId);
+      }
+    }
+
+    // C. INICIO DEL SOLAPAMIENTO REAL O FADE (Al tocar rem <= fadeSec)
     if (rem <= fadeSec && rem > 0.15 && !_hasFadedOutThisTrack) {
       _hasFadedOutThisTrack = true;
-      console.log(`🔀 AuraMusic: 📉 INICIANDO FADE-OUT de Canción A (Quedan ${rem.toFixed(1)}s, Duración: ${fadeSec}s)...`);
 
+      // 1. Si el Shadow Player ya está precargado, lanzamos el SOLAPAMIENTO REAL SIMULTÁNEO:
+      if (shadowPlayerIframe) {
+        startShadowCrossfade(fadeSec);
+        return;
+      }
+
+      // 2. Si no estaba precargado aún (ej. salto rápido a los últimos segundos):
+      const nextId = getNextTrackVideoId();
+      if (nextId) {
+        prepareShadowPlayer(nextId);
+        setTimeout(() => {
+          startShadowCrossfade(Math.max(1, rem));
+        }, 400);
+        return;
+      }
+
+      // 3. Si no hay ID de siguiente pista en la cola, ejecutar Fade-Out secuencial suave:
+      console.log(`🔀 AuraMusic: 📉 INICIANDO FADE-OUT de Canción A (Quedan ${rem.toFixed(1)}s, Duración: ${fadeSec}s)...`);
       if (_fadeInterval) clearInterval(_fadeInterval);
       const startTime = performance.now();
       const fadeDurationMs = Math.max(800, rem * 1000);
@@ -600,8 +644,8 @@
       }, 30);
     }
 
-    // C. DISPARO DE LA SIGUIENTE PISTA (A falta de 1.2s para enlazar antes de que muera la anterior)
-    if (rem <= 1.2 && rem > 0.05 && _hasFadedOutThisTrack && !_isTransitioningToNext) {
+    // D. DISPARO DE LA SIGUIENTE PISTA (Para modo secuencial o transición garantizada)
+    if (rem <= 1.2 && rem > 0.05 && _hasFadedOutThisTrack && !_isTransitioningToNext && _xfadeStatus !== XFADE_STATE.CROSSFADE_ACTIVE) {
       const now = performance.now();
       if (now - _lastSkipTime < 3500) return;
       _lastSkipTime = now;
@@ -636,14 +680,23 @@
         clearInterval(_fadeInterval);
         _fadeInterval = null;
       }
+      destroyShadowPlayer();
+      _xfadeStatus = XFADE_STATE.IDLE;
       _hasFadedOutThisTrack = false;
       _isTransitioningToNext = false;
       setPlayerVolume(1.0);
     });
 
+    video.addEventListener('pause', () => {
+      _sendShadowCommand('pauseVideo');
+    });
+
     video.addEventListener('play', () => {
       if (!_isTransitioningToNext && !_hasFadedOutThisTrack) {
         setPlayerVolume(1.0);
+      }
+      if (_xfadeStatus === XFADE_STATE.CROSSFADE_ACTIVE) {
+        _sendShadowCommand('playVideo');
       }
     });
   }
