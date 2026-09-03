@@ -582,17 +582,45 @@
   function setupHubEvents(launcher, overlay) {
     const closeBtn = document.getElementById('auramusic-close-btn');
 
-    launcher.addEventListener('click', () => overlay.classList.add('active'));
+    function openHub() {
+      overlay.classList.add('active');
+    }
+
+    function closeHub() {
+      overlay.classList.remove('active');
+    }
+
+    launcher.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openHub();
+    });
+
     const cinemaTabBtn = document.getElementById('hub-cinema-lyrics-tab');
     if (cinemaTabBtn) {
       cinemaTabBtn.addEventListener('click', () => {
-        overlay.classList.remove('active');
+        closeHub();
         openCinemaMode();
       });
     }
-    closeBtn.addEventListener('click', () => overlay.classList.remove('active'));
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeHub();
+      });
+    }
+
     overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) overlay.classList.remove('active');
+      if (e.target === overlay) {
+        closeHub();
+      }
+    });
+
+    // Cerrar con tecla Escape de forma confiable
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('active')) {
+        closeHub();
+      }
     });
 
     // Pestañas

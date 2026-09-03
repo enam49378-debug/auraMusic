@@ -133,6 +133,75 @@ ytmusic-guide-signin-promo-renderer {
   transition: all 0.25s ease !important;
 }
 
+/* ── SOPORTE PARA MENÚ LATERAL CERRADO / COLAPSADO (MINI GUIDE) ── */
+#guide-wrapper {
+  container-type: inline-size;
+  container-name: guide;
+}
+
+@container guide (max-width: 130px) {
+  ytmusic-guide-section-renderer:not(:first-child),
+  #guide-builder-item,
+  ytmusic-guide-signin-promo-renderer,
+  ytmusic-guide-entry-renderer yt-formatted-string,
+  ytmusic-guide-entry-renderer .title {
+    display: none !important;
+  }
+
+  ytmusic-guide-entry-renderer {
+    margin: 8px auto !important;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 8px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transform: none !important;
+  }
+
+  ytmusic-guide-entry-renderer tp-yt-paper-item {
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+ytmusic-app[guide-collapsed] ytmusic-guide-section-renderer:not(:first-child),
+ytmusic-guide-renderer[collapsed] ytmusic-guide-section-renderer:not(:first-child),
+ytmusic-guide-renderer[is-collapsed] ytmusic-guide-section-renderer:not(:first-child),
+ytmusic-app[is-guide-collapsed] ytmusic-guide-section-renderer:not(:first-child),
+#guide-wrapper[collapsed] ytmusic-guide-section-renderer:not(:first-child) {
+  display: none !important;
+}
+
+ytmusic-app[guide-collapsed] #guide-builder-item,
+ytmusic-guide-renderer[collapsed] #guide-builder-item,
+ytmusic-guide-renderer[is-collapsed] #guide-builder-item {
+  display: none !important;
+}
+
+ytmusic-app[guide-collapsed] ytmusic-guide-entry-renderer yt-formatted-string,
+ytmusic-guide-renderer[collapsed] ytmusic-guide-entry-renderer yt-formatted-string,
+ytmusic-guide-renderer[is-collapsed] ytmusic-guide-entry-renderer yt-formatted-string,
+#guide-wrapper[collapsed] ytmusic-guide-entry-renderer yt-formatted-string {
+  display: none !important;
+}
+
+ytmusic-app[guide-collapsed] ytmusic-guide-entry-renderer,
+ytmusic-guide-renderer[collapsed] ytmusic-guide-entry-renderer,
+ytmusic-guide-renderer[is-collapsed] ytmusic-guide-entry-renderer,
+#guide-wrapper[collapsed] ytmusic-guide-entry-renderer {
+  margin: 8px auto !important;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 8px !important;
+  justify-content: center !important;
+}
+
 /* ESPACIADO LIMPIO EN TIEMPOS DEL REPRODUCTOR */
 ytmusic-player-bar .time-info.ytmusic-player-bar {
   margin: 0 16px !important;
@@ -1034,6 +1103,275 @@ body.auramusic-theme-cyberpunk yt-button-shape[has-no-focus-outline] button:hove
   0%, 49% { opacity: 1; }
   50%, 100% { opacity: 0; }
 }
+
+/* ==========================================================================
+   CYBERPUNK 2.0: 📜 PÁGINA DE HISTORIAL (TIMELINE / REGISTRO DE AUDIOS HUD)
+   ========================================================================== */
+/* Encabezado principal de Historial */
+body.auramusic-theme-cyberpunk ytmusic-browse-response[page-type="MUSIC_PAGE_TYPE_HISTORY"] #header,
+body.auramusic-theme-cyberpunk ytmusic-item-section-renderer[page-type="MUSIC_PAGE_TYPE_HISTORY"] #header {
+  border-bottom: 1px solid rgba(0, 245, 255, 0.25) !important;
+  padding-bottom: 12px !important;
+  margin-bottom: 20px !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-browse-response[page-type="MUSIC_PAGE_TYPE_HISTORY"] .title.ytmusic-header-renderer,
+body.auramusic-theme-cyberpunk ytmusic-browse-response[page-type="MUSIC_PAGE_TYPE_HISTORY"] h1 {
+  font-family: 'Orbitron', 'Rajdhani', sans-serif !important;
+  font-size: 2.2rem !important;
+  color: var(--cy-cyan) !important;
+  letter-spacing: 2px !important;
+  text-shadow: 0 0 25px rgba(0, 245, 255, 0.6) !important;
+}
+
+/* Sub-etiqueta terminal sobre el título de Historial */
+body.auramusic-theme-cyberpunk ytmusic-browse-response[page-type="MUSIC_PAGE_TYPE_HISTORY"] #header::before {
+  content: '// AUDIO_LOG :: ARCHIVO CRONOLÓGICO DE TRANSMISIONES //';
+  display: block;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 2px;
+  color: rgba(255, 45, 120, 0.75);
+  margin-bottom: 6px;
+}
+
+/* Cabeceras de fechas en el historial: "Hoy", "Ayer", etc. */
+body.auramusic-theme-cyberpunk ytmusic-item-section-renderer #header yt-formatted-string,
+body.auramusic-theme-cyberpunk ytmusic-header-renderer[header-style="SECTION_HEADER"] .title,
+body.auramusic-theme-cyberpunk ytmusic-shelf-renderer[header-style="SECTION_HEADER"] .title {
+  font-family: 'Share Tech Mono', 'Rajdhani', monospace !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  color: #00f5ff !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: linear-gradient(90deg, rgba(0, 245, 255, 0.12) 0%, rgba(0, 245, 255, 0.02) 80%, transparent 100%) !important;
+  padding: 6px 14px !important;
+  border-left: 3px solid #ff2d78 !important;
+  border-radius: 0 6px 6px 0 !important;
+  margin: 16px 0 10px 0 !important;
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.4) !important;
+}
+
+/* Filas de canciones en el historial */
+body.auramusic-theme-cyberpunk ytmusic-browse-response[page-type="MUSIC_PAGE_TYPE_HISTORY"] ytmusic-responsive-list-item-renderer,
+body.auramusic-theme-cyberpunk ytmusic-item-section-renderer ytmusic-responsive-list-item-renderer {
+  background: rgba(0, 245, 255, 0.02) !important;
+  border: 1px solid rgba(0, 245, 255, 0.05) !important;
+  border-left: 3px solid rgba(0, 245, 255, 0.2) !important;
+  border-radius: 0 8px 8px 0 !important;
+  margin: 4px 0 !important;
+  padding: 6px 12px !important;
+  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1) !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-browse-response[page-type="MUSIC_PAGE_TYPE_HISTORY"] ytmusic-responsive-list-item-renderer:hover,
+body.auramusic-theme-cyberpunk ytmusic-item-section-renderer ytmusic-responsive-list-item-renderer:hover {
+  background: linear-gradient(90deg, rgba(0, 245, 255, 0.12) 0%, rgba(255, 45, 120, 0.04) 100%) !important;
+  border-left-color: var(--cy-cyan) !important;
+  border-color: rgba(0, 245, 255, 0.3) !important;
+  transform: translateX(6px) !important;
+  box-shadow: 0 4px 20px rgba(0, 245, 255, 0.15), inset 0 0 15px rgba(0, 245, 255, 0.05) !important;
+}
+
+/* Thumbnail en la fila de historial con borde neón */
+body.auramusic-theme-cyberpunk ytmusic-item-section-renderer ytmusic-responsive-list-item-renderer yt-img-shadow {
+  border-radius: 4px !important;
+  border: 1px solid rgba(0, 245, 255, 0.2) !important;
+  transition: all 0.2s ease !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-item-section-renderer ytmusic-responsive-list-item-renderer:hover yt-img-shadow {
+  border-color: var(--cy-cyan) !important;
+  box-shadow: 0 0 12px rgba(0, 245, 255, 0.5) !important;
+}
+
+/* Duración en monospace cibernético */
+body.auramusic-theme-cyberpunk ytmusic-responsive-list-item-renderer .fixed-columns yt-formatted-string {
+  font-family: 'Share Tech Mono', monospace !important;
+  color: rgba(0, 245, 255, 0.7) !important;
+  font-size: 0.88rem !important;
+  letter-spacing: 1px !important;
+}
+
+/* Like button en el historial */
+body.auramusic-theme-cyberpunk ytmusic-like-button-renderer yt-icon {
+  color: rgba(0, 245, 255, 0.4) !important;
+  transition: all 0.2s ease !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-like-button-renderer[like-status="LIKE"] yt-icon {
+  color: var(--cy-magenta) !important;
+  filter: drop-shadow(0 0 8px var(--cy-magenta)) !important;
+}
+
+/* ==========================================================================
+   CYBERPUNK 2.0: 🎤 PÁGINAS DE ARTISTAS, RADIOS Y MIXES (HUD MECHA)
+   ========================================================================== */
+
+/* Cabecera inmersiva del artista / mix */
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer,
+body.auramusic-theme-cyberpunk ytmusic-immersive-header-renderer {
+  background: linear-gradient(180deg, rgba(8, 8, 24, 0.95) 0%, rgba(5, 5, 15, 0.98) 100%) !important;
+  border-bottom: 1px solid rgba(0, 245, 255, 0.25) !important;
+  box-shadow: 0 10px 40px rgba(0, 245, 255, 0.08) !important;
+  position: relative !important;
+  padding: 30px 20px !important;
+}
+
+/* Thumbnail hero del artista/mix (con corte mecha y glow dual) */
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer #thumbnail,
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer .thumbnail,
+body.auramusic-theme-cyberpunk ytmusic-immersive-header-renderer .image {
+  border-radius: 8px !important;
+  border: 2px solid rgba(0, 245, 255, 0.4) !important;
+  box-shadow: 0 0 35px rgba(0, 245, 255, 0.4), 0 0 70px rgba(255, 45, 120, 0.25) !important;
+  transition: all 0.3s ease !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer #thumbnail:hover {
+  transform: scale(1.03) !important;
+  box-shadow: 0 0 50px rgba(0, 245, 255, 0.6), 0 0 90px rgba(255, 45, 120, 0.4) !important;
+  border-color: var(--cy-cyan) !important;
+}
+
+/* Etiquetas HUD ("PÚBLICO", "Mix personal", "Artista") */
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer .strapline,
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer .metadata-container yt-formatted-string,
+body.auramusic-theme-cyberpunk ytmusic-immersive-header-renderer .description {
+  font-family: 'Share Tech Mono', monospace !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+  color: rgba(0, 245, 255, 0.75) !important;
+}
+
+/* Título gigante del artista / mix ("Radio de JesulutoXd") */
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer .title,
+body.auramusic-theme-cyberpunk ytmusic-immersive-header-renderer .title {
+  font-family: 'Orbitron', 'Rajdhani', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 2.6rem !important;
+  color: #ffffff !important;
+  text-shadow: 0 0 20px rgba(0, 245, 255, 0.6), 0 0 40px rgba(255, 45, 120, 0.3) !important;
+  letter-spacing: 1px !important;
+}
+
+/* Descripción del mix/artista */
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer .description {
+  color: rgba(176, 228, 232, 0.8) !important;
+  font-size: 0.92rem !important;
+  line-height: 1.5 !important;
+}
+
+/* Botón "Reproducir" principal en cabecera de artista/mix */
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer yt-button-renderer[slot="primary-button"] button,
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer .play-button button,
+body.auramusic-theme-cyberpunk ytmusic-immersive-header-renderer yt-button-renderer[slot="primary-button"] button,
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer #play-button button {
+  background: linear-gradient(135deg, #00f5ff 0%, #00b8d9 50%, #ff2d78 100%) !important;
+  color: #060610 !important;
+  font-weight: 800 !important;
+  font-family: 'Orbitron', 'Rajdhani', sans-serif !important;
+  letter-spacing: 1.5px !important;
+  border-radius: 6px !important;
+  border: none !important;
+  box-shadow: 0 0 25px rgba(0, 245, 255, 0.5), 0 0 50px rgba(255, 45, 120, 0.3) !important;
+  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1) !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer yt-button-renderer[slot="primary-button"] button:hover,
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer #play-button button:hover {
+  transform: scale(1.06) !important;
+  box-shadow: 0 0 35px rgba(0, 245, 255, 0.8), 0 0 70px rgba(255, 45, 120, 0.5) !important;
+  filter: brightness(1.1) !important;
+}
+
+/* Botones secundarios (Suscribirse, Iniciar radio, etc.) */
+body.auramusic-theme-cyberpunk ytmusic-subscribe-button-renderer button,
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer yt-button-renderer:not([slot="primary-button"]) button {
+  background: rgba(0, 245, 255, 0.08) !important;
+  border: 1px solid rgba(0, 245, 255, 0.4) !important;
+  color: var(--cy-cyan) !important;
+  border-radius: 6px !important;
+  font-family: 'Rajdhani', sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  transition: all 0.2s ease !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-subscribe-button-renderer button:hover,
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer yt-button-renderer:not([slot="primary-button"]) button:hover {
+  background: rgba(0, 245, 255, 0.2) !important;
+  border-color: var(--cy-cyan) !important;
+  box-shadow: 0 0 18px rgba(0, 245, 255, 0.4) !important;
+}
+
+/* Botón Suscrito (Activo) */
+body.auramusic-theme-cyberpunk ytmusic-subscribe-button-renderer[subscribe-button-renderer-state="SUBSCRIBE_BUTTON_RENDERER_STATE_SUBSCRIBED"] button {
+  background: rgba(255, 45, 120, 0.2) !important;
+  border-color: var(--cy-magenta) !important;
+  color: #ffffff !important;
+}
+
+/* Títulos de sección ("Canciones que más escuchas", "Tus artistas favoritos") */
+body.auramusic-theme-cyberpunk ytmusic-shelf-renderer .title.ytmusic-shelf-renderer {
+  font-family: 'Orbitron', 'Rajdhani', sans-serif !important;
+  font-size: 1.4rem !important;
+  color: var(--cy-cyan) !important;
+  letter-spacing: 1px !important;
+  text-shadow: 0 0 15px rgba(0, 245, 255, 0.4) !important;
+}
+
+/* Sub-título de sección (ej. "VISTAS RECIENTES • PÚBLICO") */
+body.auramusic-theme-cyberpunk ytmusic-shelf-renderer .strapline.ytmusic-shelf-renderer {
+  font-family: 'Share Tech Mono', monospace !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 2px !important;
+  color: rgba(255, 45, 120, 0.75) !important;
+  text-transform: uppercase !important;
+}
+
+/* Tarjetas de Artistas ("Tus artistas favoritos"): Círculos con anillo neón */
+body.auramusic-theme-cyberpunk ytmusic-two-row-item-renderer[aspect-ratio="MUSIC_TWO_ROW_ITEM_THUMBNAIL_TYPE_CIRCULAR"] {
+  background: transparent !important;
+  border: none !important;
+  padding: 10px !important;
+  text-align: center !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-two-row-item-renderer[aspect-ratio="MUSIC_TWO_ROW_ITEM_THUMBNAIL_TYPE_CIRCULAR"] .image-wrapper,
+body.auramusic-theme-cyberpunk ytmusic-two-row-item-renderer[aspect-ratio="MUSIC_TWO_ROW_ITEM_THUMBNAIL_TYPE_CIRCULAR"] img {
+  border-radius: 50% !important;
+  border: 2px solid rgba(0, 245, 255, 0.4) !important;
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.25), 0 0 40px rgba(255, 45, 120, 0.15) !important;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1) !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-two-row-item-renderer[aspect-ratio="MUSIC_TWO_ROW_ITEM_THUMBNAIL_TYPE_CIRCULAR"]:hover .image-wrapper,
+body.auramusic-theme-cyberpunk ytmusic-two-row-item-renderer[aspect-ratio="MUSIC_TWO_ROW_ITEM_THUMBNAIL_TYPE_CIRCULAR"]:hover img {
+  border-color: var(--cy-cyan) !important;
+  transform: scale(1.08) !important;
+  box-shadow: 0 0 35px var(--cy-cyan), 0 0 60px var(--cy-magenta) !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-two-row-item-renderer[aspect-ratio="MUSIC_TWO_ROW_ITEM_THUMBNAIL_TYPE_CIRCULAR"] .title {
+  color: #ffffff !important;
+  font-family: 'Rajdhani', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  letter-spacing: 0.5px !important;
+  text-align: center !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-two-row-item-renderer[aspect-ratio="MUSIC_TWO_ROW_ITEM_THUMBNAIL_TYPE_CIRCULAR"] .subtitle {
+  color: rgba(0, 245, 255, 0.6) !important;
+  font-size: 0.8rem !important;
+  text-align: center !important;
+}
+
 
 
 /* ==========================================================================
