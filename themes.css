@@ -858,26 +858,162 @@ body.auramusic-theme-apple ytmusic-player-bar .play-pause-button {
 }
 
 /* ==========================================================================
-   DISEÑO 7: 🟢 SPOTIFY (ESTRUCTURA Y POSICIONAMIENTO OFICIAL SPOTIFY)
+   DISEÑO 7: 🟢 SPOTIFY (ESTILO Y ESTRUCTURA IDÉNTICA A SPOTIFY DESKTOP 2026)
    ========================================================================== */
 body.auramusic-theme-spotify {
   --auramusic-primary: #1ed760;
   --auramusic-secondary: #1db954;
   --auramusic-glow: rgba(30, 215, 96, 0.4);
+  font-family: 'Circular', 'Plus Jakarta Sans', -apple-system, sans-serif !important;
+  background: #000000 !important;
+}
+
+body.auramusic-theme-spotify * {
   font-family: 'Circular', 'Plus Jakarta Sans', sans-serif !important;
 }
 
+/* 1. BARRA SUPERIOR NEGRA PURA CON BUSCADOR PÍLDORA CENTRADO */
+body.auramusic-theme-spotify ytmusic-nav-bar {
+  background: #000000 !important;
+  border-bottom: none !important;
+  height: 64px !important;
+  padding: 0 20px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-search-box {
+  background: #1f1f1f !important;
+  border: 1px solid transparent !important;
+  border-radius: 500px !important;
+  max-width: 480px !important;
+  height: 48px !important;
+  margin: 0 auto !important;
+  transition: all 0.2s ease !important;
+}
+
+body.auramusic-theme-spotify ytmusic-search-box:hover {
+  background: #282828 !important;
+  border-color: #333333 !important;
+}
+
+body.auramusic-theme-spotify ytmusic-search-box:focus-within {
+  background: #242424 !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.15) !important;
+}
+
+/* 2. CHIPS DE CATEGORÍA OFICIALES SPOTIFY ("TODO", "MÚSICA", "PÓDCASTS") */
+body.auramusic-theme-spotify ytmusic-chip-cloud-chip-renderer {
+  border-radius: 500px !important;
+  background: #2a2a2a !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 0.88rem !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 14px !important;
+  margin: 0 8px 16px 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+body.auramusic-theme-spotify ytmusic-chip-cloud-chip-renderer:hover {
+  background: #333333 !important;
+}
+
+body.auramusic-theme-spotify ytmusic-chip-cloud-chip-renderer[is-selected] {
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+/* 3. CONTENEDOR PRINCIPAL: TARJETA OSCURA CARBÓN SPOTIFY (#121212) */
 body.auramusic-theme-spotify ytmusic-app,
 body.auramusic-theme-spotify ytmusic-browse-response {
   background: #121212 !important;
 }
 
-body.auramusic-theme-spotify ytmusic-nav-bar {
-  background: #000000 !important;
-  border-bottom: none !important;
+/* Títulos de sección grandes en negrita ("Álbumes y sencillos populares", etc.) */
+body.auramusic-theme-spotify ytmusic-carousel-shelf-renderer .title,
+body.auramusic-theme-spotify ytmusic-header-renderer .title {
+  font-size: 1.55rem !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.04em !important;
+  color: #ffffff !important;
 }
 
-/* ESTRUCTURA SPOTIFY: CAJÓN LATERAL EN 2 TARJETAS SEPARADAS */
+body.auramusic-theme-spotify ytmusic-carousel-shelf-renderer .strapline {
+  color: #b3b3b3 !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+}
+
+/* 4. TARJETAS DE ÁLBUMES SPOTIFY (FONDO #181818 CON ELEVACIÓN EN HOVER) */
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer {
+  background: #181818 !important;
+  border-radius: 8px !important;
+  padding: 14px !important;
+  box-sizing: border-box !important;
+  transition: background 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer:hover {
+  background: #282828 !important;
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer .image-wrapper.ytmusic-two-row-item-renderer,
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer img {
+  border-radius: 6px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer .title.ytmusic-two-row-item-renderer {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  margin-top: 10px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer .subtitle.ytmusic-two-row-item-renderer {
+  color: #b3b3b3 !important;
+  font-size: 0.82rem !important;
+  margin-top: 4px !important;
+}
+
+/* 5. ARTISTAS POPULARES: CARÁTULA EN CÍRCULO PERFECTO (BORDER-RADIUS 50%) */
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer[aspect-ratio="MUSIC_TWO_ROW_ITEM_THUMBNAIL_TYPE_CIRCULAR"] .image-wrapper,
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer[aspect-ratio="MUSIC_TWO_ROW_ITEM_THUMBNAIL_TYPE_CIRCULAR"] img {
+  border-radius: 50% !important;
+}
+
+/* 6. EL BOTÓN VERDE FLOTANTE OFICIAL DE SPOTIFY (#1ed760) EN HOVER DE CADA CARD */
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer .play-button,
+body.auramusic-theme-spotify ytmusic-item-thumbnail-overlay-renderer #play-button,
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer ytmusic-play-button-renderer {
+  --ytmusic-play-button-icon-color: #000000 !important;
+  --ytmusic-play-button-background-color: #1ed760 !important;
+}
+
+body.auramusic-theme-spotify ytmusic-play-button-renderer #button,
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer .play-button {
+  background: #1ed760 !important;
+  border-radius: 50% !important;
+  color: #000000 !important;
+  width: 48px !important;
+  height: 48px !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7), 0 0 15px rgba(30, 215, 96, 0.4) !important;
+  transition: all 0.3s cubic-bezier(0.3, 0, 0, 1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body.auramusic-theme-spotify ytmusic-play-button-renderer #button:hover,
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer .play-button:hover {
+  transform: scale(1.08) !important;
+  background: #1fdf64 !important;
+}
+
+/* 7. ESTRUCTURA SPOTIFY: CAJÓN LATERAL EN 2 TARJETAS FLOTANTES SEPARADAS */
 body.auramusic-theme-spotify #guide-wrapper {
   background: transparent !important;
   padding: 8px !important;
@@ -885,19 +1021,19 @@ body.auramusic-theme-spotify #guide-wrapper {
 
 body.auramusic-theme-spotify ytmusic-guide-section-renderer:first-child {
   background: #121212 !important;
-  border-radius: 12px !important;
+  border-radius: 8px !important;
   padding: 10px 12px !important;
-  margin-bottom: 10px !important;
+  margin-bottom: 8px !important;
 }
 
 body.auramusic-theme-spotify ytmusic-guide-section-renderer:nth-child(2) {
   background: #121212 !important;
-  border-radius: 12px !important;
+  border-radius: 8px !important;
   padding: 12px !important;
 }
 
 body.auramusic-theme-spotify ytmusic-guide-entry-renderer {
-  border-radius: 8px !important;
+  border-radius: 6px !important;
   margin: 3px 0 !important;
   color: #b3b3b3 !important;
 }
@@ -905,10 +1041,9 @@ body.auramusic-theme-spotify ytmusic-guide-entry-renderer {
 body.auramusic-theme-spotify ytmusic-guide-entry-renderer:hover {
   background: transparent !important;
   color: #ffffff !important;
-  transform: none !important;
 }
 
-/* ESTRUCTURA SPOTIFY: REPRODUCTOR INFERIOR NEGRO CON CONTROLES CENTRADOS */
+/* 8. ESTRUCTURA SPOTIFY: REPRODUCTOR INFERIOR NEGRO DE 3 COLUMNAS */
 body.auramusic-theme-spotify ytmusic-player-bar {
   height: 88px !important;
   background: #000000 !important;
@@ -919,7 +1054,7 @@ body.auramusic-theme-spotify ytmusic-player-bar {
 body.auramusic-theme-spotify ytmusic-player-bar .image.ytmusic-player-bar {
   width: 56px !important;
   height: 56px !important;
-  border-radius: 6px !important;
+  border-radius: 4px !important;
   margin-right: 14px !important;
 }
 
@@ -934,12 +1069,13 @@ body.auramusic-theme-spotify ytmusic-player-bar .byline.ytmusic-player-bar {
   color: #b3b3b3 !important;
 }
 
+/* Botón central de reproducción blanco Spotify */
 body.auramusic-theme-spotify ytmusic-player-bar .play-pause-button {
   background: #ffffff !important;
   color: #000000 !important;
   border-radius: 50% !important;
-  width: 44px !important;
-  height: 44px !important;
+  width: 38px !important;
+  height: 38px !important;
   margin: 0 14px !important;
   transition: transform 0.2s ease !important;
 }
@@ -957,9 +1093,9 @@ body.auramusic-theme-spotify ytmusic-player-bar .next-button {
 body.auramusic-theme-spotify ytmusic-player-bar .previous-button:hover,
 body.auramusic-theme-spotify ytmusic-player-bar .next-button:hover {
   color: #ffffff !important;
-  transform: none !important;
 }
 
+/* Barra de progreso verde Spotify con knob sutil */
 body.auramusic-theme-spotify tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
   background: #1ed760 !important;
   box-shadow: none !important;
