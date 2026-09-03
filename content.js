@@ -857,6 +857,7 @@
     return true;
   }
 
+  // MOTOR PRINCIPAL: Google Translate Clients5 oficial (Sin límites, instantáneo y máxima fidelidad)
   async function translateLyrics(lyrics, targetLang = 'es') {
     if (!lyrics || lyrics.length === 0) return lyrics;
     const cacheKey = `${lastCinemaTrackId}:::${targetLang}`;
@@ -865,14 +866,48 @@
     }
 
     try {
-      // Agrupar con límite estricto de 320 caracteres para JAMÁS superar el límite de 500 chars de la API
+      const allText = lyrics.map(l => l.text).join('\n');
+      const googleUrl = `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=${targetLang}&q=${encodeURIComponent(allText)}`;
+
+      const res = await fetch(googleUrl);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data[0] && typeof data[0][0] === 'string') {
+          const rawTrans = data[0][0];
+          const transLines = rawTrans.split('\n');
+
+          const translatedList = lyrics.map((item, idx) => {
+            const trans = (transLines[idx] || '').trim();
+            const isDifferent = isValidTranslationText(trans) && trans.toLowerCase() !== item.text.toLowerCase();
+            return {
+              ...item,
+              translatedText: isDifferent ? trans : null,
+              originalText: item.text
+            };
+          });
+
+          lyricsTranslationCache[cacheKey] = translatedList;
+          console.log('✅ AuraMusic: Letra traducida exitosamente con Google Translate oficial.');
+          return translatedList;
+        }
+      }
+      throw new Error('Google fallback');
+    } catch (err) {
+      console.warn('Google Translate no disponible, usando motor de respaldo seguro...', err);
+      return await fallbackTranslateLyrics(lyrics, targetLang, cacheKey);
+    }
+  }
+
+  // MOTOR SECUNDARIO: Particionado MyMemory con validación
+  async function fallbackTranslateLyrics(lyrics, targetLang, cacheKey) {
+    try {
       const chunks = [];
       let curChunk = [];
       let curLen = 0;
 
       lyrics.forEach(item => {
         const len = item.text.length + 1;
-        if (curLen + len > 320 && curChunk.length > 0) {
+        if (curLen + len > 280 && curChunk.length > 0) {
           chunks.push(curChunk);
           curChunk = [item];
           curLen = len;
@@ -884,14 +919,12 @@
       if (curChunk.length > 0) chunks.push(curChunk);
 
       const translatedList = [];
-
       for (const chunk of chunks) {
         const textToTranslate = chunk.map(l => l.text).join('\n');
         const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(textToTranslate)}&langpair=autodetect|${targetLang}`;
-
         try {
           const res = await fetch(url);
-          if (!res.ok) throw new Error('Translation fetch error');
+          if (!res.ok) throw new Error('Fetch error');
           const data = await res.json();
           const rawTrans = data.responseData?.translatedText || '';
 
@@ -899,26 +932,23 @@
             const transLines = rawTrans.split('\n');
             chunk.forEach((item, cIdx) => {
               const trans = (transLines[cIdx] || '').trim();
-              const isDifferent = isValidTranslationText(trans) && trans.toLowerCase() !== item.text.toLowerCase();
+              const isDiff = isValidTranslationText(trans) && trans.toLowerCase() !== item.text.toLowerCase();
               translatedList.push({
                 ...item,
-                translatedText: isDifferent ? trans : null,
+                translatedText: isDiff ? trans : null,
                 originalText: item.text
               });
             });
           } else {
-            // Descartar respuestas de error y mantener original
             chunk.forEach(item => translatedList.push({ ...item, translatedText: null, originalText: item.text }));
           }
         } catch (e) {
           chunk.forEach(item => translatedList.push({ ...item, translatedText: null, originalText: item.text }));
         }
       }
-
       lyricsTranslationCache[cacheKey] = translatedList;
       return translatedList;
     } catch (e) {
-      console.warn('Traducción no disponible:', e);
       return lyrics.map(l => ({ ...l, translatedText: null, originalText: l.text }));
     }
   }
@@ -1268,10 +1298,13 @@
         if (totSpan) totSpan.textContent = formatTime(duration);
         if (playBtn) playBtn.textContent = video.paused ? '▶' : '⏸';
 
+        // Compensación auditiva perceptiva de 50ms para sincronización milimétrica instantánea
+        const effectiveTime = currentTime + 0.05;
+
         // Buscar línea activa de letra (-1 si es la intro instrumental)
         let activeIdx = -1;
         for (let i = 0; i < currentLyrics.length; i++) {
-          if (currentTime >= currentLyrics[i].time) {
+          if (effectiveTime >= currentLyrics[i].time) {
             activeIdx = i;
           } else {
             break;
@@ -1284,7 +1317,14 @@
           allLines.forEach((l, idx) => {
             if (idx === activeIdx) {
               l.classList.add('active-line');
-              l.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // Auto-scroll sedoso al foco áureo (38% de la pantalla) sin tirones
+              const container = document.getElementById('cinema-right-scroll');
+              if (container) {
+                const cRect = container.getBoundingClientRect();
+                const lRect = l.getBoundingClientRect();
+                const targetScroll = container.scrollTop + (lRect.top - cRect.top) - (cRect.height * 0.38);
+                container.scrollTo({ top: targetScroll, behavior: 'smooth' });
+              }
             } else {
               l.classList.remove('active-line');
               const words = l.querySelectorAll('.k-word');
@@ -1297,7 +1337,7 @@
           });
         }
 
-        // Actualización precisa palabra por palabra en tiempo real (60 FPS)
+        // Actualización ultra sincronizada palabra por palabra en tiempo real (60 FPS)
         if (activeIdx >= 0 && activeIdx < currentLyrics.length) {
           const activeLineEl = document.querySelector(`.cinema-lyric-line[data-index="${activeIdx}"]`);
           if (activeLineEl) {
@@ -1305,9 +1345,9 @@
             words.forEach(w => {
               const start = parseFloat(w.dataset.start);
               const end = parseFloat(w.dataset.end);
-              if (currentTime >= end) {
+              if (effectiveTime >= end) {
                 w.className = 'k-word sung';
-              } else if (currentTime >= start && currentTime < end) {
+              } else if (effectiveTime >= start && effectiveTime < end) {
                 w.className = 'k-word active';
               } else {
                 w.className = 'k-word';
