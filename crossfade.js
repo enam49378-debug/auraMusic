@@ -268,17 +268,28 @@
     }
   }
 
-  // 8. Disparo de la siguiente pista en YouTube Music nativo (Con prevención de rebotes)
+  // 8. Disparo de la siguiente pista en YouTube Music nativo (Con prevención estricta de rebotes)
   function triggerNextTrack() {
+    const now = performance.now();
+    if (now - _lastSkipTime < 3500) {
+      console.log('🔀 AuraMusic: Salto duplicado bloqueado por debounce de seguridad (3.5s).');
+      return;
+    }
+    _lastSkipTime = now;
     _isProgrammaticSkip = true;
-    _lastSkipTime = performance.now();
+
+    // Pausar el video actual para evitar que dispare su evento 'ended' natural y provoque un segundo salto a la pista C
+    try {
+      const v = document.querySelector('video');
+      if (v && !v.paused) v.pause();
+    } catch (e) {}
 
     try {
       const player = document.querySelector('#movie_player');
       if (player && typeof player.nextVideo === 'function') {
         player.nextVideo();
         console.log('🔀 AuraMusic: Siguiente canción disparada con movie_player.nextVideo()');
-        setTimeout(() => { _isProgrammaticSkip = false; }, 1200);
+        setTimeout(() => { _isProgrammaticSkip = false; }, 1500);
         return;
       }
     } catch (e) {}
@@ -291,7 +302,7 @@
       }
     } catch (e) {}
 
-    setTimeout(() => { _isProgrammaticSkip = false; }, 1200);
+    setTimeout(() => { _isProgrammaticSkip = false; }, 1500);
   }
 
   let shadowFadeInterval = null;
@@ -346,7 +357,6 @@
         clearInterval(shadowFadeInterval);
         shadowFadeInterval = null;
         _isTransitioningToNext = true;
-        _lastSkipTime = performance.now();
         _pendingSeekTime = fadeSec; // Guardar el descuento de tiempo para la Pista B
 
         console.log(`🔀 AuraMusic: Fin del solapamiento (${fadeSec}s). Verificando si YouTube Music ya cambió...`);
