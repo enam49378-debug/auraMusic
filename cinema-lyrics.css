@@ -1560,3 +1560,91 @@ body.auramusic-theme-komi .cinema-lyric-line.sung-line::after {
   0% { width: 0%; opacity: 0; }
   100% { width: calc(100% - 12px); opacity: 0.8; }
 }
+
+
+/* ==========================================================================
+   ⚡ TEMA DEDICADO: JESULUTO (APPLE MUSIC LYRICS + 3D BLOCKBENCH DANCING MODEL) 🤖🟩
+   ========================================================================== */
+body.auramusic-theme-jesuluto #auramusic-cinema-overlay.active {
+  background: #070a0e !important;
+  color: #e6fdf2 !important;
+  display: flex !important;
+}
+
+body.auramusic-theme-jesuluto .cinema-mesh-bg {
+  background: radial-gradient(circle at 25% 30%, rgba(0, 255, 119, 0.22) 0%, transparent 60%),
+              radial-gradient(circle at 80% 70%, rgba(0, 229, 255, 0.15) 0%, transparent 60%) !important;
+  opacity: 0.8 !important;
+}
+
+/* Escenario 3D de Jesuluto en la Columna Izquierda */
+.jesuluto-3d-stage {
+  width: 280px;
+  height: 360px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.jesuluto-3d-stage canvas {
+  width: 100% !important;
+  height: 100% !important;
+  filter: drop-shadow(0 10px 20px rgba(0, 255, 119, 0.3));
+}
+
+.jesuluto-stage-pedestal {
+  position: absolute;
+  bottom: 12px;
+  width: 160px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0, 255, 119, 0.7) 0%, rgba(0, 255, 119, 0) 70%);
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+/* Letras Estilo Apple Music pero en Verde Mecha Vibrante */
+body.auramusic-theme-jesuluto .cinema-lyric-line {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Plus Jakarta Sans", sans-serif !important;
+  font-size: 2.2rem !important;
+  font-weight: 700 !important;
+  color: rgba(230, 253, 242, 0.3) !important;
+  filter: blur(2.2px) !important;
+  transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+body.auramusic-theme-jesuluto .cinema-lyric-line.active-line {
+  color: #ffffff !important;
+  filter: blur(0px) !important;
+  font-size: 2.7rem !important;
+  font-weight: 900 !important;
+  text-shadow: 0 0 25px rgba(0, 255, 119, 0.75) !important;
+  transform: scale(1.04) !important;
+}
+
+body.auramusic-theme-jesuluto .k-word.active {
+  color: #00ff77 !important;
+  text-shadow: 0 0 20px rgba(0, 255, 119, 0.9), 0 0 40px rgba(0, 255, 119, 0.6) !important;
+}
+
+body.auramusic-theme-jesuluto .k-word.sung {
+  color: #ffffff !important;
+}
+
+body.auramusic-theme-jesuluto .cinema-artwork-box {
+  border: 2px solid rgba(0, 255, 119, 0.3) !important;
+  box-shadow: 0 10px 35px rgba(0, 255, 119, 0.3) !important;
+}
+
+body.auramusic-theme-jesuluto .cinema-play-btn {
+  background: #00ff77 !important;
+  color: #070a0e !important;
+  box-shadow: 0 4px 20px rgba(0, 255, 119, 0.5) !important;
+}
+
+body.auramusic-theme-jesuluto .cinema-progress-fill {
+  background: #00ff77 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 119, 0.8) !important;
+}

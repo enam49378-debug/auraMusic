@@ -38,6 +38,7 @@
         "cinema-lyrics.css"
       ],
       "js": [
+        "three.min.js",
         "content.js"
       ],
       "run_at": "document_idle"

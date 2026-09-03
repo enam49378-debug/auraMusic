@@ -115,6 +115,7 @@
   }
 
   const ALL_THEMES = [
+    'auramusic-theme-jesuluto',
     'auramusic-theme-komi',
     'auramusic-theme-apple',
     'auramusic-theme-spotify',
@@ -447,6 +448,7 @@
               <span class="auramusic-label">Estilo de Interfaz</span>
               <span class="auramusic-sublabel">Selecciona el tema que transformará la estética de YouTube Music.</span>
               <div class="auramusic-theme-grid">
+                <button type="button" class="theme-pill-btn" data-theme="jesuluto">⚡ Jesuluto</button>
                 <button type="button" class="theme-pill-btn" data-theme="komi">🐱 Komi-san</button>
                 <button type="button" class="theme-pill-btn" data-theme="apple">🍎 Apple Music</button>
                 <button type="button" class="theme-pill-btn" data-theme="spotify">🟢 Spotify</button>
@@ -1150,6 +1152,7 @@
             <div class="cinema-artwork-box">
               <img id="cinema-art-img" src="" alt="Portada">
             </div>
+            <div id="jesuluto-3d-stage" class="jesuluto-3d-stage" style="display: none;"><div class="jesuluto-stage-pedestal"></div></div>
             <div class="cinema-meta-info">
               <div class="cinema-track-title" id="cinema-track-title">Cargando...</div>
               <div class="cinema-track-artist" id="cinema-track-artist">Artista</div>
@@ -1448,6 +1451,17 @@
     overlay.classList.add('active');
     lastCinemaTrackId = ''; // Forzar actualización
 
+    const jStage = document.getElementById('jesuluto-3d-stage');
+    const artBox = document.querySelector('.cinema-standard-left .cinema-artwork-box');
+    if (state.theme === 'jesuluto') {
+      if (jStage) jStage.style.display = 'flex';
+      if (artBox) artBox.style.display = 'none';
+      setTimeout(initJesuluto3D, 100);
+    } else {
+      if (jStage) jStage.style.display = 'none';
+      if (artBox) artBox.style.display = 'block';
+    }
+
     checkCinemaTrackChange();
     startCinemaSyncLoop();
   }
@@ -1487,6 +1501,9 @@
         const playBtn = document.getElementById('cinema-play-btn');
 
         if (fill) fill.style.width = `${(currentTime / duration) * 100}%`;
+        if (state.theme === 'jesuluto' && typeof updateJesulutoAnimation === 'function') {
+          updateJesulutoAnimation(currentTime, video && !video.paused);
+        }
         if (curSpan) curSpan.textContent = formatTime(currentTime);
         if (totSpan) totSpan.textContent = formatTime(duration);
         if (playBtn) playBtn.textContent = video.paused ? '▶' : '⏸';
@@ -1713,3 +1730,257 @@
   }
 })();
 
+
+
+// --- MODELO 3D BLOCKBENCH Y MOTOR DE ANIMACIÓN PARA EL TEMA JESULUTO ---
+const JESULUTO_DANCE_DATA = {"pose:torso": [{"tick": 60.0, "r": [0.0, 0.0, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 63.0, "r": [0.0, -0.17453294, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 67.0, "r": [0.0, 0.24434611, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 71.0, "r": [0.0, 0.052359883, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 77.0, "r": [0.0, -0.24434611, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 83.0, "r": [0.0, -0.122173056, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 101.0, "r": [0.0, 0.0, 0.0], "t": [0.0, 0.0, 0.0]}], "pose:head": [{"tick": 60.0, "r": [-0.19198622, 0.06981319, -0.017453294], "t": [0.0, 0.0, 0.0]}, {"tick": 63.0, "r": [0.03490659, -0.40142575, -0.017453294], "t": [0.0, 0.0, 0.0]}, {"tick": 65.0, "r": [0.19198622, -0.3141593, -0.122173056], "t": [0.0, 0.0, 0.0]}, {"tick": 71.0, "r": [-0.017453285, 0.122173056, 0.13962635], "t": [0.0, 0.0, 0.0]}, {"tick": 74.0, "r": [0.06981318, 0.0, 0.13962635], "t": [0.0, 0.0, 0.0]}, {"tick": 77.0, "r": [0.06981318, -0.22689281, 0.13962635], "t": [0.0, 0.0, 0.0]}, {"tick": 80.0, "r": [0.19198622, -0.5061455, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 83.0, "r": [0.20943953, -0.33161253, -0.087266445], "t": [0.0, 0.0, 0.0]}, {"tick": 86.0, "r": [0.17453295, -0.33161253, -0.03490657], "t": [0.0, 0.0, 0.0]}, {"tick": 89.0, "r": [0.052359894, 0.10471979, -0.087266445], "t": [0.0, 0.0, 0.0]}, {"tick": 92.0, "r": [0.052359894, 0.10471979, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 95.0, "r": [0.052359894, 0.0698132, 0.12217308], "t": [0.0, 0.0, 0.0]}, {"tick": 101.0, "r": [-0.17453294, -0.08726647, 0.122173056], "t": [0.0, 0.0, 0.0]}], "pose:right_arm": [{"tick": 60.0, "r": [1.1693707, 0.8028515, 0.0], "t": [0.0, -1.375, -2.25]}, {"tick": 63.0, "r": [1.1693707, 0.4188791, 0.0], "t": [0.0, -1.375, -2.25]}, {"tick": 65.0, "r": [0.9250245, 0.052359946, 0.31415927], "t": [0.0, -1.375, -2.25]}, {"tick": 67.0, "r": [0.62831855, 0.052359946, 0.31415927], "t": [0.0, -1.375, -2.25]}, {"tick": 71.0, "r": [-0.03490659, 0.052359946, 0.6632251], "t": [-0.59375, -0.78125, -1.0625]}, {"tick": 74.0, "r": [-0.03490659, 0.052359946, 0.26179934], "t": [-0.59375, -0.78125, -1.0625]}, {"tick": 77.0, "r": [0.41887906, -0.15707964, 0.45378563], "t": [0.0, 0.0, 0.0]}, {"tick": 80.0, "r": [0.7679449, -0.45378563, 0.45378563], "t": [0.0, 0.0, 0.0]}, {"tick": 83.0, "r": [1.134464, 0.03490655, 0.19198626], "t": [0.0, 0.0, 0.0]}, {"tick": 86.0, "r": [1.3613569, 0.22689277, 0.19198626], "t": [0.0, 0.0, 0.0]}, {"tick": 92.0, "r": [0.36651915, -0.20943953, 0.31415927], "t": [0.0, 0.0, 0.0]}, {"tick": 95.0, "r": [0.17453294, -0.20943953, 0.50614554], "t": [0.0, 0.0, 0.0]}, {"tick": 101.0, "r": [0.0, 0.0, 0.33161256], "t": [0.0, 0.0, 0.0]}], "pose:left_arm": [{"tick": 60.0, "r": [0.0, 0.34906587, -0.47123894], "t": [0.0, 0.0, -0.34375]}, {"tick": 63.0, "r": [0.0, 0.34906587, -0.64577186], "t": [0.0, 0.0, -0.34375]}, {"tick": 65.0, "r": [0.593412, 0.7330383, -0.40142575], "t": [0.0, 0.0, -0.34375]}, {"tick": 67.0, "r": [0.8552114, 0.8552114, -0.40142575], "t": [0.0, 0.0, -0.34375]}, {"tick": 71.0, "r": [1.3439035, 0.0, 0.0], "t": [0.96875, 0.0, 0.0]}, {"tick": 74.0, "r": [1.4486233, -0.104719765, 0.0], "t": [0.96875, 0.0, 0.0]}, {"tick": 77.0, "r": [0.5235988, 0.5585054, -0.296706], "t": [0.0, 0.0, 0.0]}, {"tick": 80.0, "r": [0.22689281, 0.33161265, -0.5585054], "t": [0.0, 0.0, 0.0]}, {"tick": 83.0, "r": [-0.087266445, 0.1919863, -0.6981318], "t": [0.0, 0.0, 0.0]}, {"tick": 86.0, "r": [-0.087266445, 0.1919863, -0.8203049], "t": [0.0, 0.0, 0.0]}, {"tick": 89.0, "r": [1.1170108, 0.6981318, -0.31415936], "t": [0.0, 0.0, 0.0]}, {"tick": 95.0, "r": [1.2566372, 0.052359946, -0.31415936], "t": [0.0, 0.0, 0.0]}, {"tick": 101.0, "r": [1.2217306, -0.38397238, -0.17453302], "t": [0.0, -0.65625, 0.0]}], "pose:low_body": [{"tick": 60.0, "r": [0.0, 0.0, 0.0], "t": [0.0, 0.0, 0.0]}, {"tick": 64.0, "r": [0.104719765, -0.13962635, -0.104719765], "t": [0.0, -0.9375, 0.0]}, {"tick": 67.0, "r": [0.0, -0.13962635, -0.052359886], "t": [0.0, 0.0, 0.0]}, {"tick": 71.0, "r": [0.0, 0.2094395, 0.06981316], "t": [0.875, 0.0, 0.0]}, {"tick": 74.0, "r": [0.0, 0.0, 0.0], "t": [0.0, -0.6875, 0.0]}, {"tick": 80.0, "r": [0.0, 0.0, 0.0], "t": [-0.8125, -0.75, 0.0]}, {"tick": 83.0, "r": [-0.122173056, -0.15707964, -0.15707964], "t": [-0.8125, -0.5, 0.0]}, {"tick": 86.0, "r": [0.0, -0.052359883, 0.052359883], "t": [0.0, 0.0, 0.0]}, {"tick": 89.0, "r": [0.0, 0.104719765, 0.052359883], "t": [0.21875, -0.625, 0.0]}, {"tick": 95.0, "r": [-0.06981318, 0.22689281, 0.052359883], "t": [0.21875, -0.78125, 0.0]}, {"tick": 101.0, "r": [0.0, 0.03490659, -0.122173056], "t": [0.0, 0.0, 0.0]}], "pose:right_leg": [{"tick": 60.0, "r": [0.06981318, -0.33161253, 0.24434611], "t": [-0.125, 1.21875, -2.6875]}, {"tick": 65.0, "r": [0.34906587, 0.0, -0.2617994], "t": [0.0, 0.0, 0.0]}, {"tick": 71.0, "r": [-0.104719765, 0.0, 0.2617994], "t": [-0.3125, 0.0, -0.96875]}, {"tick": 74.0, "r": [-0.2617994, 0.0, 0.0], "t": [0.0, 0.0, -0.78125]}, {"tick": 80.0, "r": [0.0, 0.0, 0.15707964], "t": [-1.1875, 0.0, -1.6875]}, {"tick": 83.0, "r": [-0.08726647, 0.0, 0.15707964], "t": [-1.1875, 0.0, -3.15625]}, {"tick": 86.0, "r": [0.34906587, 0.0, -0.20943953], "t": [0.0, 0.0, 0.0]}, {"tick": 89.0, "r": [-0.052359883, 0.0, 0.12217303], "t": [0.0, 0.0, -2.21875]}, {"tick": 95.0, "r": [-0.052359883, 0.0, 0.40142575], "t": [-0.59375, -0.125, -2.21875]}, {"tick": 101.0, "r": [-0.13962635, 0.0, -0.296706], "t": [0.0, 0.0, 0.0]}], "pose:left_leg": [{"tick": 60.0, "r": [0.19198622, 0.45378563, -0.2792527], "t": [0.65625, 0.0, -1.5625]}, {"tick": 65.0, "r": [-0.19198622, 0.0, 0.19198622], "t": [0.0, 0.0, 0.0]}, {"tick": 71.0, "r": [-0.19198622, 0.15707964, -0.122173056], "t": [1.15625, 0.0, -0.90625]}, {"tick": 74.0, "r": [0.0, 0.0, 0.104719765], "t": [0.0, 0.34375, -2.71875]}, {"tick": 80.0, "r": [-0.03490659, 0.40142575, -0.24434611], "t": [0.6875, -0.625, -1.4375]}, {"tick": 83.0, "r": [-0.03490659, 0.40142575, -0.40142575], "t": [0.6875, -0.625, -1.4375]}, {"tick": 86.0, "r": [0.0, 0.0, 0.19198622], "t": [0.0, 0.0, 0.0]}, {"tick": 89.0, "r": [-0.38397244, 0.0, 0.19198622], "t": [0.0, 0.0, -1.34375]}, {"tick": 95.0, "r": [-0.15707964, 0.22689281, -0.052359883], "t": [1.03125, -0.25, -2.34375]}, {"tick": 101.0, "r": [-0.122173056, 0.15707964, 0.017453294], "t": [0.0, 0.0, -3.0]}]};
+
+let jesulutoScene = null;
+let jesulutoCamera = null;
+let jesulutoRenderer = null;
+let jesulutoRig = null;
+let jesulutoSkinTexture = null;
+let isJesuluto3DInitialized = false;
+
+function initJesuluto3D() {
+  const container = document.getElementById('jesuluto-3d-stage');
+  if (!container || typeof THREE === 'undefined') return;
+  if (isJesuluto3DInitialized && jesulutoRenderer) return;
+
+  const width = container.clientWidth || 320;
+  const height = container.clientHeight || 460;
+
+  jesulutoScene = new THREE.Scene();
+  jesulutoCamera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
+  jesulutoCamera.position.set(0, 16, 45);
+  jesulutoCamera.lookAt(0, 14, 0);
+
+  jesulutoRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  jesulutoRenderer.setSize(width, height);
+  jesulutoRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.innerHTML = '';
+  container.appendChild(jesulutoRenderer.domElement);
+
+  // Iluminación Mecha / Cyber Verde
+  const ambient = new THREE.AmbientLight(0xffffff, 0.85);
+  jesulutoScene.add(ambient);
+
+  const dirLight = new THREE.DirectionalLight(0x00ff88, 0.9);
+  dirLight.position.set(10, 30, 20);
+  jesulutoScene.add(dirLight);
+
+  const backLight = new THREE.DirectionalLight(0x00e5ff, 0.5);
+  backLight.position.set(-10, 10, -20);
+  jesulutoScene.add(backLight);
+
+  // Cargar textura Skin de David (Minecraft)
+  const loader = new THREE.TextureLoader();
+  const skinUrl = chrome.runtime?.getURL('assets/jesuluto_skin.png') || 'assets/jesuluto_skin.png';
+
+  loader.load(skinUrl, (texture) => {
+    texture.magFilter = THREE.NearestFilter;
+    texture.minFilter = THREE.NearestFilter;
+    jesulutoSkinTexture = texture;
+    buildJesulutoMinecraftRig(texture);
+  });
+
+  isJesuluto3DInitialized = true;
+}
+
+function createBoxFaceMaterial(image, x, y, w, h) {
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(image, x, y, w, h, 0, 0, w, h);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.magFilter = THREE.NearestFilter;
+  tex.minFilter = THREE.NearestFilter;
+  return new THREE.MeshLambertMaterial({ map: tex, transparent: true, alphaTest: 0.1 });
+}
+
+function buildJesulutoMinecraftRig(texture) {
+  const img = texture.image;
+  if (!img) return;
+
+  const root = new THREE.Group();
+  root.position.y = 0;
+
+  // Helper para crear caja con 6 caras desde coordenadas de skin
+  function makePart(w, h, d, uvMap) {
+    // uvMap: [east, west, up, down, south, north]
+    // en Blockbench: [right, left, top, bottom, front, back]
+    const mats = [
+      createBoxFaceMaterial(img, uvMap.east[0], uvMap.east[1], uvMap.east[2]-uvMap.east[0], uvMap.east[3]-uvMap.east[1]),
+      createBoxFaceMaterial(img, uvMap.west[0], uvMap.west[1], uvMap.west[2]-uvMap.west[0], uvMap.west[3]-uvMap.west[1]),
+      createBoxFaceMaterial(img, uvMap.up[0], uvMap.up[1], uvMap.up[2]-uvMap.up[0], uvMap.up[3]-uvMap.up[1]),
+      createBoxFaceMaterial(img, uvMap.down[0], uvMap.down[1], uvMap.down[2]-uvMap.down[0], uvMap.down[3]-uvMap.down[1]),
+      createBoxFaceMaterial(img, uvMap.north[0], uvMap.north[1], uvMap.north[2]-uvMap.north[0], uvMap.north[3]-uvMap.north[1]),
+      createBoxFaceMaterial(img, uvMap.south[0], uvMap.south[1], uvMap.south[2]-uvMap.south[0], uvMap.south[3]-uvMap.south[1])
+    ];
+    const geom = new THREE.BoxGeometry(w, h, d);
+    return new THREE.Mesh(geom, mats);
+  }
+
+  // 1. Torso
+  const torsoGroup = new THREE.Group();
+  torsoGroup.position.set(0, 12, 0);
+
+  const torsoMesh = makePart(8, 12, 4, {
+    north: [20, 20, 28, 32], east: [16, 20, 20, 32], south: [32, 20, 40, 32],
+    west: [28, 20, 32, 32], up: [20, 16, 28, 20], down: [28, 16, 36, 20]
+  });
+  torsoMesh.position.set(0, 6, 0);
+  torsoGroup.add(torsoMesh);
+
+  // 2. Cabeza (pivote arriba del torso en y = 12)
+  const headGroup = new THREE.Group();
+  headGroup.position.set(0, 12, 0);
+
+  const headMesh = makePart(8, 8, 8, {
+    north: [8, 8, 16, 16], east: [0, 8, 8, 16], south: [24, 8, 32, 16],
+    west: [16, 8, 24, 16], up: [8, 0, 16, 8], down: [16, 0, 24, 8]
+  });
+  headMesh.position.set(0, 4, 0);
+  headGroup.add(headMesh);
+  torsoGroup.add(headGroup);
+
+  // 3. Brazo Derecho (Alex 3px slim, pivote en [5, 10, 0])
+  const rightArmGroup = new THREE.Group();
+  rightArmGroup.position.set(5.5, 10, 0);
+
+  const rightArmMesh = makePart(3, 12, 4, {
+    north: [44, 20, 47, 32], east: [40, 20, 44, 32], south: [51, 20, 54, 32],
+    west: [47, 20, 51, 32], up: [44, 16, 47, 20], down: [47, 16, 50, 20]
+  });
+  rightArmMesh.position.set(0, -5, 0);
+  rightArmGroup.add(rightArmMesh);
+  torsoGroup.add(rightArmGroup);
+
+  // 4. Brazo Izquierdo (Alex 3px slim, pivote en [-5.5, 10, 0])
+  const leftArmGroup = new THREE.Group();
+  leftArmGroup.position.set(-5.5, 10, 0);
+
+  const leftArmMesh = makePart(3, 12, 4, {
+    north: [36, 52, 39, 64], east: [32, 52, 36, 64], south: [43, 52, 46, 64],
+    west: [39, 52, 43, 64], up: [36, 48, 39, 52], down: [39, 48, 42, 52]
+  });
+  leftArmMesh.position.set(0, -5, 0);
+  leftArmGroup.add(leftArmMesh);
+  torsoGroup.add(leftArmGroup);
+
+  root.add(torsoGroup);
+
+  // 5. Pierna Derecha (pivote en [2, 12, 0])
+  const rightLegGroup = new THREE.Group();
+  rightLegGroup.position.set(2, 12, 0);
+
+  const rightLegMesh = makePart(4, 12, 4, {
+    north: [4, 20, 8, 32], east: [0, 20, 4, 32], south: [12, 20, 16, 32],
+    west: [8, 20, 12, 32], up: [4, 16, 8, 20], down: [8, 16, 12, 20]
+  });
+  rightLegMesh.position.set(0, -6, 0);
+  rightLegGroup.add(rightLegMesh);
+  root.add(rightLegGroup);
+
+  // 6. Pierna Izquierda (pivote en [-2, 12, 0])
+  const leftLegGroup = new THREE.Group();
+  leftLegGroup.position.set(-2, 12, 0);
+
+  const leftLegMesh = makePart(4, 12, 4, {
+    north: [20, 52, 24, 64], east: [16, 52, 20, 64], south: [28, 52, 32, 64],
+    west: [24, 52, 28, 64], up: [20, 48, 24, 52], down: [24, 48, 28, 52]
+  });
+  leftLegMesh.position.set(0, -6, 0);
+  leftLegGroup.add(leftLegMesh);
+  root.add(leftLegGroup);
+
+  jesulutoScene.add(root);
+
+  jesulutoRig = {
+    root,
+    torso: torsoGroup,
+    head: headGroup,
+    rightArm: rightArmGroup,
+    leftArm: leftArmGroup,
+    rightLeg: rightLegGroup,
+    leftLeg: leftLegGroup
+  };
+
+  console.log('✅ AuraMusic: Rig 3D de Jesuluto construido con éxito!');
+}
+
+function updateJesulutoAnimation(currentTime, isPlaying) {
+  if (!jesulutoRig || !isJesuluto3DInitialized) return;
+
+  if (!isPlaying) {
+    // Idle suave si está pausado
+    jesulutoRig.root.rotation.y = Math.sin(currentTime * 1.5) * 0.1;
+    if (jesulutoRenderer && jesulutoScene && jesulutoCamera) {
+      jesulutoRenderer.render(jesulutoScene, jesulutoCamera);
+    }
+    return;
+  }
+
+  // Mapear tiempo al baile de 41 ticks (tick 60.0 a 101.0)
+  const animLen = 41.0;
+  const currentTick = 60.0 + ((currentTime * 20.0) % animLen);
+
+  function sampleKeyframe(channelName) {
+    const kfs = JESULUTO_DANCE_DATA[channelName];
+    if (!kfs || kfs.length === 0) return { r: [0, 0, 0], t: [0, 0, 0] };
+
+    let p0 = kfs[0];
+    let p1 = kfs[kfs.length - 1];
+
+    for (let i = 0; i < kfs.length - 1; i++) {
+      if (currentTick >= kfs[i].tick && currentTick <= kfs[i + 1].tick) {
+        p0 = kfs[i];
+        p1 = kfs[i + 1];
+        break;
+      }
+    }
+
+    const span = p1.tick - p0.tick;
+    const factor = span > 0 ? (currentTick - p0.tick) / span : 0;
+
+    const r = [
+      p0.r[0] + (p1.r[0] - p0.r[0]) * factor,
+      p0.r[1] + (p1.r[1] - p0.r[1]) * factor,
+      p0.r[2] + (p1.r[2] - p0.r[2]) * factor
+    ];
+
+    const t = [
+      p0.t[0] + (p1.t[0] - p0.t[0]) * factor,
+      p0.t[1] + (p1.t[1] - p0.t[1]) * factor,
+      p0.t[2] + (p1.t[2] - p0.t[2]) * factor
+    ];
+
+    return { r, t };
+  }
+
+  const torsoKf = sampleKeyframe('pose:torso');
+  const headKf = sampleKeyframe('pose:head');
+  const rArmKf = sampleKeyframe('pose:right_arm');
+  const lArmKf = sampleKeyframe('pose:left_arm');
+  const rLegKf = sampleKeyframe('pose:right_leg');
+  const lLegKf = sampleKeyframe('pose:left_leg');
+  const lowBodyKf = sampleKeyframe('pose:low_body');
+
+  // Aplicar rotaciones
+  jesulutoRig.torso.rotation.set(torsoKf.r[0], torsoKf.r[1], torsoKf.r[2]);
+  jesulutoRig.head.rotation.set(headKf.r[0], headKf.r[1], headKf.r[2]);
+  jesulutoRig.rightArm.rotation.set(rArmKf.r[0], rArmKf.r[1], rArmKf.r[2]);
+  jesulutoRig.leftArm.rotation.set(lArmKf.r[0], lArmKf.r[1], lArmKf.r[2]);
+  jesulutoRig.rightLeg.rotation.set(rLegKf.r[0], rLegKf.r[1], rLegKf.r[2]);
+  jesulutoRig.leftLeg.rotation.set(lLegKf.r[0], lLegKf.r[1], lLegKf.r[2]);
+
+  // Desplazamiento del cuerpo
+  jesulutoRig.root.position.y = (lowBodyKf.t[1] || 0) * 0.5;
+  jesulutoRig.root.rotation.y = 0.2 + Math.sin(currentTime * 2) * 0.15; // Ligero giro cinemático hacia la cámara
+
+  if (jesulutoRenderer && jesulutoScene && jesulutoCamera) {
+    jesulutoRenderer.render(jesulutoScene, jesulutoCamera);
+  }
+}
