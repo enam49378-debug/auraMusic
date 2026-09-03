@@ -92,9 +92,16 @@
 
   // 3. Extracción del ID de la siguiente canción real de la lista
   function getNextTrackVideoId() {
+    const currentVid = document.querySelector('#movie_player')?.getVideoData?.()?.video_id || 
+                       new URLSearchParams(window.location.search).get('v') || '';
+
+    function isValid(id) {
+      return id && typeof id === 'string' && id.length === 11 && id !== currentVid;
+    }
+
     // A. Del puente del contexto principal (Polymer Memory / movie_player playlist)
     const fromBridge = document.documentElement.dataset.auramusicNextVideoId;
-    if (fromBridge && typeof fromBridge === 'string' && fromBridge.length === 11) {
+    if (isValid(fromBridge)) {
       return fromBridge;
     }
 
@@ -103,11 +110,11 @@
       const player = document.querySelector('#movie_player');
       if (player && typeof player.getPlaylist === 'function') {
         const list = player.getPlaylist();
-        const curId = player.getVideoData?.()?.video_id;
+        const curId = currentVid || player.getVideoData?.()?.video_id;
         const idx = (Array.isArray(list) && curId) ? list.indexOf(curId) : (typeof player.getPlaylistIndex === 'function' ? player.getPlaylistIndex() : -1);
         if (Array.isArray(list) && idx >= 0 && idx + 1 < list.length) {
           const id = list[idx + 1];
-          if (id && typeof id === 'string' && id.length === 11) return id;
+          if (isValid(id)) return id;
         }
       }
     } catch (e) {}
@@ -129,7 +136,7 @@
         const link = nextRow.querySelector('a[href*="watch?v="]');
         if (link && link.href) {
           const m = link.href.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-          if (m) return m[1];
+          if (m && isValid(m[1])) return m[1];
         }
       }
     } catch (e) {}
@@ -141,7 +148,7 @@
         const link = currentQueueItem.nextElementSibling.querySelector('a[href*="watch?v="]');
         if (link && link.href) {
           const m = link.href.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-          if (m) return m[1];
+          if (m && isValid(m[1])) return m[1];
         }
       }
     } catch (e) {}
@@ -359,29 +366,17 @@
         _isTransitioningToNext = true;
         _pendingSeekTime = fadeSec; // Guardar el descuento de tiempo para la Pista B
 
-        console.log(`🔀 AuraMusic: Fin del solapamiento (${fadeSec}s). Verificando si YouTube Music ya cambió...`);
+        console.log(`🔀 AuraMusic: Fin del solapamiento (${fadeSec}s). Dejando que YouTube Music avance naturalmente a Pista B ("${targetVideoId}")...`);
 
-        // Comprobar estrictamente si YouTube Music ya avanzó a la Pista B
-        const player = document.querySelector('#movie_player');
-        const currentVideoId = player?.getVideoData?.()?.video_id || '';
-
-        const alreadyOnNext = (currentVideoId && currentVideoId === targetVideoId);
-
-        if (alreadyOnNext) {
-          console.log(`🔀 AuraMusic: YouTube Music ya está en Pista B ("${targetVideoId}"). ¡No se dispara salto adicional para no saltar a la Pista C!`);
-          const v = document.querySelector('video');
-          if (v && isFinite(v.duration) && v.duration > fadeSec) {
-            try {
-              v.currentTime = fadeSec;
-              console.log(`🔀 AuraMusic: Intro de Pista B descontado -> Sincronizado en ${fadeSec}s.`);
-              _pendingSeekTime = 0;
-              _targetNextVideoId = '';
-            } catch (e) {}
+        // Timeout de seguridad: Si YouTube Music NO avanza en 2.5s (ej. si el reproductor se congeló), forzar avance a Pista B
+        setTimeout(() => {
+          const player = document.querySelector('#movie_player');
+          const currentVideoId = player?.getVideoData?.()?.video_id || '';
+          if (currentVideoId !== targetVideoId && _pendingSeekTime > 0) {
+            console.log(`🔀 AuraMusic: YouTube Music no avanzó solo tras 2.5s -> Forzando avance a Pista B ("${targetVideoId}")...`);
+            triggerNextTrack();
           }
-        } else {
-          console.log(`🔀 AuraMusic: Forzando avance único a Pista B ("${targetVideoId}")...`);
-          triggerNextTrack();
-        }
+        }, 2500);
 
         setTimeout(() => {
           setPlayerVolume(1.0);
