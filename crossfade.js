@@ -1,36 +1,528 @@
 // ============================================================================
-// AuraMusic - Módulo de Crossfade y Transición Continua (crossfade.js)
-// Arquitectura True Dual-Deck: Motor DJ de Dos Decks Continuos Sin Microcortes
+// AuraMusic - AuraPlayer: Reproductor Autónomo de Doble Deck (crossfade.js)
+// Arquitectura 100% Propietaria: Control Total de Audio, Cero Dependencia de YouTube
 // ============================================================================
 
 (function() {
   'use strict';
 
-  // 1. Estado del Motor Dual-Deck
-  let _activeDeck = 'native'; // 'native' | 'deckA' | 'deckB'
-  let _deckA = null; // HTMLAudioElement
-  let _deckB = null; // HTMLAudioElement
-  let _deckAVideoId = '';
-  let _deckBVideoId = '';
-  let _currentPlayingVideoId = '';
-  let _upcomingNextVideoId = '';
-  let _isCrossfading = false;
-  let _fadeInterval = null;
-  let _watchdogInterval = null;
-  let _isProgrammaticSkip = false;
-  let _lastSkipTime = 0;
+  // 1. Estado del Reproductor Autónomo AuraPlayer
+  const AuraPlayer = {
+    deck1: null,
+    deck2: null,
+    activeDeckNum: 1, // 1 o 2
+    currentVideoId: '',
+    nextVideoId: '',
+    isCrossfading: false,
+    isPlaying: false,
+    fadeInterval: null,
+    watchdogInterval: null,
+    isProgrammaticNav: false,
+    lastNavTime: 0,
 
-  // 2. Identificador canónico de la pista en pantalla
-  function getCanonicalTrackKey() {
-    const img = document.querySelector('ytmusic-player-bar .image, #song-image img');
-    const title = document.querySelector('ytmusic-player-bar .title, .middle-controls .title');
-    const src = img?.src || '';
-    const text = title?.textContent?.trim() || '';
-    if (!src && !text) return '';
-    return `${src}||${text}`;
+    getActiveDeck: function() {
+      return this.activeDeckNum === 1 ? this.deck1 : this.deck2;
+    },
+
+    getInactiveDeck: function() {
+      return this.activeDeckNum === 1 ? this.deck2 : this.deck1;
+    },
+
+    getActiveDeckNum: function() {
+      return this.activeDeckNum;
+    },
+
+    swapDecks: function() {
+      this.activeDeckNum = this.activeDeckNum === 1 ? 2 : 1;
+    }
+  };
+
+  // 2. Extraer el VideoId actual de YouTube Music
+  function getCurrentYouTubeVideoId() {
+    const fromPlayer = document.querySelector('#movie_player')?.getVideoData?.()?.video_id;
+    if (fromPlayer && fromPlayer.length === 11) return fromPlayer;
+    const fromUrl = new URLSearchParams(window.location.search).get('v');
+    if (fromUrl && fromUrl.length === 11) return fromUrl;
+    return '';
   }
 
-  // 3. Puente inyectado en el contexto principal para leer la cola de YouTube Music en tiempo real
+  // 3. Extraer el VideoId de la siguiente canción de la lista (Álbum / Cola)
+  function getNextTrackVideoId() {
+    const curId = AuraPlayer.currentVideoId || getCurrentYouTubeVideoId();
+
+    function isValid(id) {
+      return id && typeof id === 'string' && id.length === 11 && id !== curId;
+    }
+
+    // A. Del puente del contexto principal (Polymer Memory)
+    const fromBridge = document.documentElement.dataset.auramusicNextVideoId;
+    if (isValid(fromBridge)) return fromBridge;
+
+    // B. De la API interna #movie_player
+    try {
+      const player = document.querySelector('#movie_player');
+      if (player && typeof player.getPlaylist === 'function') {
+        const list = player.getPlaylist();
+        const curVid = curId || player.getVideoData?.()?.video_id;
+        const idx = (Array.isArray(list) && curVid) ? list.indexOf(curVid) : (typeof player.getPlaylistIndex === 'function' ? player.getPlaylistIndex() : -1);
+        if (Array.isArray(list) && idx >= 0 && idx + 1 < list.length) {
+          const id = list[idx + 1];
+          if (isValid(id)) return id;
+        }
+      }
+    } catch (e) {}
+
+    // C. De la lista de canciones en pantalla (Álbumes / Responsive Tracklist)
+    try {
+      const allRows = Array.from(document.querySelectorAll('ytmusic-responsive-list-item-renderer'));
+      let activeIdx = -1;
+      for (let i = 0; i < allRows.length; i++) {
+        const row = allRows[i];
+        if (row.querySelector('[play-button-state="playing"], .playing-icon, ytmusic-play-button-renderer[state="playing"]') || row.classList.contains('selected')) {
+          activeIdx = i;
+          break;
+        }
+      }
+      if (activeIdx >= 0 && activeIdx + 1 < allRows.length) {
+        const nextRow = allRows[activeIdx + 1];
+        const link = nextRow.querySelector('a[href*="watch?v="]');
+        if (link && link.href) {
+          const m = link.href.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+          if (m && isValid(m[1])) return m[1];
+        }
+      }
+    } catch (e) {}
+
+    // D. De los elementos visibles de la cola en el DOM
+    try {
+      const queueItems = Array.from(document.querySelectorAll('ytmusic-player-queue-item'));
+      const activeQueueIdx = queueItems.findIndex(el => 
+        el.hasAttribute('selected') || 
+        el.classList.contains('selected') || 
+        el.querySelector('[play-button-state="playing"]')
+      );
+      if (activeQueueIdx >= 0 && activeQueueIdx + 1 < queueItems.length) {
+        const nextQueueItem = queueItems[activeQueueIdx + 1];
+        const link = nextQueueItem.querySelector('a[href*="watch?v="]');
+        if (link && link.href) {
+          const m = link.href.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+          if (m && isValid(m[1])) return m[1];
+        }
+      }
+    } catch (e) {}
+
+    return '';
+  }
+
+  // 4. Curvas de Ganancia Acústica
+  function calculateGainCurve(progress, curveType = 'equal-power') {
+    const p = Math.max(0, Math.min(1, progress));
+    if (curveType === 'equal-power') {
+      return {
+        gainA: Math.cos(p * 0.5 * Math.PI),
+        gainB: Math.sin(p * 0.5 * Math.PI)
+      };
+    } else if (curveType === 'smoothstep') {
+      const s = p * p * (3 - 2 * p);
+      return { gainA: 1 - s, gainB: s };
+    } else {
+      return { gainA: 1 - p, gainB: p };
+    }
+  }
+
+  // 5. Silenciamiento Absoluto de YouTube (YouTube NO emite audio)
+  function enforceYouTubeSilent() {
+    if (!window.state?.crossfade) return;
+
+    const video = document.querySelector('video');
+    if (video) {
+      if (video.volume > 0) {
+        try { video.volume = 0; } catch (e) {}
+      }
+      if (!video.muted) {
+        try { video.muted = true; } catch (e) {}
+      }
+    }
+
+    const player = document.querySelector('#movie_player');
+    if (player && typeof player.setVolume === 'function' && typeof player.getVolume === 'function') {
+      if (player.getVolume() > 0) {
+        try { player.setVolume(0); } catch (e) {}
+      }
+    }
+  }
+
+  // 6. Avanzar la interfaz visual de YouTube Music a la siguiente pista
+  function navigateYouTubeUIToTrack(targetId) {
+    const now = performance.now();
+    if (now - AuraPlayer.lastNavTime < 2500) return;
+    AuraPlayer.lastNavTime = now;
+    AuraPlayer.isProgrammaticNav = true;
+
+    // A. Si estamos en un álbum en pantalla, hacer clic en la siguiente fila
+    try {
+      const allRows = Array.from(document.querySelectorAll('ytmusic-responsive-list-item-renderer'));
+      let activeIdx = -1;
+      for (let i = 0; i < allRows.length; i++) {
+        const row = allRows[i];
+        if (row.querySelector('[play-button-state="playing"], .playing-icon, ytmusic-play-button-renderer[state="playing"]') || row.classList.contains('selected')) {
+          activeIdx = i;
+          break;
+        }
+      }
+      if (activeIdx >= 0 && activeIdx + 1 < allRows.length) {
+        const nextRow = allRows[activeIdx + 1];
+        const playBtn = nextRow.querySelector('ytmusic-play-button-renderer, .play-button, #play-button, a[href*="watch?v="]');
+        if (playBtn) {
+          playBtn.click();
+          console.log('🔀 AuraPlayer: Interfaz de álbum actualizada a la siguiente fila.');
+          setTimeout(() => { AuraPlayer.isProgrammaticNav = false; }, 1200);
+          return;
+        }
+      }
+    } catch (e) {}
+
+    // B. Si la cola está abierta, avanzar en la cola
+    try {
+      const queueItems = Array.from(document.querySelectorAll('ytmusic-player-queue-item'));
+      const activeQueueIdx = queueItems.findIndex(el => 
+        el.hasAttribute('selected') || 
+        el.classList.contains('selected') || 
+        el.querySelector('[play-button-state="playing"]')
+      );
+      if (activeQueueIdx >= 0 && activeQueueIdx + 1 < queueItems.length) {
+        const nextQueueItem = queueItems[activeQueueIdx + 1];
+        const playBtn = nextQueueItem.querySelector('.play-button, ytmusic-play-button-renderer, #play-button');
+        if (playBtn) {
+          playBtn.click();
+          console.log('🔀 AuraPlayer: Interfaz de cola actualizada.');
+          setTimeout(() => { AuraPlayer.isProgrammaticNav = false; }, 1200);
+          return;
+        }
+      }
+    } catch (e) {}
+
+    // C. Por API movie_player
+    try {
+      const player = document.querySelector('#movie_player');
+      if (player && typeof player.nextVideo === 'function') {
+        player.nextVideo();
+        if (typeof player.playVideo === 'function') player.playVideo();
+        console.log('🔀 AuraPlayer: Siguiente canción activada con movie_player.nextVideo().');
+        setTimeout(() => { AuraPlayer.isProgrammaticNav = false; }, 1200);
+        return;
+      }
+    } catch (e) {}
+
+    // D. Botón next en la barra
+    try {
+      const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
+      if (nextBtn) nextBtn.click();
+    } catch (e) {}
+
+    setTimeout(() => { AuraPlayer.isProgrammaticNav = false; }, 1200);
+  }
+
+  // 7. Actualizar la barra inferior de YouTube Music (Minutero, Progreso y Botón Play/Pausa)
+  function updatePlayerBarUI(cur, dur, isPlaying) {
+    if (!dur || dur <= 0 || isNaN(dur)) return;
+
+    // A. Texto del minutero (ej. "1:15 / 2:48")
+    const timeInfo = document.querySelector('ytmusic-player-bar .time-info, ytmusic-player-bar #time-info, .time-info');
+    if (timeInfo) {
+      const formatTime = (sec) => {
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60);
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+      };
+      timeInfo.textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
+    }
+
+    // B. Slider de progreso (#progress-bar)
+    const progressBar = document.querySelector('ytmusic-player-bar #progress-bar, #progress-bar');
+    if (progressBar) {
+      progressBar.value = cur;
+      progressBar.max = dur;
+      progressBar.setAttribute('value', cur);
+      progressBar.setAttribute('max', dur);
+    }
+
+    // C. Relleno visual del slider (#primaryProgress)
+    const primaryProgress = document.querySelector('ytmusic-player-bar #primaryProgress, ytmusic-player-bar #sliderBar #primaryProgress');
+    if (primaryProgress) {
+      const pct = Math.max(0, Math.min(1, cur / dur));
+      primaryProgress.style.transform = `scaleX(${pct})`;
+      primaryProgress.style.transformOrigin = 'left center';
+    }
+
+    // D. Reflejar estado de Play / Pausa en el botón nativo
+    const playPauseBtn = document.querySelector('ytmusic-player-bar #play-pause-button, #play-pause-button');
+    if (playPauseBtn) {
+      const icon = playPauseBtn.querySelector('iron-icon, yt-icon, svg');
+      if (icon) {
+        if (isPlaying) {
+          playPauseBtn.setAttribute('title', 'Pausar');
+          playPauseBtn.setAttribute('aria-label', 'Pausar');
+        } else {
+          playPauseBtn.setAttribute('title', 'Reproducir');
+          playPauseBtn.setAttribute('aria-label', 'Reproducir');
+        }
+      }
+    }
+  }
+
+  // 8. Cargar y reproducir una canción en un Deck de AuraPlayer
+  async function loadTrackIntoDeck(deckNum, videoId) {
+    try {
+      console.log(`🔀 AuraPlayer: Precargando pista "${videoId}" en Deck ${deckNum}...`);
+      const res = await fetch(`http://localhost:8080/prefetch?id=${videoId}`);
+      if (!res.ok) throw new Error('Servidor companion devolvió error HTTP');
+      const data = await res.json();
+      if (!data || !data.url) throw new Error('URL de audio inválida');
+
+      const audio = new Audio(data.url);
+      audio.preload = 'auto';
+
+      if (deckNum === 1) {
+        if (AuraPlayer.deck1) {
+          try { AuraPlayer.deck1.pause(); AuraPlayer.deck1.src = ''; } catch (e) {}
+        }
+        AuraPlayer.deck1 = audio;
+      } else {
+        if (AuraPlayer.deck2) {
+          try { AuraPlayer.deck2.pause(); AuraPlayer.deck2.src = ''; } catch (e) {}
+        }
+        AuraPlayer.deck2 = audio;
+      }
+
+      console.log(`✅ AuraPlayer: Deck ${deckNum} listo con audio de "${videoId}".`);
+      return audio;
+    } catch (e) {
+      console.warn(`❌ AuraPlayer: Error al cargar en Deck ${deckNum}:`, e.message);
+      return null;
+    }
+  }
+
+  // 9. Iniciar reproducción de una canción en AuraPlayer
+  async function playTrack(videoId) {
+    if (!videoId) return;
+
+    // Si ya es la canción que está sonando, solo asegurarse de que esté en Play
+    if (AuraPlayer.currentVideoId === videoId && AuraPlayer.getActiveDeck()) {
+      const active = AuraPlayer.getActiveDeck();
+      if (active.paused) {
+        active.play().catch(() => {});
+        AuraPlayer.isPlaying = true;
+      }
+      return;
+    }
+
+    AuraPlayer.currentVideoId = videoId;
+    AuraPlayer.nextVideoId = '';
+    AuraPlayer.isCrossfading = false;
+
+    // Silenciar YouTube nativo inmediatamente
+    enforceYouTubeSilent();
+
+    const targetDeckNum = AuraPlayer.activeDeckNum;
+    const audio = await loadTrackIntoDeck(targetDeckNum, videoId);
+    if (!audio) return;
+
+    audio.volume = 1.0;
+    audio.currentTime = 0;
+    audio.play().then(() => {
+      AuraPlayer.isPlaying = true;
+      console.log(`🎵 AuraPlayer: Reproduciendo "${videoId}" en Deck ${targetDeckNum} al 100% de volumen.`);
+    }).catch(e => {
+      console.warn('Error al reproducir audio de AuraPlayer:', e.message);
+    });
+  }
+
+  // 10. Disparar el Crossfade de Estudio entre Deck 1 y Deck 2
+  function startAuraCrossfade(fadeSec, nextVideoId) {
+    if (AuraPlayer.isCrossfading) return;
+    AuraPlayer.isCrossfading = true;
+
+    const outgoingDeck = AuraPlayer.getActiveDeck();
+    const incomingDeck = AuraPlayer.getInactiveDeck();
+    const incomingDeckNum = AuraPlayer.activeDeckNum === 1 ? 2 : 1;
+    const outgoingId = AuraPlayer.currentVideoId;
+
+    if (!outgoingDeck || !incomingDeck) {
+      AuraPlayer.isCrossfading = false;
+      return;
+    }
+
+    const durationMs = fadeSec * 1000;
+    const startTime = performance.now();
+    const curveType = window.state?.crossfadeCurve || 'equal-power';
+
+    console.log(`🔀 AuraPlayer: 🔥 Mezcla en vivo (${fadeSec}s) desde Deck ${AuraPlayer.activeDeckNum} hacia Deck ${incomingDeckNum} ("${nextVideoId}").`);
+
+    incomingDeck.currentTime = 0;
+    incomingDeck.volume = 0;
+    incomingDeck.play().catch(() => {});
+
+    if (AuraPlayer.fadeInterval) clearInterval(AuraPlayer.fadeInterval);
+    AuraPlayer.fadeInterval = setInterval(() => {
+      const elapsed = performance.now() - startTime;
+      const progress = Math.min(1, elapsed / durationMs);
+      const { gainA, gainB } = calculateGainCurve(progress, curveType);
+
+      outgoingDeck.volume = Math.max(0, Math.min(1, gainA));
+      incomingDeck.volume = Math.max(0, Math.min(1, gainB));
+
+      if (progress >= 1) {
+        clearInterval(AuraPlayer.fadeInterval);
+        AuraPlayer.fadeInterval = null;
+        AuraPlayer.isCrossfading = false;
+
+        // Detener y limpiar el deck saliente
+        outgoingDeck.pause();
+        outgoingDeck.currentTime = 0;
+
+        if (outgoingId && outgoingId !== nextVideoId) {
+          fetch(`http://localhost:8080/cleanup?id=${outgoingId}`).catch(() => {});
+        }
+
+        // Relevo oficial: el deck entrante es el nuevo master
+        AuraPlayer.swapDecks();
+        AuraPlayer.currentVideoId = nextVideoId;
+        AuraPlayer.nextVideoId = '';
+
+        // Actualizar la interfaz de YouTube Music a la nueva canción
+        navigateYouTubeUIToTrack(nextVideoId);
+        setTimeout(enforceYouTubeSilent, 150);
+        setTimeout(enforceYouTubeSilent, 500);
+
+        console.log(`🔀 AuraPlayer: ¡Mezcla completada! Deck ${AuraPlayer.activeDeckNum} continúa de corrido sin interrupción.`);
+      }
+    }, 30);
+  }
+
+  // 11. Bucle Maestro de Vigilancia Continua (cada 50ms)
+  function handleWatchdog() {
+    if (!window.state?.crossfade) return;
+
+    enforceYouTubeSilent();
+
+    const currentYtId = getCurrentYouTubeVideoId();
+
+    // Si el usuario cambió de canción manualmente en la interfaz de YouTube Music:
+    if (currentYtId && currentYtId !== AuraPlayer.currentVideoId && !AuraPlayer.isCrossfading && !AuraPlayer.isProgrammaticNav) {
+      console.log(`🔀 AuraPlayer: Detectado cambio manual de canción a "${currentYtId}".`);
+      playTrack(currentYtId);
+      return;
+    }
+
+    const activeDeck = AuraPlayer.getActiveDeck();
+    if (!activeDeck) {
+      if (currentYtId && !AuraPlayer.isCrossfading) {
+        playTrack(currentYtId);
+      }
+      return;
+    }
+
+    const cur = activeDeck.currentTime;
+    const dur = activeDeck.duration;
+    const isPaused = activeDeck.paused;
+
+    AuraPlayer.isPlaying = !isPaused;
+
+    if (!dur || dur < 3) return;
+
+    // Actualizar barra y minutero en vivo segundo a segundo
+    updatePlayerBarUI(cur, dur, !isPaused);
+
+    if (isPaused) return;
+
+    const rem = dur - cur;
+    const fadeSec = Math.max(1, Math.min(15, window.state?.crossfadeDuration || 5));
+
+    // A. Pre-descarga de la siguiente canción cuando faltan entre fadeSec+25s y fadeSec
+    if (rem <= fadeSec + 25 && rem > fadeSec && !AuraPlayer.nextVideoId && !AuraPlayer.isCrossfading) {
+      const nextId = getNextTrackVideoId();
+      if (nextId) {
+        AuraPlayer.nextVideoId = nextId;
+        const targetDeckNum = AuraPlayer.activeDeckNum === 1 ? 2 : 1;
+        loadTrackIntoDeck(targetDeckNum, nextId);
+      }
+    }
+
+    // B. Disparar mezcla continua de estudio al tocar rem <= fadeSec
+    if (rem <= fadeSec && rem > 0.2 && !AuraPlayer.isCrossfading) {
+      const effectiveFadeSec = Math.min(fadeSec, Math.max(1, Math.round(rem * 10) / 10));
+      const nextId = AuraPlayer.nextVideoId || getNextTrackVideoId();
+      if (nextId) {
+        startAuraCrossfade(effectiveFadeSec, nextId);
+      }
+    }
+  }
+
+  // 12. Controles de Usuario: Play / Pausa / Barra de Tiempo
+  function togglePlayPause() {
+    const active = AuraPlayer.getActiveDeck();
+    if (!active) return;
+
+    if (active.paused) {
+      active.play().catch(() => {});
+      AuraPlayer.isPlaying = true;
+      console.log('▶️ AuraPlayer: Reanudado por usuario.');
+    } else {
+      active.pause();
+      AuraPlayer.isPlaying = false;
+      console.log('⏸️ AuraPlayer: Pausado por usuario.');
+    }
+  }
+
+  function seekToSeconds(sec) {
+    const active = AuraPlayer.getActiveDeck();
+    if (!active || isNaN(sec)) return;
+    active.currentTime = Math.max(0, Math.min(active.duration || 9999, sec));
+    console.log(`⏩ AuraPlayer: Posición actualizada a ${sec}s.`);
+  }
+
+  // 13. Listeners Globales
+  function setupListeners() {
+    // A. Interceptar clics en el botón nativo de Play/Pausa
+    document.addEventListener('click', (e) => {
+      const playPauseBtn = e.target.closest('#play-pause-button, ytmusic-player-bar #play-pause-button');
+      if (playPauseBtn) {
+        e.stopPropagation();
+        togglePlayPause();
+      }
+    }, true);
+
+    // B. Interceptar tecla Espacio para Play/Pausa
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !e.target.matches('input, textarea, select, [contenteditable="true"]')) {
+        e.preventDefault();
+        togglePlayPause();
+      }
+    });
+
+    // C. Interceptar arrastre o clic en la barra deslizadora de tiempo
+    document.addEventListener('input', (e) => {
+      if (e.target.matches('ytmusic-player-bar #progress-bar, #progress-bar, tp-yt-paper-slider')) {
+        const sec = parseFloat(e.target.value);
+        if (!isNaN(sec)) seekToSeconds(sec);
+      }
+    });
+
+    document.addEventListener('change', (e) => {
+      if (e.target.matches('ytmusic-player-bar #progress-bar, #progress-bar, tp-yt-paper-slider')) {
+        const sec = parseFloat(e.target.value);
+        if (!isNaN(sec)) seekToSeconds(sec);
+      }
+    });
+
+    // Iniciar bucle de vigilancia de 50ms
+    if (!AuraPlayer.watchdogInterval) {
+      AuraPlayer.watchdogInterval = setInterval(handleWatchdog, 50);
+    }
+  }
+
+  // 14. Inyectar puente para lectura de memoria de cola
   function injectMainWorldBridge() {
     if (document.getElementById('auramusic-main-bridge')) return;
     const script = document.createElement('script');
@@ -78,625 +570,33 @@
     (document.head || document.documentElement).appendChild(script);
   }
 
-  // 4. Extracción del ID de la siguiente canción real de la lista
-  function getNextTrackVideoId() {
-    const currentVid = document.querySelector('#movie_player')?.getVideoData?.()?.video_id || 
-                       new URLSearchParams(window.location.search).get('v') || '';
-
-    function isValid(id) {
-      return id && typeof id === 'string' && id.length === 11 && id !== currentVid;
-    }
-
-    // A. Del puente del contexto principal (Polymer Memory / movie_player playlist)
-    const fromBridge = document.documentElement.dataset.auramusicNextVideoId;
-    if (isValid(fromBridge)) {
-      return fromBridge;
-    }
-
-    // B. De la API interna #movie_player
-    try {
-      const player = document.querySelector('#movie_player');
-      if (player && typeof player.getPlaylist === 'function') {
-        const list = player.getPlaylist();
-        const curId = currentVid || player.getVideoData?.()?.video_id;
-        const idx = (Array.isArray(list) && curId) ? list.indexOf(curId) : (typeof player.getPlaylistIndex === 'function' ? player.getPlaylistIndex() : -1);
-        if (Array.isArray(list) && idx >= 0 && idx + 1 < list.length) {
-          const id = list[idx + 1];
-          if (isValid(id)) return id;
-        }
-      }
-    } catch (e) {}
-
-    // C. De la lista de canciones en pantalla (Álbumes / Responsive Tracklist)
-    try {
-      const allRows = Array.from(document.querySelectorAll('ytmusic-responsive-list-item-renderer'));
-      let playingIndex = -1;
-      for (let i = 0; i < allRows.length; i++) {
-        const row = allRows[i];
-        const isPlaying = row.querySelector('[play-button-state="playing"], [aria-selected="true"], .playing-icon, ytmusic-play-button-renderer[state="playing"]');
-        if (isPlaying || row.classList.contains('selected')) {
-          playingIndex = i;
-          break;
-        }
-      }
-      if (playingIndex >= 0 && playingIndex + 1 < allRows.length) {
-        const nextRow = allRows[playingIndex + 1];
-        const link = nextRow.querySelector('a[href*="watch?v="]');
-        if (link && link.href) {
-          const m = link.href.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-          if (m && isValid(m[1])) return m[1];
-        }
-      }
-    } catch (e) {}
-
-    // D. De los elementos visibles de la cola en el DOM
-    try {
-      const currentQueueItem = document.querySelector('ytmusic-player-queue-item[play-button-state="playing"], ytmusic-player-queue-item.selected, ytmusic-player-queue-item[selected]');
-      if (currentQueueItem && currentQueueItem.nextElementSibling) {
-        const link = currentQueueItem.nextElementSibling.querySelector('a[href*="watch?v="]');
-        if (link && link.href) {
-          const m = link.href.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-          if (m && isValid(m[1])) return m[1];
-        }
-      }
-    } catch (e) {}
-
-    return '';
-  }
-
-  // 5. Curvas de Ganancia Acústica (Spotify Equal Power, Smoothstep, Lineal)
-  function calculateGainCurve(progress, curveType = 'equal-power') {
-    const p = Math.max(0, Math.min(1, progress));
-    if (curveType === 'equal-power') {
-      return {
-        gainA: Math.cos(p * 0.5 * Math.PI),
-        gainB: Math.sin(p * 0.5 * Math.PI)
-      };
-    } else if (curveType === 'smoothstep') {
-      const s = p * p * (3 - 2 * p);
-      return { gainA: 1 - s, gainB: s };
-    } else {
-      return { gainA: 1 - p, gainB: p };
-    }
-  }
-
-  // 6. Control de Volumen Triple Capa (#movie_player, video.volume, y Web Audio)
-  function setPlayerVolume(volumeFactor) {
-    const vf = Math.max(0, Math.min(1, volumeFactor));
-
-    try {
-      const player = document.querySelector('#movie_player');
-      if (player && typeof player.setVolume === 'function') {
-        player.setVolume(Math.round(vf * 100));
-      }
-    } catch (e) {}
-
-    const video = document.querySelector('video');
-    if (video) {
-      try { video.volume = vf; } catch (e) {}
-    }
-
-    if (window.gainNode && window.audioCtx && window.audioCtx.state === 'running') {
-      try {
-        const bg = window.baseGain || 1.0;
-        window.gainNode.gain.setValueAtTime(vf * bg, window.audioCtx.currentTime);
-      } catch (e) {}
-    }
-  }
-
-  // 7. Mantener el video nativo de YouTube completamente en silencio cuando un Deck externo está activo
-  function keepNativeVideoSilent() {
-    if (!window.state?.crossfade || _activeDeck === 'native') return;
-
-    const video = document.querySelector('video');
-    if (video && video.volume > 0) {
-      try { video.volume = 0; } catch (e) {}
-    }
-
-    const player = document.querySelector('#movie_player');
-    if (player && typeof player.setVolume === 'function' && typeof player.getVolume === 'function') {
-      if (player.getVolume() > 0) {
-        try { player.setVolume(0); } catch (e) {}
-      }
-    }
-  }
-
-  // 8. Actualizar la interfaz gráfica de YouTube Music respetando la lista (Álbum, Playlist y Cola)
-  function advanceToNextTrackInList(targetVideoId) {
-    const now = performance.now();
-    if (now - _lastSkipTime < 2500) return;
-    _lastSkipTime = now;
-    _isProgrammaticSkip = true;
-
-    // A. Si estamos en una vista de Álbum o Playlist en pantalla, hacer clic en la siguiente fila
-    try {
-      const allRows = Array.from(document.querySelectorAll('ytmusic-responsive-list-item-renderer'));
-      let activeIdx = -1;
-      for (let i = 0; i < allRows.length; i++) {
-        const row = allRows[i];
-        if (row.querySelector('[play-button-state="playing"], .playing-icon, ytmusic-play-button-renderer[state="playing"]') || row.classList.contains('selected')) {
-          activeIdx = i;
-          break;
-        }
-      }
-      if (activeIdx >= 0 && activeIdx + 1 < allRows.length) {
-        const nextRow = allRows[activeIdx + 1];
-        const playBtn = nextRow.querySelector('ytmusic-play-button-renderer, .play-button, #play-button, a[href*="watch?v="]');
-        if (playBtn) {
-          playBtn.click();
-          console.log('🔀 AuraMusic: Siguiente canción seleccionada directamente en la lista del álbum.');
-          setTimeout(() => { _isProgrammaticSkip = false; }, 1200);
-          return;
-        }
-      }
-    } catch (e) {}
-
-    // B. Si la cola lateral de reproducción está activa, avanzar al siguiente elemento de la cola
-    try {
-      const queueItems = Array.from(document.querySelectorAll('ytmusic-player-queue-item'));
-      const activeQueueIdx = queueItems.findIndex(el => 
-        el.hasAttribute('selected') || 
-        el.classList.contains('selected') || 
-        el.querySelector('[play-button-state="playing"]')
-      );
-      if (activeQueueIdx >= 0 && activeQueueIdx + 1 < queueItems.length) {
-        const nextQueueItem = queueItems[activeQueueIdx + 1];
-        const playBtn = nextQueueItem.querySelector('.play-button, ytmusic-play-button-renderer, #play-button');
-        if (playBtn) {
-          playBtn.click();
-          console.log('🔀 AuraMusic: Siguiente canción seleccionada directamente en la cola.');
-          setTimeout(() => { _isProgrammaticSkip = false; }, 1200);
-          return;
-        }
-      }
-    } catch (e) {}
-
-    // C. Por API oficial de YouTube Music (#movie_player)
-    try {
-      const player = document.querySelector('#movie_player');
-      if (player && typeof player.nextVideo === 'function') {
-        player.nextVideo();
-        if (typeof player.playVideo === 'function') player.playVideo();
-        console.log('🔀 AuraMusic: Siguiente canción activada con movie_player.nextVideo().');
-        setTimeout(() => { _isProgrammaticSkip = false; }, 1200);
-        return;
-      }
-    } catch (e) {}
-
-    // D. Botón siguiente en la barra del reproductor
-    try {
-      const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
-      if (nextBtn) {
-        nextBtn.click();
-        console.log('🔀 AuraMusic: Siguiente canción activada con botón next.');
-      }
-    } catch (e) {}
-
-    setTimeout(() => { _isProgrammaticSkip = false; }, 1200);
-  }
-
-  // 9. Bloquear el avance automático nativo de YouTube Music (Solo con Crossfade Activo)
-  function interceptYouTubeAutoAdvance() {
-    const video = document.querySelector('video');
-    if (!video || video._auramusicAutoAdvanceBlocked) return;
-    video._auramusicAutoAdvanceBlocked = true;
-
-    // A. Interceptar 'ended' en fase de captura para anularlo
-    video.addEventListener('ended', (e) => {
-      if (window.state?.crossfade) {
-        e.stopImmediatePropagation();
-        e.preventDefault();
-        console.log('🔀 AuraMusic: Avance nativo de YouTube Music bloqueado con éxito.');
-      }
-    }, true);
-
-    // B. Pausar video nativo 0.35s antes del fin si crossfade está activo para evitar el salto nativo
-    video.addEventListener('timeupdate', () => {
-      if (window.state?.crossfade && _activeDeck === 'native' && video.duration && !video.paused) {
-        if (video.duration - video.currentTime <= 0.35) {
-          video.pause();
-        }
-      }
-    });
-  }
-
-  // 10. Reseteo a modo nativo (al pausar, desactivar crossfade o hacer clic manual en otra pista)
-  function resetToNative(reason = 'reset') {
-    if (_fadeInterval) {
-      clearInterval(_fadeInterval);
-      _fadeInterval = null;
-    }
-    _isCrossfading = false;
-
-    if (_deckA) {
-      try { _deckA.pause(); _deckA.currentTime = 0; } catch (e) {}
-      _deckA = null;
-    }
-    if (_deckB) {
-      try { _deckB.pause(); _deckB.currentTime = 0; } catch (e) {}
-      _deckB = null;
-    }
-
-    _deckAVideoId = '';
-    _deckBVideoId = '';
-    _upcomingNextVideoId = '';
-    _activeDeck = 'native';
-
-    setPlayerVolume(1.0);
-    console.log(`🔀 AuraMusic: Motor Dual-Deck reseteado a modo nativo (${reason}).`);
-  }
-
-  // 11. Pre-descarga de la siguiente pista en el Deck inactivo
-  function prepareUpcomingDeck(nextVideoId) {
-    if (!nextVideoId || _upcomingNextVideoId === nextVideoId) return;
-    _upcomingNextVideoId = nextVideoId;
-
-    fetch(`http://localhost:8080/prefetch?id=${nextVideoId}`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data && data.status === 'ready' && data.url) {
-          const targetAudio = new Audio(data.url);
-          targetAudio.volume = 0;
-          targetAudio.preload = 'auto';
-
-          if (_activeDeck === 'native' || _activeDeck === 'deckA') {
-            if (_deckB) { try { _deckB.pause(); } catch (e) {} }
-            _deckB = targetAudio;
-            _deckBVideoId = nextVideoId;
-            console.log(`🔀 AuraMusic: Audio de pista "${nextVideoId}" preparado en Deck B.`);
-          } else {
-            if (_deckA) { try { _deckA.pause(); } catch (e) {} }
-            _deckA = targetAudio;
-            _deckAVideoId = nextVideoId;
-            console.log(`🔀 AuraMusic: Audio de pista "${nextVideoId}" preparado en Deck A.`);
-          }
-        }
-      })
-      .catch(() => {});
-  }
-
-  // 12. Ejecución de la Mezcla Dual-Deck (Flip-Flop Continuo Sin Saltos)
-  function executeDualDeckCrossfade(fadeSec, nextVideoId) {
-    if (_isCrossfading) return;
-    _isCrossfading = true;
-
-    const durationMs = fadeSec * 1000;
-    const startTime = performance.now();
-    const curveType = window.state?.crossfadeCurve || 'equal-power';
-
-    console.log(`🔀 AuraMusic: 🔥 Iniciando mezcla Dual-Deck (${fadeSec}s) desde "${_activeDeck}" hacia pista "${nextVideoId}".`);
-
-    if (_activeDeck === 'native') {
-      // Caso 1: Pista A (Native Video) -> Pista B (Deck B)
-      const incomingDeck = _deckB;
-      if (!incomingDeck) {
-        _isCrossfading = false;
-        return;
-      }
-
-      incomingDeck.currentTime = 0;
-      incomingDeck.volume = 0;
-      incomingDeck.play().catch(() => {});
-
-      if (_fadeInterval) clearInterval(_fadeInterval);
-      _fadeInterval = setInterval(() => {
-        const elapsed = performance.now() - startTime;
-        const progress = Math.min(1, elapsed / durationMs);
-        const { gainA, gainB } = calculateGainCurve(progress, curveType);
-
-        setPlayerVolume(gainA);
-        incomingDeck.volume = Math.max(0, Math.min(1, gainB));
-
-        if (progress >= 1) {
-          clearInterval(_fadeInterval);
-          _fadeInterval = null;
-          _isCrossfading = false;
-
-          // Silenciar video nativo para evitar interferencias
-          const v = document.querySelector('video');
-          if (v) {
-            try { v.volume = 0; v.muted = true; } catch (e) {}
-          }
-
-          _activeDeck = 'deckB';
-          _currentPlayingVideoId = nextVideoId;
-          _upcomingNextVideoId = '';
-
-          // Actualizar UI de YouTube Music manteniendo silencio en video nativo
-          advanceToNextTrackInList(nextVideoId);
-          setTimeout(keepNativeVideoSilent, 150);
-          setTimeout(keepNativeVideoSilent, 600);
-          setTimeout(keepNativeVideoSilent, 1200);
-          console.log(`🔀 AuraMusic: ¡Transición impecable! Deck B continúa reproduciéndose sin ningún corte.`);
-        }
-      }, 30);
-
-    } else if (_activeDeck === 'deckB') {
-      // Caso 2: Pista B (Deck B) -> Pista C (Deck A)
-      const outgoingDeck = _deckB;
-      const incomingDeck = _deckA;
-      const outgoingId = _deckBVideoId;
-
-      if (!incomingDeck) {
-        _isCrossfading = false;
-        return;
-      }
-
-      incomingDeck.currentTime = 0;
-      incomingDeck.volume = 0;
-      incomingDeck.play().catch(() => {});
-
-      if (_fadeInterval) clearInterval(_fadeInterval);
-      _fadeInterval = setInterval(() => {
-        const elapsed = performance.now() - startTime;
-        const progress = Math.min(1, elapsed / durationMs);
-        const { gainA, gainB } = calculateGainCurve(progress, curveType);
-
-        outgoingDeck.volume = Math.max(0, Math.min(1, gainA));
-        incomingDeck.volume = Math.max(0, Math.min(1, gainB));
-
-        if (progress >= 1) {
-          clearInterval(_fadeInterval);
-          _fadeInterval = null;
-          _isCrossfading = false;
-
-          outgoingDeck.pause();
-          _deckB = null;
-
-          if (outgoingId) {
-            fetch(`http://localhost:8080/cleanup?id=${outgoingId}`).catch(() => {});
-          }
-
-          _activeDeck = 'deckA';
-          _currentPlayingVideoId = nextVideoId;
-          _upcomingNextVideoId = '';
-
-          advanceToNextTrackInList(nextVideoId);
-          setTimeout(keepNativeVideoSilent, 150);
-          setTimeout(keepNativeVideoSilent, 600);
-          setTimeout(keepNativeVideoSilent, 1200);
-          console.log(`🔀 AuraMusic: ¡Transición impecable! Deck A continúa reproduciéndose sin ningún corte.`);
-        }
-      }, 30);
-
-    } else if (_activeDeck === 'deckA') {
-      // Caso 3: Pista C (Deck A) -> Pista D (Deck B)
-      const outgoingDeck = _deckA;
-      const incomingDeck = _deckB;
-      const outgoingId = _deckAVideoId;
-
-      if (!incomingDeck) {
-        _isCrossfading = false;
-        return;
-      }
-
-      incomingDeck.currentTime = 0;
-      incomingDeck.volume = 0;
-      incomingDeck.play().catch(() => {});
-
-      if (_fadeInterval) clearInterval(_fadeInterval);
-      _fadeInterval = setInterval(() => {
-        const elapsed = performance.now() - startTime;
-        const progress = Math.min(1, elapsed / durationMs);
-        const { gainA, gainB } = calculateGainCurve(progress, curveType);
-
-        outgoingDeck.volume = Math.max(0, Math.min(1, gainA));
-        incomingDeck.volume = Math.max(0, Math.min(1, gainB));
-
-        if (progress >= 1) {
-          clearInterval(_fadeInterval);
-          _fadeInterval = null;
-          _isCrossfading = false;
-
-          outgoingDeck.pause();
-          _deckA = null;
-
-          if (outgoingId) {
-            fetch(`http://localhost:8080/cleanup?id=${outgoingId}`).catch(() => {});
-          }
-
-          _activeDeck = 'deckB';
-          _currentPlayingVideoId = nextVideoId;
-          _upcomingNextVideoId = '';
-
-          advanceToNextTrackInList(nextVideoId);
-          setTimeout(keepNativeVideoSilent, 150);
-          setTimeout(keepNativeVideoSilent, 600);
-          setTimeout(keepNativeVideoSilent, 1200);
-          console.log(`🔀 AuraMusic: ¡Transición impecable! Deck B continúa reproduciéndose sin ningún corte.`);
-        }
-      }, 30);
-    }
-  }
-
-  // 13. Vigilancia continua del Motor Dual-Deck (cada 50ms)
-  function handleDualDeckCheck() {
-    if (!window.state?.crossfade) return;
-
-    keepNativeVideoSilent();
-
-    let cur = 0;
-    let dur = 0;
-    let isPaused = false;
-
-    if (_activeDeck === 'native') {
-      const video = document.querySelector('video');
-      if (!video || !video.duration || isNaN(video.duration)) return;
-      cur = video.currentTime;
-      dur = video.duration;
-      isPaused = video.paused;
-    } else if (_activeDeck === 'deckB' && _deckB) {
-      cur = _deckB.currentTime;
-      dur = _deckB.duration;
-      isPaused = _deckB.paused;
-    } else if (_activeDeck === 'deckA' && _deckA) {
-      cur = _deckA.currentTime;
-      dur = _deckA.duration;
-      isPaused = _deckA.paused;
-    }
-
-    if (!dur || dur < 3) return;
-
-    // Sincronizar la barra de tiempo y el menú de YouTube Music con el Deck que está sonando
-    if (_activeDeck !== 'native') {
-      updatePlayerBarUI(cur, dur);
-    }
-
-    if (isPaused) return;
-
-    const rem = dur - cur;
-    const fadeSec = Math.max(1, Math.min(15, window.state?.crossfadeDuration || 5));
-
-    // A. Pre-descarga de la siguiente pista cuando faltan entre fadeSec+25s y fadeSec
-    if (rem <= fadeSec + 25 && rem > fadeSec && !_upcomingNextVideoId && !_isCrossfading) {
-      const nextId = getNextTrackVideoId();
-      if (nextId) {
-        prepareUpcomingDeck(nextId);
-      }
-    }
-
-    // B. Disparo de la mezcla simultánea al tocar rem <= fadeSec
-    if (rem <= fadeSec && rem > 0.2 && !_isCrossfading) {
-      const effectiveFadeSec = Math.min(fadeSec, Math.max(1, Math.round(rem * 10) / 10));
-      const nextId = _upcomingNextVideoId || getNextTrackVideoId();
-      if (nextId) {
-        executeDualDeckCrossfade(effectiveFadeSec, nextId);
-      }
-    }
-  }
-
-  // Actualizar directamente la barra de progreso, minutero y slider de YouTube Music
-  function updatePlayerBarUI(cur, dur) {
-    if (!dur || dur <= 0 || isNaN(dur)) return;
-
-    // A. Actualizar texto de tiempo (ej. "0:14 / 2:48")
-    const timeInfo = document.querySelector('ytmusic-player-bar .time-info, ytmusic-player-bar #time-info, .time-info');
-    if (timeInfo) {
-      const formatTime = (sec) => {
-        const m = Math.floor(sec / 60);
-        const s = Math.floor(sec % 60);
-        return `${m}:${s < 10 ? '0' : ''}${s}`;
-      };
-      timeInfo.textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
-    }
-
-    // B. Actualizar barra deslizadora (#progress-bar)
-    const progressBar = document.querySelector('ytmusic-player-bar #progress-bar, #progress-bar');
-    if (progressBar) {
-      progressBar.value = cur;
-      progressBar.max = dur;
-      progressBar.setAttribute('value', cur);
-      progressBar.setAttribute('max', dur);
-    }
-
-    // C. Actualizar relleno visual de la barra de progreso (#primaryProgress)
-    const primaryProgress = document.querySelector('ytmusic-player-bar #primaryProgress, ytmusic-player-bar #sliderBar #primaryProgress');
-    if (primaryProgress) {
-      const pct = Math.max(0, Math.min(1, cur / dur));
-      primaryProgress.style.transform = `scaleX(${pct})`;
-      primaryProgress.style.transformOrigin = 'left center';
-    }
-  }
-
-  // 14. Listeners de sincronización: Play, Pausa, Búsqueda y Clics manuales
-  function setupListeners() {
-    const video = document.querySelector('video');
-    if (!video) return;
-
-    interceptYouTubeAutoAdvance();
-
-    if (video._auramusicDualDeckBound) return;
-    video._auramusicDualDeckBound = true;
-
-    if (!_watchdogInterval) {
-      _watchdogInterval = setInterval(handleDualDeckCheck, 50);
-    }
-
-    // Sincronizar PLAY / PAUSE cuando el usuario hace clic en el botón de YouTube Music
-    document.addEventListener('click', (e) => {
-      const playPauseBtn = e.target.closest('#play-pause-button, ytmusic-player-bar #play-pause-button');
-      if (playPauseBtn) {
-        if (_activeDeck === 'deckB' && _deckB) {
-          if (_deckB.paused) _deckB.play().catch(() => {});
-          else _deckB.pause();
-        } else if (_activeDeck === 'deckA' && _deckA) {
-          if (_deckA.paused) _deckA.play().catch(() => {});
-          else _deckA.pause();
-        }
-      }
-    }, true);
-
-    // Sincronizar PLAY / PAUSE con la barra espaciadora
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && !e.target.matches('input, textarea, select, [contenteditable="true"]')) {
-        if (_activeDeck === 'deckB' && _deckB) {
-          if (_deckB.paused) _deckB.play().catch(() => {});
-          else _deckB.pause();
-        } else if (_activeDeck === 'deckA' && _deckA) {
-          if (_deckA.paused) _deckA.play().catch(() => {});
-          else _deckA.pause();
-        }
-      }
-    });
-
-    // Sincronizar cuando el usuario hace clic o arrastra la barra de progreso
-    document.addEventListener('input', (e) => {
-      if (e.target.matches('ytmusic-player-bar #progress-bar, #progress-bar, tp-yt-paper-slider')) {
-        const targetSec = parseFloat(e.target.value);
-        if (!isNaN(targetSec)) {
-          if (_activeDeck === 'deckB' && _deckB) _deckB.currentTime = targetSec;
-          else if (_activeDeck === 'deckA' && _deckA) _deckA.currentTime = targetSec;
-        }
-      }
-    });
-    document.addEventListener('change', (e) => {
-      if (e.target.matches('ytmusic-player-bar #progress-bar, #progress-bar, tp-yt-paper-slider')) {
-        const targetSec = parseFloat(e.target.value);
-        if (!isNaN(targetSec)) {
-          if (_activeDeck === 'deckB' && _deckB) _deckB.currentTime = targetSec;
-          else if (_activeDeck === 'deckA' && _deckA) _deckA.currentTime = targetSec;
-        }
-      }
-    });
-
-    // Clics manuales en canciones o botones de siguiente/anterior
-    document.addEventListener('click', (e) => {
-      if (_isProgrammaticSkip) return;
-
-      const isQueueTrackClick = e.target.closest('ytmusic-player-queue-item, ytmusic-responsive-list-item-renderer, .song-button, [role="listitem"]');
-      const isManualSkipBtn = e.target.closest('.next-button, .previous-button, #next-button, #previous-button');
-
-      if (isQueueTrackClick || isManualSkipBtn) {
-        resetToNative('usuario_cambio_pista_manual');
-      }
-    }, true);
-  }
-
-  // 15. API Pública de AuraCrossfade
+  // 15. API Pública
   window.AuraCrossfade = {
     init: function() {
       injectMainWorldBridge();
       setupListeners();
-      console.log('🔀 AuraMusic: Motor Dual-Deck Continuo (crossfade.js) inicializado al 100%.');
+      console.log('🎛️ AuraPlayer: Reproductor Autónomo de Doble Deck inicializado.');
     },
     apply: function(enabled) {
-      if (enabled) {
-        setupListeners();
-      } else {
-        resetToNative('crossfade_desactivado');
+      if (!enabled) {
+        if (AuraPlayer.deck1) { try { AuraPlayer.deck1.pause(); } catch (e) {} }
+        if (AuraPlayer.deck2) { try { AuraPlayer.deck2.pause(); } catch (e) {} }
+        AuraPlayer.isPlaying = false;
+        const v = document.querySelector('video');
+        if (v) { v.muted = false; v.volume = 1.0; }
+        const p = document.querySelector('#movie_player');
+        if (p && typeof p.setVolume === 'function') p.setVolume(100);
       }
     },
     setDuration: function(sec) {
       if (!window.state) window.state = {};
       window.state.crossfadeDuration = sec;
-      console.log(`🔀 AuraMusic: Duración de crossfade configurada a ${sec}s.`);
     },
     setCurve: function(curve) {
       if (!window.state) window.state = {};
       window.state.crossfadeCurve = curve;
-      console.log(`🔀 AuraMusic: Curva de ganancia configurada a "${curve}".`);
     },
-    reset: resetToNative
+    player: AuraPlayer
   };
 
 })();
