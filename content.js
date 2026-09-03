@@ -498,15 +498,33 @@
       if (progress >= 1) {
         clearInterval(shadowFadeInterval);
         shadowFadeInterval = null;
-        _xfadeStatus = XFADE_STATE.NEXT_TRACK_ACTIVE;
         _isTransitioningToNext = true;
         _lastSkipTime = performance.now();
         _pendingSeekTime = fadeSec; // Descontar los segundos de la intro en la Canción B
 
-        console.log(`🔀 AuraMusic: Fin del solapamiento (${fadeSec}s). Disparando avance ÚNICO a Canción B...`);
+        console.log(`🔀 AuraMusic: Fin del solapamiento (${fadeSec}s). Verificando si YouTube Music ya cambió...`);
 
-        // Handoff: Disparamos la siguiente canción en YouTube Music exactamente UNA SOLA VEZ
-        triggerNextTrack();
+        // Comprobar si YouTube Music ya avanzó automáticamente a Canción B por haber terminado la Canción A
+        const player = document.querySelector('#movie_player');
+        const currentVideoId = player?.getVideoData?.()?.video_id || '';
+        const currentKey = _getCanonicalTrackKey();
+
+        const alreadyOnNext = (currentVideoId && currentVideoId === targetId) || (currentKey && currentKey !== previousTrackId);
+
+        if (alreadyOnNext) {
+          console.log(`🔀 AuraMusic: YouTube Music ya está en Canción B ("${targetId}"). ¡No se dispara salto adicional para no saltar a Canción C!`);
+          const v = document.querySelector('video');
+          if (v && isFinite(v.duration) && v.duration > fadeSec) {
+            try {
+              v.currentTime = fadeSec;
+              console.log(`🔀 AuraMusic: Intro de Canción B descontado -> Sincronizado en ${fadeSec}s.`);
+              _pendingSeekTime = 0;
+            } catch (e) {}
+          }
+        } else {
+          console.log(`🔀 AuraMusic: Forzando avance a Canción B ("${targetId}")...`);
+          triggerNextTrack();
+        }
 
         setTimeout(() => {
           setPlayerVolume(1.0);
@@ -523,6 +541,7 @@
           }
 
           destroyShadowPlayer();
+          _xfadeStatus = XFADE_STATE.IDLE;
         }, 1200);
       }
     }, 30);
@@ -616,6 +635,15 @@
     const cur = video.currentTime;
     const fadeSec = Math.max(1, Math.min(12, state.crossfadeDuration || 5));
     const trackKey = _getCanonicalTrackKey();
+
+    // Sincronización instantánea de intro descontado en Canción B tan pronto como arranca en 0:00
+    if (_pendingSeekTime > 0 && cur < 2.0 && dur > _pendingSeekTime) {
+      try {
+        video.currentTime = _pendingSeekTime;
+        console.log(`🔀 AuraMusic: Intro de Canción B descontado con éxito -> Sincronizado en ${_pendingSeekTime}s.`);
+        _pendingSeekTime = 0;
+      } catch (e) {}
+    }
 
     // A. DETECCIÓN DE CAMBIO DE CANCIÓN
     if (trackKey && trackKey !== _currentTrackCanonicalId) {
@@ -719,8 +747,8 @@
       }, 30);
     }
 
-    // D. DISPARO DE LA SIGUIENTE PISTA (Solo para modo IDLE / secuencial sin crossfade activo)
-    if (rem <= 1.2 && rem > 0.05 && _hasFadedOutThisTrack && !_isTransitioningToNext && _xfadeStatus === XFADE_STATE.IDLE) {
+    // D. DISPARO DE LA SIGUIENTE PISTA (Desactivado si el Crossfade está activo para no saltar pistas)
+    if (!state.crossfade && rem <= 1.0 && rem > 0.05 && !_isTransitioningToNext) {
       const now = performance.now();
       if (now - _lastSkipTime < 4000) return;
       _lastSkipTime = now;
