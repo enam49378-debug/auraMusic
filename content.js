@@ -145,6 +145,12 @@
       jStage.style.setProperty('display', (themeName === 'jesuluto') ? 'flex' : 'none', 'important');
       if (themeName === 'jesuluto') {
         setTimeout(initJesuluto3D, 50);
+      } else {
+        if (typeof destroyJesuluto3D === 'function') destroyJesuluto3D();
+      }
+    } else {
+      if (themeName !== 'jesuluto' && typeof destroyJesuluto3D === 'function') {
+        destroyJesuluto3D();
       }
     }
     if (artBox) {
@@ -273,19 +279,38 @@
   }
 
   function startVisualizerLoop(canvas) {
+    if (!canvas) canvas = document.getElementById('auramusic-vis-canvas');
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
+
+    if (state.visualizer === 'off') {
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
+
+    if (animFrameId) return; // Evitar bucles concurrentes
+
     const dataArray = new Uint8Array(64);
-
     let lastRenderTime = 0;
-    function render(now) {
-      animFrameId = requestAnimationFrame(render);
 
-      if (state.visualizer === 'off') {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function render(now) {
+      // 0% CPU cuando el visualizador está apagado o la pestaña está oculta
+      if (state.visualizer === 'off' || document.hidden) {
+        if (animFrameId) {
+          cancelAnimationFrame(animFrameId);
+          animFrameId = null;
+        }
+        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
         return;
       }
 
-      // Limitar a 30 FPS para máximo rendimiento y 0% de CPU
+      animFrameId = requestAnimationFrame(render);
+
+      // Limitar a 30 FPS para máximo ahorro de CPU/GPU
       const curTime = now || performance.now();
       if (curTime - lastRenderTime < 33) return;
       lastRenderTime = curTime;
@@ -293,7 +318,6 @@
       if (analyser && isAudioConnected) {
         analyser.getByteFrequencyData(dataArray);
       } else {
-        // Simulación sutil reactiva si el audio está en streaming directo
         const video = document.querySelector('video');
         const isPlaying = video && !video.paused;
         const time = performance.now() * 0.003;
@@ -323,7 +347,6 @@
           const barHeight = (val / 255) * height * 0.9;
           const x = i * (barWidth + gap) + gap / 2;
           const y = height - barHeight;
-
           ctx.fillRect(x, y, barWidth, barHeight);
         }
       } else if (state.visualizer === 'wave') {
@@ -344,6 +367,20 @@
 
     render();
   }
+
+  // Suspender loops cuando la pestaña se minimiza para liberar memoria RAM
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+    } else {
+      if (state.visualizer !== 'off') {
+        startVisualizerLoop();
+      }
+    }
+  });
 
   // --- 6. ILUMINACIÓN AMBIENTAL DINÁMICA ---
   function initAmbientGlowElements() {
@@ -401,24 +438,17 @@
     };
   }
 
-  // --- 7. GUARDIÁN ANTI-DISTRACCIONES Y ANUNCIOS ---
-  function initCleanWatchdog() {
-    setInterval(() => {
-      if (!state.cleanMode) return;
-
-      // 1. Auto-confirmar diálogo "¿Sigues ahí?"
-      const confirmBtn = document.querySelector('ytmusic-you-there-renderer #confirm-button, #confirm-button.yt-button-renderer');
-      if (confirmBtn && confirmBtn.offsetParent !== null) {
-        console.log('⚡ AuraMusic: Auto-confirmando sesión activa.');
-        confirmBtn.click();
-      }
-
-      // 2. Cerrar banners promocionales de suscripción
-      const dismissBtn = document.querySelector('ytmusic-mealbar-promo-renderer #dismiss-button');
-      if (dismissBtn && dismissBtn.offsetParent !== null) {
-        dismissBtn.click();
-      }
-    }, 1500);
+  // --- 7. GUARDIÁN ANTI-DISTRACCIONES Y ANUNCIOS (Se ejecuta en el bucle maestro)
+  function runCleanWatchdog() {
+    if (!state.cleanMode) return;
+    const confirmBtn = document.querySelector('ytmusic-you-there-renderer #confirm-button, #confirm-button.yt-button-renderer');
+    if (confirmBtn && confirmBtn.offsetParent !== null) {
+      confirmBtn.click();
+    }
+    const dismissBtn = document.querySelector('ytmusic-mealbar-promo-renderer #dismiss-button');
+    if (dismissBtn && dismissBtn.offsetParent !== null) {
+      dismissBtn.click();
+    }
   }
 
   // --- 8. CREACIÓN DEL PANEL DE CONTROL GLASSMORPHISM ---
@@ -750,7 +780,7 @@
     injectLauncherAndHub();
     initAmbientGlowElements();
     initVisualizerElements();
-    initCleanWatchdog();
+    // initCleanWatchdog integrado en bucle maestro
 
     // Detección ultraliviana de cambio de canción (0% CPU, sin MutationObserver pesado)
     let lastCoverSrc = '';
@@ -775,7 +805,19 @@
       video.addEventListener('loadeddata', onGlobalSongChange);
       video.addEventListener('play', onGlobalSongChange);
     }
-    setInterval(onGlobalSongChange, 1500);
+
+    // BUCLE MAESTRO UNIFICADO (2500ms, 0% CPU si la pestaña no está visible)
+    setInterval(() => {
+      if (document.hidden) return; // Si la pestaña está oculta, 0% CPU!
+
+      onGlobalSongChange();
+      runCleanWatchdog();
+      checkAndInjectLyricsButton();
+
+      if (state.theme === 'spotify' || document.getElementById('auramusic-spotify-logo')) {
+        updateSpotifyBrandElements();
+      }
+    }, 2500);
   }
 
   
@@ -1527,6 +1569,9 @@
       overlay.style.pointerEvents = 'none';
     }
     isCinemaActive = false;
+    if (typeof destroyJesuluto3D === 'function') {
+      destroyJesuluto3D();
+    }
   }
 
   function startCinemaSyncLoop() {
@@ -1709,7 +1754,7 @@
     }
   }
 
-  setInterval(checkAndInjectLyricsButton, 1500);
+  // (checkAndInjectLyricsButton integrado en el bucle maestro unificado)
 
   // --- INYECCIÓN DE ELEMENTOS OFICIALES DE SPOTIFY (LOGO, BOTÓN HOME, PLACEHOLDER) ---
   function updateSpotifyBrandElements() {
@@ -1773,7 +1818,7 @@
     }
   }
 
-  setInterval(updateSpotifyBrandElements, 1200);
+  // (updateSpotifyBrandElements integrado en el bucle maestro unificado)
 
 
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
@@ -1798,6 +1843,37 @@ let jesulutoRenderer = null;
 let jesulutoRig = null;
 let jesulutoCurrentSkinImg = null;
 let isJesuluto3DInitialized = false;
+
+// 🧹 LIBERACIÓN COMPLETA DE RECURSOS THREE.JS (LIBERA RAM Y VRAM)
+function destroyJesuluto3D() {
+  if (!isJesuluto3DInitialized) return;
+  try {
+    if (jesulutoRenderer) {
+      jesulutoRenderer.dispose();
+      if (jesulutoRenderer.forceContextLoss) {
+        jesulutoRenderer.forceContextLoss();
+      }
+      if (jesulutoRenderer.domElement && jesulutoRenderer.domElement.parentNode) {
+        jesulutoRenderer.domElement.parentNode.removeChild(jesulutoRenderer.domElement);
+      }
+    }
+    if (jesulutoScene) {
+      jesulutoScene.traverse((obj) => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+          if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+          else obj.material.dispose();
+        }
+      });
+    }
+  } catch(e) {}
+  jesulutoScene = null;
+  jesulutoCamera = null;
+  jesulutoRenderer = null;
+  jesulutoRig = null;
+  isJesuluto3DInitialized = false;
+  console.log('🧹 AuraMusic: Recursos 3D liberados (memoria RAM/GPU optimizada).');
+}
 
 function initJesuluto3D() {
   const container = document.getElementById('jesuluto-3d-stage');

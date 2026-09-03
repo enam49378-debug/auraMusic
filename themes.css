@@ -670,27 +670,27 @@ body.auramusic-theme-cyberpunk #guide-wrapper {
 
 /* (Diagnóstico SYS eliminado para no romper el sidebar de YTM) */
 
-/* Entradas de menú: paneles de comandos HUD */
-body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer {
+/* Entradas de menú principales (Principal, Explorar, Biblioteca) */
+body.auramusic-theme-cyberpunk ytmusic-guide-section-renderer:first-child ytmusic-guide-entry-renderer {
   background: linear-gradient(90deg,
-    rgba(0, 245, 255, 0.06) 0%,
-    rgba(0, 245, 255, 0.02) 60%,
+    rgba(0, 245, 255, 0.08) 0%,
+    rgba(0, 245, 255, 0.02) 70%,
     transparent 100%) !important;
-  border-left: 3px solid rgba(0, 245, 255, 0.25) !important;
+  border-left: 3px solid rgba(0, 245, 255, 0.3) !important;
   border-right: 1px solid rgba(0, 245, 255, 0.08) !important;
   border-top: none !important;
   border-bottom: 1px solid rgba(0, 245, 255, 0.06) !important;
   clip-path: none !important;
   border-radius: 0 6px 6px 0 !important;
-  margin: 3px 10px 3px 0 !important;
+  margin: 3px 8px 3px 0 !important;
   transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1) !important;
   position: relative !important;
 }
 
-body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer:hover {
+body.auramusic-theme-cyberpunk ytmusic-guide-section-renderer:first-child ytmusic-guide-entry-renderer:hover {
   background: linear-gradient(90deg,
-    rgba(0, 245, 255, 0.16) 0%,
-    rgba(0, 245, 255, 0.08) 50%,
+    rgba(0, 245, 255, 0.18) 0%,
+    rgba(0, 245, 255, 0.08) 60%,
     transparent 100%) !important;
   border-left-color: var(--cy-cyan) !important;
   box-shadow:
@@ -700,13 +700,43 @@ body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer:hover {
   transform: translateX(4px) !important;
 }
 
-body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer[is-selected] {
+body.auramusic-theme-cyberpunk ytmusic-guide-section-renderer:first-child ytmusic-guide-entry-renderer[is-selected] {
   background: linear-gradient(90deg,
     rgba(255, 45, 120, 0.18) 0%,
-    rgba(255, 45, 120, 0.06) 50%,
+    rgba(255, 45, 120, 0.06) 60%,
     transparent 100%) !important;
   border-left-color: var(--cy-magenta) !important;
   box-shadow: 4px 0 25px rgba(255, 45, 120, 0.3) !important;
+}
+
+/* Entradas secundarias (Playlists y biblioteca en el sidebar - listas limpias sin píldoras desordenadas) */
+body.auramusic-theme-cyberpunk ytmusic-guide-section-renderer:not(:first-child) ytmusic-guide-entry-renderer {
+  background: transparent !important;
+  border: none !important;
+  border-left: 2px solid transparent !important;
+  border-radius: 4px !important;
+  margin: 2px 8px !important;
+  padding: 6px 10px !important;
+  width: auto !important;
+  box-shadow: none !important;
+  transition: all 0.15s ease !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-guide-section-renderer:not(:first-child) ytmusic-guide-entry-renderer:hover {
+  background: rgba(0, 245, 255, 0.08) !important;
+  border-left-color: var(--cy-cyan) !important;
+  transform: translateX(4px) !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-guide-section-renderer:not(:first-child) ytmusic-guide-entry-renderer yt-formatted-string {
+  color: rgba(160, 216, 220, 0.8) !important;
+  font-size: 0.86rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.5px !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-guide-section-renderer:not(:first-child) ytmusic-guide-entry-renderer:hover yt-formatted-string {
+  color: #00f5ff !important;
 }
 
 /* Iconos del sidebar */
@@ -716,16 +746,116 @@ body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer iron-icon {
   filter: drop-shadow(0 0 6px var(--cy-cyan)) !important;
 }
 
-body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer yt-formatted-string {
+body.auramusic-theme-cyberpunk ytmusic-guide-section-renderer:first-child ytmusic-guide-entry-renderer yt-formatted-string {
   color: #a0d8dc !important;
   letter-spacing: 1px !important;
   font-size: 0.9rem !important;
   font-weight: 600 !important;
 }
 
-body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer:hover yt-formatted-string,
-body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer:hover span {
+body.auramusic-theme-cyberpunk ytmusic-guide-section-renderer:first-child ytmusic-guide-entry-renderer:hover yt-formatted-string,
+body.auramusic-theme-cyberpunk ytmusic-guide-section-renderer:first-child ytmusic-guide-entry-renderer:hover span {
   color: var(--cy-cyan) !important;
+}
+
+/* ── ESTADO COLAPSADO / CERRADO DE LA BARRA LATERAL (CYBERPUNK MINI-GUIDE) ── */
+@container guide (max-width: 130px) {
+  body.auramusic-theme-cyberpunk ytmusic-guide-section-renderer:not(:first-child),
+  body.auramusic-theme-cyberpunk #guide-builder-item,
+  body.auramusic-theme-cyberpunk ytmusic-guide-signin-promo-renderer {
+    display: none !important;
+  }
+
+  body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer {
+    margin: 8px auto !important;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(0, 245, 255, 0.35) !important;
+    background: rgba(0, 245, 255, 0.08) !important;
+    box-shadow: 0 0 12px rgba(0, 245, 255, 0.15) !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transform: none !important;
+  }
+
+  body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer:hover {
+    background: rgba(0, 245, 255, 0.22) !important;
+    border-color: var(--cy-cyan) !important;
+    box-shadow: 0 0 20px rgba(0, 245, 255, 0.45) !important;
+    transform: scale(1.08) !important;
+  }
+
+  body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer tp-yt-paper-item {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer yt-formatted-string,
+  body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer .title {
+    display: none !important;
+  }
+}
+
+body.auramusic-theme-cyberpunk ytmusic-app[guide-collapsed] ytmusic-guide-section-renderer:not(:first-child),
+body.auramusic-theme-cyberpunk ytmusic-guide-renderer[collapsed] ytmusic-guide-section-renderer:not(:first-child),
+body.auramusic-theme-cyberpunk ytmusic-guide-renderer[is-collapsed] ytmusic-guide-section-renderer:not(:first-child),
+body.auramusic-theme-cyberpunk #guide-wrapper[collapsed] ytmusic-guide-section-renderer:not(:first-child),
+body.auramusic-theme-cyberpunk ytmusic-app[guide-collapsed] #guide-builder-item {
+  display: none !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-app[guide-collapsed] ytmusic-guide-entry-renderer,
+body.auramusic-theme-cyberpunk ytmusic-guide-renderer[collapsed] ytmusic-guide-entry-renderer,
+body.auramusic-theme-cyberpunk ytmusic-guide-renderer[is-collapsed] ytmusic-guide-entry-renderer,
+body.auramusic-theme-cyberpunk #guide-wrapper[collapsed] ytmusic-guide-entry-renderer {
+  margin: 8px auto !important;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(0, 245, 255, 0.35) !important;
+  background: rgba(0, 245, 255, 0.08) !important;
+  box-shadow: 0 0 12px rgba(0, 245, 255, 0.15) !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transform: none !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-app[guide-collapsed] ytmusic-guide-entry-renderer:hover,
+body.auramusic-theme-cyberpunk ytmusic-guide-renderer[collapsed] ytmusic-guide-entry-renderer:hover,
+body.auramusic-theme-cyberpunk #guide-wrapper[collapsed] ytmusic-guide-entry-renderer:hover {
+  background: rgba(0, 245, 255, 0.22) !important;
+  border-color: var(--cy-cyan) !important;
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.45) !important;
+  transform: scale(1.08) !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-app[guide-collapsed] ytmusic-guide-entry-renderer yt-formatted-string,
+body.auramusic-theme-cyberpunk ytmusic-guide-renderer[collapsed] ytmusic-guide-entry-renderer yt-formatted-string,
+body.auramusic-theme-cyberpunk ytmusic-guide-renderer[is-collapsed] ytmusic-guide-entry-renderer yt-formatted-string,
+body.auramusic-theme-cyberpunk #guide-wrapper[collapsed] ytmusic-guide-entry-renderer yt-formatted-string {
+  display: none !important;
+}
+
+body.auramusic-theme-cyberpunk ytmusic-app[guide-collapsed] ytmusic-guide-entry-renderer tp-yt-paper-item,
+body.auramusic-theme-cyberpunk ytmusic-guide-renderer[collapsed] ytmusic-guide-entry-renderer tp-yt-paper-item,
+body.auramusic-theme-cyberpunk #guide-wrapper[collapsed] ytmusic-guide-entry-renderer tp-yt-paper-item {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 /* ── HEADER / TOP BAR ── */
