@@ -447,6 +447,7 @@
               <span class="auramusic-label">Estilo de Interfaz</span>
               <span class="auramusic-sublabel">Selecciona el tema que transformará la estética de YouTube Music.</span>
               <div class="auramusic-theme-grid">
+                <button type="button" class="theme-pill-btn" data-theme="komi">🐱 Komi-san</button>
                 <button type="button" class="theme-pill-btn" data-theme="apple">🍎 Apple Music</button>
                 <button type="button" class="theme-pill-btn" data-theme="spotify">🟢 Spotify</button>
                 <button type="button" class="theme-pill-btn" data-theme="whatsapp">💬 WhatsApp</button>
