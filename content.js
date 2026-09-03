@@ -989,6 +989,23 @@
     if (!wrapper || !currentLyrics || currentLyrics.length === 0) return;
 
     wrapper.innerHTML = '';
+
+    if (state.theme === 'whatsapp') {
+      wrapper.innerHTML = `
+        <div class="whatsapp-encryption-badge">
+          <span>🔒 Los mensajes y llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.</span>
+        </div>
+        <div id="whatsapp-messages-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        <div id="whatsapp-typing-bubble" class="wa-typing-bubble" style="display: none;">
+          <span class="wa-typing-text">escribiendo</span>
+          <span class="wa-dot"></span>
+          <span class="wa-dot"></span>
+          <span class="wa-dot"></span>
+        </div>
+      `;
+      return;
+    }
+
     const itemsToRender = currentLyrics;
 
     itemsToRender.forEach((item, index) => {
@@ -1430,6 +1447,56 @@
             activeIdx = i;
           } else {
             break;
+          }
+        }
+
+        
+        // GESTIÓN DINÁMICA DE MENSAJES Y "ESCRIBIENDO..." PARA WHATSAPP
+        if (state.theme === 'whatsapp') {
+          const msgContainer = document.getElementById('whatsapp-messages-container');
+          const typingBubble = document.getElementById('whatsapp-typing-bubble');
+          const topStatus = document.querySelector('.whatsapp-top-status');
+
+          if (msgContainer && typingBubble) {
+            // Rebobinado: Si retrocedió en la canción, quitar mensajes futuros
+            const allRendered = msgContainer.querySelectorAll('.cinema-lyric-line');
+            allRendered.forEach(bubble => {
+              const bTime = parseFloat(bubble.dataset.time);
+              if (bTime > effectiveTime + 0.3) {
+                bubble.remove();
+              }
+            });
+
+            // Enviar mensajes pasados y el actual que ya hayan llegado a su tiempo
+            if (activeIdx >= 0) {
+              for (let k = 0; k <= activeIdx; k++) {
+                if (!msgContainer.querySelector(`.cinema-lyric-line[data-index="${k}"]`)) {
+                  const b = createWhatsAppLyricBubble(currentLyrics[k], k, currentLyrics);
+                  msgContainer.appendChild(b);
+
+                  const container = document.getElementById('cinema-right-scroll');
+                  if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+                }
+              }
+            }
+
+            // Indicador de "Escribiendo..." para el siguiente verso que viene
+            const nextIdx = activeIdx + 1;
+            if (nextIdx < currentLyrics.length) {
+              const timeToNext = currentLyrics[nextIdx].time - effectiveTime;
+              if (timeToNext <= 2.6 && timeToNext > 0) {
+                typingBubble.style.display = 'flex';
+                if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> escribiendo...';
+                const container = document.getElementById('cinema-right-scroll');
+                if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+              } else {
+                typingBubble.style.display = 'none';
+                if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> en línea';
+              }
+            } else {
+              typingBubble.style.display = 'none';
+              if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> en línea';
+            }
           }
         }
 
