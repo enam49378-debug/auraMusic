@@ -860,11 +860,15 @@ body.auramusic-theme-cyberpunk #guide-wrapper[collapsed] ytmusic-guide-entry-ren
 
 /* ── HEADER / TOP BAR ── */
 body.auramusic-theme-cyberpunk #header,
+body.auramusic-theme-cyberpunk ytmusic-nav-bar,
 body.auramusic-theme-cyberpunk ytmusic-nav-bar-renderer {
-  background: rgba(8, 8, 16, 0.92) !important;
-  backdrop-filter: blur(20px) !important;
+  background: rgba(8, 8, 16, 0.95) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
   border-bottom: 1px solid rgba(0, 245, 255, 0.2) !important;
   box-shadow: 0 4px 30px rgba(0, 245, 255, 0.08) !important;
+  z-index: 100 !important;
+  position: relative !important;
 }
 
 body.auramusic-theme-cyberpunk #logo-icon-container svg path,
@@ -1342,14 +1346,51 @@ body.auramusic-theme-cyberpunk ytmusic-like-button-renderer[like-status="LIKE"] 
    CYBERPUNK 2.0: 🎤 PÁGINAS DE ARTISTAS, RADIOS Y MIXES (HUD MECHA)
    ========================================================================== */
 
-/* Cabecera inmersiva del artista / mix */
-body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer,
-body.auramusic-theme-cyberpunk ytmusic-immersive-header-renderer {
+/* Cabecera para Playlists y Mixes con thumbnail cuadrado */
+body.auramusic-theme-cyberpunk ytmusic-visual-header-renderer {
   background: linear-gradient(180deg, rgba(8, 8, 24, 0.95) 0%, rgba(5, 5, 15, 0.98) 100%) !important;
   border-bottom: 1px solid rgba(0, 245, 255, 0.25) !important;
   box-shadow: 0 10px 40px rgba(0, 245, 255, 0.08) !important;
   position: relative !important;
   padding: 30px 20px !important;
+}
+
+/* Cabecera inmersiva de artistas (Banner panorámico completo de borde a borde) */
+body.auramusic-theme-cyberpunk ytmusic-immersive-header-renderer {
+  background: transparent !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  position: relative !important;
+}
+
+/* Gradiente que cubre el 100% del banner desde arriba hasta fundirse con el fondo #080810 */
+body.auramusic-theme-cyberpunk ytmusic-immersive-header-renderer #gradient-container,
+body.auramusic-theme-cyberpunk ytmusic-immersive-header-renderer .gradient-container {
+  background: linear-gradient(
+    180deg,
+    rgba(8, 8, 16, 0.2) 0%,
+    rgba(8, 8, 16, 0.45) 35%,
+    rgba(8, 8, 16, 0.85) 70%,
+    #080810 100%
+  ) !important;
+  opacity: 1 !important;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* Difuminado suave del banner al fondo sin cortes bruscos */
+body.auramusic-theme-cyberpunk ytmusic-immersive-header-renderer #background,
+body.auramusic-theme-cyberpunk ytmusic-immersive-header-renderer .background-image {
+  mask-image: linear-gradient(180deg, black 60%, transparent 100%) !important;
+  -webkit-mask-image: linear-gradient(180deg, black 60%, transparent 100%) !important;
+}
+
+/* Contenido del artista dentro del banner (título, descripción, botones) */
+body.auramusic-theme-cyberpunk ytmusic-immersive-header-renderer #content-container,
+body.auramusic-theme-cyberpunk ytmusic-immersive-header-renderer .content-container {
+  padding: 30px 24px 20px 24px !important;
+  background: transparent !important;
 }
 
 /* Thumbnail hero del artista/mix (con corte mecha y glow dual) */

@@ -29,6 +29,8 @@
     volumeBoost: 100, // 100% a 300%
     playbackSpeed: 1.0,
     cleanMode: true,
+    crossfade: false,
+    crossfadeDuration: 4, // 1 a 12 segundos
     eq: {
       '60Hz': 0,
       '250Hz': 0,
@@ -111,6 +113,7 @@
     applyPlaybackSpeed(state.playbackSpeed);
     applyVolumeBoost(state.volumeBoost);
     applyEQ();
+    applyCrossfade(state.crossfade);
     updateUIControls();
   }
 
@@ -188,6 +191,70 @@
         eqFilters[freq].gain.setValueAtTime(gain, audioCtx.currentTime);
       }
     }
+  }
+
+  // --- MOTOR DE CROSSFADE / TRANSICIÓN CONTINUA ENTRE CANCIONES ---
+  let isCrossfadingNext = false;
+
+  function handleCrossfadeCheck() {
+    if (!state.crossfade || !gainNode || !audioCtx) return;
+    const video = document.querySelector('video');
+    if (!video || video.paused || !video.duration || isNaN(video.duration)) return;
+
+    const dur = video.duration;
+    const cur = video.currentTime;
+    const fadeSec = Math.max(1, Math.min(12, state.crossfadeDuration || 4));
+    const baseGain = Math.max(0, Math.min(3.0, (state.volumeBoost || 100) / 100));
+
+    if (dur < fadeSec * 2) return;
+
+    const rem = dur - cur;
+
+    // 1. FADE OUT hacia el final de la pista
+    if (rem <= fadeSec && rem > 0) {
+      const factor = Math.max(0.01, rem / fadeSec);
+      gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(baseGain * factor, audioCtx.currentTime);
+
+      if (rem <= 0.6 && !isCrossfadingNext) {
+        isCrossfadingNext = true;
+        const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
+        if (nextBtn) {
+          nextBtn.click();
+        }
+      }
+    } 
+    // 2. FADE IN al inicio de una pista nueva
+    else if (cur <= (fadeSec / 2)) {
+      const factor = Math.min(1.0, Math.max(0.01, cur / (fadeSec / 2)));
+      gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(baseGain * factor, audioCtx.currentTime);
+      isCrossfadingNext = false;
+    } 
+    // 3. Reproducción normal
+    else {
+      gainNode.gain.setValueAtTime(baseGain, audioCtx.currentTime);
+      isCrossfadingNext = false;
+    }
+  }
+
+  function applyCrossfade(enabled) {
+    if (enabled) {
+      initAudioEngine();
+      setupCrossfadeListeners();
+    } else {
+      isCrossfadingNext = false;
+      if (gainNode && audioCtx) {
+        applyVolumeBoost(state.volumeBoost);
+      }
+    }
+  }
+
+  function setupCrossfadeListeners() {
+    const video = document.querySelector('video');
+    if (!video) return;
+    video.removeEventListener('timeupdate', handleCrossfadeCheck);
+    video.addEventListener('timeupdate', handleCrossfadeCheck);
   }
 
   // --- 4. MOTOR DE AUDIO WEB AUDIO API ---
@@ -567,6 +634,27 @@
               <input type="range" class="auramusic-range" id="speed-slider" min="0.25" max="3.0" step="0.05" value="${state.playbackSpeed}">
             </div>
 
+            <!-- TRANSICIÓN ENTRE CANCIONES (CROSSFADE / CROSSOVER) -->
+            <div class="auramusic-card">
+              <div class="auramusic-row">
+                <div class="auramusic-label-box">
+                  <span class="auramusic-label">🔀 Transición entre Canciones (Crossfade)</span>
+                  <span class="auramusic-sublabel">Transición suave de volumen sin silencios entre el fin de una pista y el inicio de la siguiente.</span>
+                </div>
+                <label class="auramusic-switch">
+                  <input type="checkbox" id="toggle-crossfade" ${state.crossfade ? 'checked' : ''}>
+                  <span class="auramusic-slider"></span>
+                </label>
+              </div>
+              <div id="crossfade-slider-container" style="display: ${state.crossfade ? 'block' : 'none'}; margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06);">
+                <div class="auramusic-row" style="margin-bottom: 6px;">
+                  <span class="auramusic-sublabel">Duración de la transición</span>
+                  <span id="crossfade-duration-val" style="font-weight:700; color:var(--auramusic-primary);">${state.crossfadeDuration || 4}s</span>
+                </div>
+                <input type="range" class="auramusic-range" id="crossfade-duration-slider" min="1" max="12" step="1" value="${state.crossfadeDuration || 4}">
+              </div>
+            </div>
+
             <div class="auramusic-card">
               <span class="auramusic-label">🎚️ Ecualizador de 5 Bandas (-12dB a +12dB)</span>
               <div class="auramusic-eq-container">
@@ -752,6 +840,31 @@
       });
     });
 
+    // Toggle Crossfade y Slider
+    const toggleCrossfade = document.getElementById('toggle-crossfade');
+    const crossfadeContainer = document.getElementById('crossfade-slider-container');
+    const crossfadeSlider = document.getElementById('crossfade-duration-slider');
+    const crossfadeVal = document.getElementById('crossfade-duration-val');
+
+    if (toggleCrossfade) {
+      toggleCrossfade.addEventListener('change', (e) => {
+        state.crossfade = e.target.checked;
+        if (crossfadeContainer) {
+          crossfadeContainer.style.display = state.crossfade ? 'block' : 'none';
+        }
+        applyCrossfade(state.crossfade);
+        saveSettings();
+      });
+    }
+
+    if (crossfadeSlider) {
+      crossfadeSlider.addEventListener('input', (e) => {
+        state.crossfadeDuration = parseInt(e.target.value, 10) || 4;
+        if (crossfadeVal) crossfadeVal.textContent = `${state.crossfadeDuration}s`;
+        saveSettings();
+      });
+    }
+
     // Restablecer
     const resetBtn = document.getElementById('auramusic-reset-btn');
     if (resetBtn) {
@@ -772,6 +885,17 @@
     document.querySelectorAll('.theme-pill-btn[data-vis]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.vis === state.visualizer);
     });
+
+    // Sincronizar Crossfade
+    const toggleCrossfade = document.getElementById('toggle-crossfade');
+    const crossfadeContainer = document.getElementById('crossfade-slider-container');
+    const crossfadeSlider = document.getElementById('crossfade-duration-slider');
+    const crossfadeVal = document.getElementById('crossfade-duration-val');
+
+    if (toggleCrossfade) toggleCrossfade.checked = !!state.crossfade;
+    if (crossfadeContainer) crossfadeContainer.style.display = state.crossfade ? 'block' : 'none';
+    if (crossfadeSlider) crossfadeSlider.value = state.crossfadeDuration || 4;
+    if (crossfadeVal) crossfadeVal.textContent = `${state.crossfadeDuration || 4}s`;
   }
 
   // --- 9. INICIALIZACIÓN GLOBAL CUANDO EL DOM ESTÉ LISTO ---
@@ -813,6 +937,7 @@
       onGlobalSongChange();
       runCleanWatchdog();
       checkAndInjectLyricsButton();
+      setupCrossfadeListeners();
 
       if (state.theme === 'spotify' || document.getElementById('auramusic-spotify-logo')) {
         updateSpotifyBrandElements();
