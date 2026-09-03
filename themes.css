@@ -51,10 +51,23 @@ tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
   height: 24px !important;
 }
 
-/* BARRAS DE DESPLAZAMIENTO ULTRA ELEGANTES Y DISCRETAS EN TODOS LOS MENÚS */
-::-webkit-scrollbar {
+/* ==========================================================
+   PROHIBICIÓN TOTAL DE SCROLLBARS HORIZONTALES (SOLO SCROLL VERTICAL)
+   ========================================================== */
+
+/* Bloquear scrollbars horizontales en toda la aplicación */
+::-webkit-scrollbar:horizontal,
+*::-webkit-scrollbar:horizontal {
+  display: none !important;
+  height: 0px !important;
+  width: 0px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Solo scrollbars verticales elegantes de 6px */
+::-webkit-scrollbar:vertical {
   width: 6px !important;
-  height: 6px !important;
 }
 
 ::-webkit-scrollbar-track {
@@ -70,10 +83,72 @@ tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
   background: var(--auramusic-primary, #00f2fe) !important;
 }
 
-/* MENÚ LATERAL Y CAJÓN DE NAVEGACIÓN: CERO DOBLES BARRAS NI ESPACIOS ROTOS */
-#guide-wrapper,
-#guide-content {
+/* CONTENCIÓN ESTRICTA: JAMÁS PERMITIR OVERFLOW HORIZONTAL */
+html,
+body,
+ytmusic-app,
+ytmusic-app-layout,
+#content,
+#browse-page,
+ytmusic-browse-response,
+ytmusic-player-page,
+#main-panel,
+ytmusic-item-section-renderer {
   overflow-x: hidden !important;
+  max-width: 100vw !important;
+}
+
+/* CARRUSELES Y FILAS DE ÁLBUMES (FAVORITOS OLVIDADOS, ETC.):
+   CERO SCROLLBARS HORIZONTALES, NAVEGACIÓN LIMPIA POR FLECHAS */
+ytmusic-carousel,
+ytmusic-carousel-shelf-renderer,
+#items.ytmusic-carousel,
+#items.ytmusic-grid-renderer,
+ytmusic-chip-cloud-renderer,
+#chips.ytmusic-chip-cloud-renderer {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  overflow-x: hidden !important;
+}
+
+#items.ytmusic-carousel::-webkit-scrollbar,
+ytmusic-carousel::-webkit-scrollbar,
+ytmusic-carousel-shelf-renderer::-webkit-scrollbar,
+ytmusic-chip-cloud-renderer::-webkit-scrollbar,
+#chips.ytmusic-chip-cloud-renderer::-webkit-scrollbar {
+  display: none !important;
+  height: 0px !important;
+  width: 0px !important;
+}
+
+/* CAJÓN LATERAL (SIDEBAR): CERO SCROLLBARS HORIZONTALES NI DESBORDES */
+#guide-wrapper,
+#guide-content,
+ytmusic-guide-renderer,
+ytmusic-guide-section-renderer,
+#sections.ytmusic-guide-renderer,
+#items.ytmusic-guide-section-renderer {
+  overflow-x: hidden !important;
+  scrollbar-width: none !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#guide-wrapper::-webkit-scrollbar,
+#guide-content::-webkit-scrollbar,
+ytmusic-guide-renderer::-webkit-scrollbar,
+#sections.ytmusic-guide-renderer::-webkit-scrollbar,
+#items.ytmusic-guide-section-renderer::-webkit-scrollbar {
+  display: none !important;
+  height: 0px !important;
+  width: 0px !important;
+}
+
+/* ELEMENTOS DEL MENÚ LATERAL: CONTENIDOS PERFECTAMENTE SIN REBASAR */
+ytmusic-guide-entry-renderer {
+  box-sizing: border-box !important;
+  max-width: calc(100% - 16px) !important;
+  width: auto !important;
 }
 
 #guide-builder-item,
@@ -142,15 +217,17 @@ body.auramusic-theme-aesthetic ytmusic-search-box:focus-within {
 body.auramusic-theme-aesthetic ytmusic-guide-entry-renderer {
   background: rgba(255, 255, 255, 0.03) !important;
   border: 1px solid rgba(255, 143, 163, 0.1) !important;
-  border-radius: 24px !important;
-  margin: 6px 12px !important;
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  border-radius: 20px !important;
+  margin: 4px 8px !important;
+  box-sizing: border-box !important;
+  width: auto !important;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
 body.auramusic-theme-aesthetic ytmusic-guide-entry-renderer:hover {
   background: rgba(255, 143, 163, 0.15) !important;
-  transform: translateX(8px) scale(1.02) !important;
-  box-shadow: 0 8px 25px rgba(255, 143, 163, 0.3) !important;
+  transform: scale(1.02) !important;
+  box-shadow: 0 6px 20px rgba(255, 143, 163, 0.25) !important;
 }
 
 body.auramusic-theme-aesthetic ytmusic-guide-entry-renderer[is-primary] tp-yt-paper-item,
@@ -206,7 +283,7 @@ body.auramusic-theme-aesthetic ytmusic-responsive-list-item-renderer {
 
 body.auramusic-theme-aesthetic ytmusic-responsive-list-item-renderer:hover {
   background: rgba(255, 143, 163, 0.12) !important;
-  transform: translateX(6px) scale(1.01) !important;
+  transform: scale(1.01) !important;
   box-shadow: 0 4px 15px rgba(255, 143, 163, 0.2) !important;
 }
 
@@ -521,7 +598,7 @@ body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer {
 body.auramusic-theme-cyberpunk ytmusic-guide-entry-renderer:hover {
   background: rgba(0, 242, 254, 0.14) !important;
   border-left-color: #00f2fe !important;
-  transform: translateX(8px) !important;
+  transform: scale(1.02) !important;
   box-shadow: inset 0 0 15px rgba(0, 242, 254, 0.3), 0 0 15px rgba(255, 0, 127, 0.4) !important;
 }
 
@@ -560,7 +637,7 @@ body.auramusic-theme-cyberpunk ytmusic-responsive-list-item-renderer {
 body.auramusic-theme-cyberpunk ytmusic-responsive-list-item-renderer:hover {
   background: linear-gradient(90deg, rgba(0, 242, 254, 0.15), rgba(255, 0, 127, 0.05), transparent) !important;
   border-left-color: #00f2fe !important;
-  transform: translateX(6px) !important;
+  transform: scale(1.01) !important;
   box-shadow: 0 0 15px rgba(0, 242, 254, 0.2) !important;
 }
 
@@ -940,7 +1017,7 @@ body.auramusic-theme-aesthetic tp-yt-paper-listbox {
 body.auramusic-theme-aesthetic tp-yt-paper-item:hover {
   background: rgba(255, 143, 163, 0.18) !important;
   border-radius: 16px !important;
-  transform: translateX(4px) !important;
+  transform: scale(1.02) !important;
 }
 
 /* 2. ⛏️ Minecraft Dropdowns */
