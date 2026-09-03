@@ -514,55 +514,49 @@
 
     const rem = dur - cur;
 
-    // B. MODO REAL: MÁQUINA DE ESTADOS CON PRECARGA Y SOLAPAMIENTO
-    if (isRealMode) {
-      // 1. PREPARACIÓN (Faltando fadeSec + 12 segundos)
-      if (rem <= fadeSec + 12 && rem > fadeSec && _xfadeStatus === XFADE_STATE.IDLE) {
-        const nextId = getNextTrackVideoId();
-        if (nextId) {
-          console.log(`🔀 AuraMusic: Preparando Shadow Player B con videoId "${nextId}"...`);
-          prepareShadowPlayer(nextId);
-        } else {
-          // Si no hay videoId en la cola, pasar a fallback
-          _xfadeStatus = 'FALLBACK_READY';
-        }
-      }
-
-      // 2. DISPARO DEL SOLAPAMIENTO (Faltando exactamente fadeSec segundos)
-      if (rem <= fadeSec && rem > 0.4 && (_xfadeStatus === XFADE_STATE.CROSSFADE_READY || _xfadeStatus === XFADE_STATE.PREPARING_NEXT)) {
-        startShadowCrossfade(fadeSec, baseGain);
-        return;
+    // B. PREPARACIÓN ANTICIPADA EN MODO REAL (Faltando entre fadeSec+15s y fadeSec)
+    if (isRealMode && rem <= fadeSec + 15 && rem > fadeSec && _xfadeStatus === XFADE_STATE.IDLE) {
+      const nextId = getNextTrackVideoId();
+      if (nextId) {
+        console.log(`🔀 AuraMusic: Precargando siguiente pista "${nextId}"...`);
+        prepareShadowPlayer(nextId);
       }
     }
 
-    // C. MODO FALLBACK (O si el Shadow Player no estaba disponible)
-    if (!isRealMode || _xfadeStatus === 'FALLBACK_READY') {
-      // Fade-out suave en los últimos segundos
-      if (rem <= fadeSec && rem > 1.2 && !_hasFadedOutThisTrack) {
-        _hasFadedOutThisTrack = true;
-        try {
-          gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-          const curGain = Math.max(0.01, gainNode.gain.value);
-          gainNode.gain.setValueAtTime(curGain, audioCtx.currentTime);
-          gainNode.gain.linearRampToValueAtTime(0.02, audioCtx.currentTime + rem);
-          console.log(`🔀 AuraMusic: Fade-Out secuencial suave (${rem.toFixed(1)}s restantes).`);
-        } catch (e) {}
+    // C. INICIO DEL CROSSFADE (Garantizado al tocar rem <= fadeSec)
+    if (rem <= fadeSec && rem > 0.3 && !_hasFadedOutThisTrack) {
+      _hasFadedOutThisTrack = true;
+
+      // Si estamos en Modo Real y el Shadow Player está disponible, activamos solapamiento real:
+      if (isRealMode && (_xfadeStatus === XFADE_STATE.CROSSFADE_READY || shadowPlayerIframe)) {
+        startShadowCrossfade(fadeSec, baseGain);
+        return;
       }
 
-      // Disparo de siguiente pista en el sweet spot (1.1s)
-      if (rem <= 1.1 && rem > 0.05 && _hasFadedOutThisTrack && !_isTransitioningToNext) {
-        const now = performance.now();
-        if (now - _lastSkipTime < 3500) return;
-        _lastSkipTime = now;
+      // Si Shadow Player no estaba listo o estamos en Modo Fallback:
+      // Fade-Out garantizado en la canción actual
+      try {
+        gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+        const curGain = Math.max(0.01, gainNode.gain.value);
+        gainNode.gain.setValueAtTime(curGain, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + rem);
+        console.log(`🔀 AuraMusic: Fade-Out activo en Canción A (${rem.toFixed(1)}s restantes)...`);
+      } catch (e) {}
+    }
 
-        const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
-        if (nextBtn) {
-          console.log('🔀 AuraMusic: Conectando con la siguiente canción (Fallback)...');
-          _isTransitioningToNext = true;
-          _isProgrammaticSkip = true;
-          nextBtn.click();
-          setTimeout(() => { _isProgrammaticSkip = false; }, 800);
-        }
+    // D. DISPARO DE LA SIGUIENTE PISTA (Para modo Fallback o transición garantizada)
+    if (rem <= 1.2 && rem > 0.05 && _hasFadedOutThisTrack && !_isTransitioningToNext && _xfadeStatus !== XFADE_STATE.CROSSFADE_ACTIVE) {
+      const now = performance.now();
+      if (now - _lastSkipTime < 3500) return;
+      _lastSkipTime = now;
+
+      const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
+      if (nextBtn) {
+        console.log('🔀 AuraMusic: Conectando con la siguiente canción...');
+        _isTransitioningToNext = true;
+        _isProgrammaticSkip = true;
+        nextBtn.click();
+        setTimeout(() => { _isProgrammaticSkip = false; }, 800);
       }
     }
 
