@@ -1294,8 +1294,9 @@ body.auramusic-theme-whatsapp .cinema-lyric-line.wa-sent {
 
 
 
+
 /* ==========================================================================
-   🌸 TEMA DEDICADO: EL CUADERNO ESCOLAR DE KOMI-SAN (ESCRITURA A LÁPIZ Y TACHADO) 📒✏️🐾
+   🌸 TEMA DEDICADO: EL CUADERNO ESCOLAR DE KOMI-SAN (ESCRITURA ORGÁNICA + STICKERS) 📒✏️🐾
    ========================================================================== */
 body.auramusic-theme-komi #auramusic-cinema-overlay.active {
   background-color: #12151b !important;
@@ -1474,17 +1475,17 @@ body.auramusic-theme-komi .cinema-lyrics-wrapper {
   flex-direction: column !important;
   gap: 0 !important;
   width: 100% !important;
-  border-left: 2px solid #ff85a2 !important; /* Margen vertical escolar rojo */
-  padding-left: 18px !important;
+  border-left: 2px solid #ff85a2 !important; /* Margen escolar rojo */
+  padding-left: 14px !important;
   box-sizing: border-box !important;
 }
 
-/* RENGLÓN DE CUADERNO: LÍNEA AZUL Y TEXTO EN GRAFITO OSCURO (NUNCA BLANCO) */
+/* RENGLONES ESCOLARES DE 52px */
 body.auramusic-theme-komi .cinema-lyric-line {
   height: 52px !important;
   min-height: 52px !important;
   line-height: 48px !important;
-  border-bottom: 2px solid #c7d8e8 !important;
+  border-bottom: 2px solid #c7d8e8 !important; /* Renglón azul de libreta */
   margin: 0 !important;
   padding: 0 10px 4px 10px !important;
   box-sizing: border-box !important;
@@ -1494,7 +1495,6 @@ body.auramusic-theme-komi .cinema-lyric-line {
   font-size: 1.75rem !important;
   color: #2b3336 !important;
   position: relative !important;
-  opacity: 0.65 !important;
   letter-spacing: 0.5px !important;
   border-top: none !important;
   border-left: none !important;
@@ -1503,12 +1503,41 @@ body.auramusic-theme-komi .cinema-lyric-line {
   box-shadow: none !important;
 }
 
-/* PALABRAS EN GRAFITO OSCURO VISIBLES (ELIMINA BLUR BLANCO DE FONDO) */
+/* ==========================================================================
+   VARIACIÓN ORGÁNICA: SANGRÍAS Y DESPLAZAMIENTOS REALISTAS DE ESCRITURA
+   ========================================================================== */
+body.auramusic-theme-komi .cinema-lyric-line:nth-child(5n+1) {
+  padding-left: 10px !important;
+}
+body.auramusic-theme-komi .cinema-lyric-line:nth-child(5n+2) {
+  padding-left: 28px !important;
+}
+body.auramusic-theme-komi .cinema-lyric-line:nth-child(5n+3) {
+  padding-left: 16px !important;
+}
+body.auramusic-theme-komi .cinema-lyric-line:nth-child(5n+4) {
+  padding-left: 36px !important;
+}
+body.auramusic-theme-komi .cinema-lyric-line:nth-child(5n+5) {
+  padding-left: 20px !important;
+}
+
+/* ==========================================================================
+   SOLO MOSTRAR LO CANTADO Y LO QUE SE ESTÁ CANTANDO:
+   LOS VERSOS FUTUROS QUEDAN COMO RENGLONES EN BLANCO ESPERANDO A SER ESCRITOS
+   ========================================================================== */
+body.auramusic-theme-komi .cinema-lyric-line:not(.active-line):not(.sung-line) .line-primary,
+body.auramusic-theme-komi .cinema-lyric-line:not(.active-line):not(.sung-line) .line-original-sub,
+body.auramusic-theme-komi .cinema-lyric-line:not(.active-line):not(.sung-line) .komi-inline-sticker {
+  display: none !important;
+  opacity: 0 !important;
+}
+
+/* PALABRAS EN GRAFITO OSCURO */
 body.auramusic-theme-komi .k-word {
   color: #2b3336 !important;
   filter: none !important;
   text-shadow: none !important;
-  opacity: 0.8 !important;
   display: inline-block !important;
 }
 
@@ -1526,7 +1555,7 @@ body.auramusic-theme-komi .cinema-lyric-line.active-line .k-word {
   transition: none !important;
 }
 
-/* PALABRA CANTÁNDOSE: SE DIBUJA CON TRAZO DE LÁPIZ EN VIVO */
+/* PALABRA CANTÁNDOSE: TRAZO CONTINUO DE LÁPIZ EN TIEMPO REAL */
 body.auramusic-theme-komi .cinema-lyric-line.active-line .k-word.active {
   opacity: 1 !important;
   color: #000000 !important;
@@ -1586,4 +1615,34 @@ body.auramusic-theme-komi .cinema-lyric-line.sung-line::after {
 @keyframes komiPencilStrike {
   0% { width: 0%; opacity: 0; }
   100% { width: calc(100% - 12px); opacity: 0.75; }
+}
+
+/* ==========================================================================
+   STICKERS DE EXPRESIONES DE KOMI-SAN EN EL CUADERNO 🌸💖
+   ========================================================================== */
+.komi-inline-sticker {
+  position: absolute !important;
+  right: 15px !important;
+  top: -30px !important;
+  width: 85px !important;
+  height: 85px !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  transform: scale(0.4) rotate(-8deg) !important;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  z-index: 25 !important;
+}
+
+.komi-inline-sticker img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.18)) !important;
+}
+
+/* El sticker aparece animado cuando el verso se canta o ya fue cantado */
+body.auramusic-theme-komi .cinema-lyric-line.active-line .komi-inline-sticker,
+body.auramusic-theme-komi .cinema-lyric-line.sung-line .komi-inline-sticker {
+  opacity: 1 !important;
+  transform: scale(1) rotate(-3deg) !important;
 }

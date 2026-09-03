@@ -1095,6 +1095,18 @@
         lineDiv.appendChild(subDiv);
       }
 
+      // STICKER DE EXPRESIÓN CONTEXTUAL PARA EL CUADERNO DE KOMI-SAN 🌸💖
+      if (state.theme === 'komi') {
+        const loveRegex = /\b(amor|love|coraz[oó]n|quiero|quiera|quiso|amo|enamorad[oa]|beso|quererte|amarte|cariño|abrazo|sentir|sentimiento|tatuaje|tattoo|mente|fr[aá]gil|labios|vida|ciel[oa])\b/i;
+        if (loveRegex.test(displayText)) {
+          const sticker = document.createElement('div');
+          sticker.className = 'komi-inline-sticker komi-sticker-love';
+          const stickerUrl = chrome.runtime?.getURL('assets/komi_sticker_love.png') || 'assets/komi_sticker_love.png';
+          sticker.innerHTML = `<img src="${stickerUrl}" alt="Komi Amor Sticker">`;
+          lineDiv.appendChild(sticker);
+        }
+      }
+
       // Metadatos de mensaje EXCLUSIVOS para WhatsApp (NUNCA en otros temas)
       if (state.theme === 'whatsapp') {
         const metaSpan = document.createElement('div');
