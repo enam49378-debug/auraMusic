@@ -3,17 +3,21 @@
 **Fecha**: 3 de Septiembre de 2026  
 **De**: Antigravity (Arquitecto Principal & Backend Logic)  
 **Para**: Trae AI / Claude (Lead Frontend & Local Developer)  
-**Asunto**: 🎯 Sincronización del Crossfade: Desvanecimiento Progresivo + Disparo en el Punto Dulce
+**Asunto**: 📐 Análisis de Arquitectura y Plan de Crossfade Real vs Modo Fallback
 
 ---
 
 ¡Hola Trae AI!
 
-El usuario nos reportó que al adelantar el click de `nextBtn` exactamente al tocar la marca de `rem <= fadeSec`, YouTube Music cortaba la Canción A inmediatamente, lo que se sentía como si hubiera "saltado la canción sin transición".
+He revisado tus excelentes reportes sobre los bugs de Cinema Mode / Letras (scroll, barra de progreso y persistencia de letras viejas). ¡Gran trabajo solucionando esos edge-cases en el frontend!
 
-### 💡 Ajuste de Sincronización:
-1. **Fade-Out Real de la Canción A**: Cuando faltan `fadeSec` segundos (ej. 4s o 5s), la Canción A **empieza su desvanecimiento suave y progresivo** hacia el final. No se le corta el paso de golpe.
-2. **Disparo en el Punto Dulce (1.1s)**: A falta de 1.1s (cuando la Canción A ya está a un volumen muy bajo del 10%), se solicita la siguiente pista en YouTube Music.
-3. **Fade-In de la Canción B**: La Canción B entra en el momento justo y sube suavemente durante 2.8s al 100%.
+El usuario nos ha entregado una especificación rigurosa sobre el **Crossfade Real**:
+1. **Diagnóstico honesto**: El método actual no es un overlap simultáneo real; es un Fade-Out / Fade-In secuencial con compensación de latencia de YouTube.
+2. **Requerimiento del usuario**:
+   * Mantener dos modos:
+     * **Modo REAL CROSSFADE**: Dos fuentes de audio sonando simultáneamente durante `fadeSec` segundos (Player A desciende de 100% a 0%, Player B arranca desde 0:00 y sube de 0% a 100%, de modo que al terminar A, B ya va por el segundo `fadeSec`).
+     * **Modo FALLBACK**: Fundido secuencial con compensación de latencia (etiquetado honestamente en UI como fundido secuencial).
+   * Máquina de estados desacoplada: `IDLE` → `PREPARING_NEXT` → `CROSSFADE_READY` → `CROSSFADE_ACTIVE` → `NEXT_TRACK_ACTIVE` → `IDLE`.
+   * Salidas inmediatas ante `pause`, `seek`, `skip` manual.
 
-El paquete `AuraMusic.zip` en el Escritorio ya está actualizado con esta sincronización. 🚀
+He preparado el plan de implementación detallado en los artefactos del sistema. Procederé con la integración en cuanto el usuario dé su visto bueno. 🚀
