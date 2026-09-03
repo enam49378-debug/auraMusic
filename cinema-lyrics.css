@@ -1293,8 +1293,9 @@ body.auramusic-theme-whatsapp .cinema-lyric-line.wa-sent {
 
 
 
+
 /* ==========================================================================
-   🌸 TEMA DEDICADO: EL CUADERNO ESCOLAR DE KOMI-SAN (ESCRITURA SUAVE Y TACHADO) 📒✏️🐾
+   🌸 TEMA DEDICADO: EL CUADERNO ESCOLAR DE KOMI-SAN (ESCRITURA A LÁPIZ Y TACHADO) 📒✏️🐾
    ========================================================================== */
 body.auramusic-theme-komi #auramusic-cinema-overlay.active {
   background-color: #12151b !important;
@@ -1314,7 +1315,14 @@ body.auramusic-theme-komi .cinema-mesh-bg {
   display: none !important;
 }
 
-/* EL CUADERNO ABIERTO EN 2 PÁGINAS */
+/* NUNCA MOSTRAR EL MODELO 3D DE JESULUTO EN EL TEMA DE KOMI-SAN */
+body.auramusic-theme-komi #jesuluto-3d-stage,
+body.auramusic-theme-komi .jesuluto-3d-stage,
+body.auramusic-theme-komi .jesuluto-skin-controls {
+  display: none !important;
+}
+
+/* EL CUADERNO ABIERTO EN 2 PÁGINAS (ESTILO B5 JAPONÉS) */
 body.auramusic-theme-komi .cinema-content-grid {
   background: #faf7ee !important;
   border-radius: 16px !important;
@@ -1369,15 +1377,17 @@ body.auramusic-theme-komi .cinema-left {
 }
 
 body.auramusic-theme-komi .cinema-artwork-box {
-  width: 220px !important;
-  height: 220px !important;
+  display: block !important;
+  width: 230px !important;
+  height: 230px !important;
   background: #ffffff !important;
-  padding: 8px 8px 24px 8px !important;
+  padding: 8px 8px 26px 8px !important;
   border-radius: 4px !important;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16) !important;
   border: 1px solid #dcd3c1 !important;
   transform: rotate(-1.5deg) !important;
   position: relative !important;
+  margin: 10px auto !important;
 }
 
 body.auramusic-theme-komi .cinema-artwork-box::before {
@@ -1446,7 +1456,6 @@ body.auramusic-theme-komi .cinema-right {
   overflow-y: auto !important;
 }
 
-/* Cabecera escolar en la parte superior */
 body.auramusic-theme-komi .cinema-right::before {
   content: 'No. 01      DATE:  /  / 2026       名前: 古見 硝子 🌸 (Komi Shouko)';
   display: block !important;
@@ -1460,23 +1469,22 @@ body.auramusic-theme-komi .cinema-right::before {
   letter-spacing: 0.5px !important;
 }
 
-/* Margen vertical rojo/rosa de libreta escolar */
 body.auramusic-theme-komi .cinema-lyrics-wrapper {
   display: flex !important;
   flex-direction: column !important;
   gap: 0 !important;
   width: 100% !important;
-  border-left: 2px solid #ff85a2 !important;
+  border-left: 2px solid #ff85a2 !important; /* Margen vertical escolar rojo */
   padding-left: 18px !important;
   box-sizing: border-box !important;
 }
 
-/* LÍNEA DE RENGLÓN: CADA FRASE NUNCA ESTÁ VACÍA NI DESFASADA */
+/* RENGLÓN DE CUADERNO: LÍNEA AZUL Y TEXTO EN GRAFITO OSCURO (NUNCA BLANCO) */
 body.auramusic-theme-komi .cinema-lyric-line {
   height: 52px !important;
   min-height: 52px !important;
   line-height: 48px !important;
-  border-bottom: 2px solid #c7d8e8 !important; /* Renglón azul escolar */
+  border-bottom: 2px solid #c7d8e8 !important;
   margin: 0 !important;
   padding: 0 10px 4px 10px !important;
   box-sizing: border-box !important;
@@ -1484,10 +1492,9 @@ body.auramusic-theme-komi .cinema-lyric-line {
   align-items: flex-end !important;
   font-family: 'Patrick Hand', 'Caveat', 'Comic Sans MS', cursive, sans-serif !important;
   font-size: 1.75rem !important;
-  color: #3b454e !important;
+  color: #2b3336 !important;
   position: relative !important;
-  opacity: 0.45 !important; /* Versos que aún no se cantan: letra a lápiz visible en el cuaderno */
-  transition: opacity 0.3s ease, color 0.3s ease !important;
+  opacity: 0.65 !important;
   letter-spacing: 0.5px !important;
   border-top: none !important;
   border-left: none !important;
@@ -1496,53 +1503,73 @@ body.auramusic-theme-komi .cinema-lyric-line {
   box-shadow: none !important;
 }
 
-/* Verso cantándose activamente */
-body.auramusic-theme-komi .cinema-lyric-line.active-line {
-  opacity: 1 !important;
-  color: #1a1e24 !important;
-  border-bottom: 2px solid #8ba4bb !important;
-}
-
-/* Las palabras del verso activo se van escribiendo poco a poco */
-body.auramusic-theme-komi .cinema-lyric-line.active-line .k-word {
-  opacity: 0.28 !important;
-  transition: opacity 0.15s cubic-bezier(0.25, 1, 0.5, 1), transform 0.15s ease, color 0.15s ease !important;
-  transform: translateY(2px) !important;
+/* PALABRAS EN GRAFITO OSCURO VISIBLES (ELIMINA BLUR BLANCO DE FONDO) */
+body.auramusic-theme-komi .k-word {
+  color: #2b3336 !important;
+  filter: none !important;
+  text-shadow: none !important;
+  opacity: 0.8 !important;
   display: inline-block !important;
 }
 
-/* Palabra cantándose en este instante: aparece nítida escrita con tinta */
-body.auramusic-theme-komi .cinema-lyric-line.active-line .k-word.active {
+/* VERSO CANTÁNDOSE AHORA */
+body.auramusic-theme-komi .cinema-lyric-line.active-line {
   opacity: 1 !important;
-  transform: translateY(0) scale(1.04) !important;
-  color: #0b0f14 !important;
-  font-weight: 800 !important;
+  color: #111b21 !important;
+  border-bottom: 2px solid #7c98b0 !important;
 }
 
-/* Palabras ya escritas del verso actual */
+/* PALABRAS DEL VERSO ACTIVO: SE DIBUJAN CON LÁPIZ DE IZQUIERDA A DERECHA */
+body.auramusic-theme-komi .cinema-lyric-line.active-line .k-word {
+  opacity: 0 !important;
+  clip-path: inset(0 100% 0 0);
+  transition: none !important;
+}
+
+/* PALABRA CANTÁNDOSE: SE DIBUJA CON TRAZO DE LÁPIZ EN VIVO */
+body.auramusic-theme-komi .cinema-lyric-line.active-line .k-word.active {
+  opacity: 1 !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  animation: pencilDrawWrite 0.28s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
+
+@keyframes pencilDrawWrite {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0.2;
+    transform: translateY(1px);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* PALABRAS YA DIBUJADAS DEL VERSO ACTUAL */
 body.auramusic-theme-komi .cinema-lyric-line.active-line .k-word.sung {
   opacity: 1 !important;
-  transform: translateY(0) !important;
-  color: #1a1e24 !important;
+  clip-path: none !important;
+  color: #1b232a !important;
   font-weight: 700 !important;
 }
 
 /* ==========================================================================
-   VERSO TERMINADO: TACHADO REALISTA DE IZQUIERDA A DERECHA (SIN LÁPIZ FLOTANTE)
+   VERSO COMPLETADO: TACHADO CON LÁPIZ DE IZQUIERDA A DERECHA
    ========================================================================== */
 body.auramusic-theme-komi .cinema-lyric-line.sung-line {
-  opacity: 0.52 !important;
-  color: #63707d !important;
+  opacity: 0.45 !important;
+  color: #6a7782 !important;
   position: relative !important;
 }
 
 body.auramusic-theme-komi .cinema-lyric-line.sung-line .k-word {
   opacity: 1 !important;
-  transform: translateY(0) !important;
+  clip-path: none !important;
   color: inherit !important;
 }
 
-/* Trazo de lápiz continuo que tacha el verso completado */
 body.auramusic-theme-komi .cinema-lyric-line.sung-line::after {
   content: '' !important;
   position: absolute !important;
@@ -1552,133 +1579,11 @@ body.auramusic-theme-komi .cinema-lyric-line.sung-line::after {
   background: #2b3336 !important;
   border-radius: 2px !important;
   transform: rotate(-0.5deg) !important;
-  opacity: 0.8 !important;
+  opacity: 0.75 !important;
   animation: komiPencilStrike 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
 }
 
 @keyframes komiPencilStrike {
   0% { width: 0%; opacity: 0; }
-  100% { width: calc(100% - 12px); opacity: 0.8; }
-}
-
-
-/* ==========================================================================
-   ⚡ TEMA DEDICADO: JESULUTO (APPLE MUSIC LYRICS + 3D BLOCKBENCH DANCING MODEL) 🤖🟩
-   ========================================================================== */
-body.auramusic-theme-jesuluto #auramusic-cinema-overlay.active {
-  background: #070a0e !important;
-  color: #e6fdf2 !important;
-  display: flex !important;
-}
-
-body.auramusic-theme-jesuluto .cinema-mesh-bg {
-  background: radial-gradient(circle at 25% 30%, rgba(0, 255, 119, 0.22) 0%, transparent 60%),
-              radial-gradient(circle at 80% 70%, rgba(0, 229, 255, 0.15) 0%, transparent 60%) !important;
-  opacity: 0.8 !important;
-}
-
-/* Escenario 3D de Jesuluto en la Columna Izquierda */
-.jesuluto-3d-stage {
-  width: 320px !important;
-  height: 480px !important;
-  position: relative !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  margin: 0 auto !important;
-  overflow: visible !important;
-}
-
-.jesuluto-skin-controls {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  margin-top: 8px !important;
-  z-index: 100 !important;
-}
-
-.jesuluto-skin-action-btn {
-  background: rgba(18, 24, 32, 0.9) !important;
-  color: #00ff77 !important;
-  border: 1.5px solid rgba(0, 255, 119, 0.45) !important;
-  border-radius: 8px !important;
-  padding: 8px 15px !important;
-  font-size: 0.85rem !important;
-  font-weight: 700 !important;
-  cursor: pointer !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 10px rgba(0, 255, 119, 0.2) !important;
-  transition: all 0.2s ease !important;
-}
-
-.jesuluto-skin-action-btn:hover {
-  background: #00ff77 !important;
-  color: #090d12 !important;
-  border-color: #00ff77 !important;
-  box-shadow: 0 0 20px rgba(0, 255, 119, 0.7) !important;
-  transform: translateY(-2px) !important;
-}
-
-.jesuluto-3d-stage canvas {
-  width: 100% !important;
-  height: 100% !important;
-  filter: drop-shadow(0 10px 20px rgba(0, 255, 119, 0.3));
-}
-
-.jesuluto-stage-pedestal {
-  position: absolute;
-  bottom: 12px;
-  width: 160px;
-  height: 20px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(0, 255, 119, 0.7) 0%, rgba(0, 255, 119, 0) 70%);
-  filter: blur(4px);
-  pointer-events: none;
-}
-
-/* Letras Estilo Apple Music pero en Verde Mecha Vibrante */
-body.auramusic-theme-jesuluto .cinema-lyric-line {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Plus Jakarta Sans", sans-serif !important;
-  font-size: 2.2rem !important;
-  font-weight: 700 !important;
-  color: rgba(230, 253, 242, 0.3) !important;
-  filter: blur(2.2px) !important;
-  transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
-}
-
-body.auramusic-theme-jesuluto .cinema-lyric-line.active-line {
-  color: #ffffff !important;
-  filter: blur(0px) !important;
-  font-size: 2.7rem !important;
-  font-weight: 900 !important;
-  text-shadow: 0 0 25px rgba(0, 255, 119, 0.75) !important;
-  transform: scale(1.04) !important;
-}
-
-body.auramusic-theme-jesuluto .k-word.active {
-  color: #00ff77 !important;
-  text-shadow: 0 0 20px rgba(0, 255, 119, 0.9), 0 0 40px rgba(0, 255, 119, 0.6) !important;
-}
-
-body.auramusic-theme-jesuluto .k-word.sung {
-  color: #ffffff !important;
-}
-
-body.auramusic-theme-jesuluto .cinema-artwork-box {
-  border: 2px solid rgba(0, 255, 119, 0.3) !important;
-  box-shadow: 0 10px 35px rgba(0, 255, 119, 0.3) !important;
-}
-
-body.auramusic-theme-jesuluto .cinema-play-btn {
-  background: #00ff77 !important;
-  color: #070a0e !important;
-  box-shadow: 0 4px 20px rgba(0, 255, 119, 0.5) !important;
-}
-
-body.auramusic-theme-jesuluto .cinema-progress-fill {
-  background: #00ff77 !important;
-  box-shadow: 0 0 10px rgba(0, 255, 119, 0.8) !important;
+  100% { width: calc(100% - 12px); opacity: 0.75; }
 }

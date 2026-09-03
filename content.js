@@ -137,6 +137,19 @@
     }
 
     document.documentElement.style.setProperty('--auramusic-primary', state.primaryColor);
+
+    // AISLAMIENTO ESTRICTO: Solo mostrar el escenario 3D en el tema Jesuluto
+    const jStage = document.getElementById('jesuluto-3d-stage');
+    const artBox = document.querySelector('.cinema-artwork-box');
+    if (jStage) {
+      jStage.style.setProperty('display', (themeName === 'jesuluto') ? 'flex' : 'none', 'important');
+      if (themeName === 'jesuluto') {
+        setTimeout(initJesuluto3D, 50);
+      }
+    }
+    if (artBox) {
+      artBox.style.setProperty('display', (themeName === 'jesuluto') ? 'none' : 'block');
+    }
   }
 
   function applyCleanMode(enabled) {
