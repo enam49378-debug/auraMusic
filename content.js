@@ -193,14 +193,24 @@
       }
     }
   }
+  // =====================================================================  // ==========================================================================
+  // 🔀 MOTOR DE CROSSFADE INTELIGENTE (SPOTIFY REAL MIX)
   // ==========================================================================
-  // 🔀 MOTOR DE CROSSFADE PROFESIONAL (ESTILO SPOTIFY / DJ SUAVE)
-  // ==========================================================================
+  let _currentTrackCanonicalId = '';
+  let _hasFadedOutThisTrack = false;
+  let _isTransitioningToNext = false;
   let _isProgrammaticSkip = false;
-  let _lastTrackId = '';
-  let _isFadingOut = false;
-  let _isFadingIn = false;
-  let _skipCooldownTs = 0;
+  let _lastSkipTime = 0;
+
+  // Identificador canónico e inmutable de la canción actual (basado en portada + título)
+  function _getCanonicalTrackKey() {
+    const img = document.querySelector('ytmusic-player-bar .image, #song-image img');
+    const title = document.querySelector('ytmusic-player-bar .title, .middle-controls .title');
+    const src = img?.src || '';
+    const text = title?.textContent?.trim() || '';
+    if (!src && !text) return '';
+    return `${src}||${text}`;
+  }
 
   function restoreVideoFullGain(instant = false) {
     if (!gainNode || !audioCtx) return;
@@ -210,9 +220,9 @@
       if (instant) {
         gainNode.gain.setValueAtTime(baseGain, audioCtx.currentTime);
       } else {
-        const curVal = Math.max(0.001, gainNode.gain.value);
+        const curVal = Math.max(0.01, gainNode.gain.value);
         gainNode.gain.setValueAtTime(curVal, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(baseGain, audioCtx.currentTime + 0.3);
+        gainNode.gain.linearRampToValueAtTime(baseGain, audioCtx.currentTime + 0.3);
       }
     } catch (e) {}
   }
@@ -226,66 +236,73 @@
     const cur = video.currentTime;
     const fadeSec = Math.max(1, Math.min(12, state.crossfadeDuration || 4));
     const baseGain = Math.max(0, Math.min(3.0, (state.volumeBoost || 100) / 100));
-    const currentTrackId = `${video.src}_${Math.floor(dur)}`;
+    const trackKey = _getCanonicalTrackKey();
 
-    // 1. DETECCIÓN DE NUEVA CANCIÓN -> FADE-IN SUAVE
-    if (currentTrackId !== _lastTrackId) {
-      _lastTrackId = currentTrackId;
-      _isFadingOut = false;
-      _isFadingIn = true;
+    // 1. DETECCIÓN DE CAMBIO DE CANCIÓN
+    if (trackKey && trackKey !== _currentTrackCanonicalId) {
+      _currentTrackCanonicalId = trackKey;
+      _hasFadedOutThisTrack = false;
 
-      try {
-        gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(0.001, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(baseGain, audioCtx.currentTime + fadeSec);
-        console.log(`🔀 AuraMusic: Entrada suave (Fade-In ${fadeSec}s) en nueva pista.`);
-      } catch (e) {
+      // REGLA CLAVE: ¿Venimos de una transición automática al final de la anterior?
+      if (_isTransitioningToNext) {
+        _isTransitioningToNext = false;
+        // La canción entrante NO debe ser silenciosa ni tardar 12s en sonar.
+        // Entra con energía perceptible (40% de volumen) y sube rápidamente al 100% en 1.2 segundos!
+        try {
+          gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+          gainNode.gain.setValueAtTime(baseGain * 0.4, audioCtx.currentTime);
+          gainNode.gain.linearRampToValueAtTime(baseGain, audioCtx.currentTime + 1.2);
+          console.log(`🔀 AuraMusic: Entrada enérgica (Mix In) de nueva pista: ${trackKey}`);
+        } catch (e) {
+          restoreVideoFullGain(true);
+        }
+      } else {
+        // CANCIÓN PUESTA MANUALMENTE (ej. usuario busca canción y le da play):
+        // Volumen 100% inmediato. CERO fade-in, no se corta el inicio!
         restoreVideoFullGain(true);
+        console.log('🔀 AuraMusic: Reproducción manual -> Volumen 100% inmediato (sin fade-in).');
       }
-
-      setTimeout(() => {
-        _isFadingIn = false;
-      }, (fadeSec + 0.5) * 1000);
       return;
     }
 
-    if (dur < fadeSec * 2) return; // Canción demasiado corta
+    if (dur < fadeSec * 2) return; // Canción muy corta
 
     const rem = dur - cur;
 
-    // 2. FADE-OUT GRADUAL: La canción actual empieza a desvanecerse en sus últimos fadeSec segundos (¡SIN CORTARLA!)
-    if (rem <= fadeSec && rem > 0.6 && !_isFadingOut) {
-      _isFadingOut = true;
+    // 2. FADE-OUT AL FINAL DE LA PISTA (Solo se ejecuta UNA VEZ al final)
+    if (rem <= fadeSec && rem > 0.5 && !_hasFadedOutThisTrack) {
+      _hasFadedOutThisTrack = true;
       try {
         const curGain = Math.max(0.01, gainNode.gain.value);
         gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
         gainNode.gain.setValueAtTime(curGain, audioCtx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + rem);
-        console.log(`🔀 AuraMusic: Desvanecimiento suave (Fade-Out ${rem.toFixed(1)}s restantes).`);
+        console.log(`🔀 AuraMusic: Desvanecimiento suave (Fade-Out de ${fadeSec}s) a falta de ${rem.toFixed(1)}s.`);
       } catch (e) {}
     }
 
-    // 3. PASO CONTINUO A LA SIGUIENTE PISTA (cuando ya está casi en silencio, a falta de 0.5s)
-    if (rem <= 0.5 && rem > 0.05 && _isFadingOut) {
+    // 3. PASO A LA SIGUIENTE CANCIÓN (cuando ya casi se desvaneció, a falta de 0.6s)
+    if (rem <= 0.6 && rem > 0.05 && _hasFadedOutThisTrack) {
       const now = performance.now();
-      if (now - _skipCooldownTs < 3500) return;
-      _skipCooldownTs = now;
+      if (now - _lastSkipTime < 3500) return;
+      _lastSkipTime = now;
 
       const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
       if (nextBtn) {
         console.log('🔀 AuraMusic: Transicionando a la siguiente canción...');
+        _isTransitioningToNext = true;
         _isProgrammaticSkip = true;
         nextBtn.click();
-        setTimeout(() => { _isProgrammaticSkip = false; }, 600);
+        setTimeout(() => { _isProgrammaticSkip = false; }, 800);
       }
     }
 
-    // 4. FUERA DE ZONA DE FADE: Asegurar volumen nominal si no estamos en transición
-    if (!_isFadingOut && !_isFadingIn && rem > fadeSec && cur > fadeSec) {
+    // 4. MANTENER VOLUMEN NOMINAL DURANTE TODA LA REPRODUCCIÓN NORMAL
+    if (!_hasFadedOutThisTrack && !_isTransitioningToNext && rem > fadeSec && cur > 1.5) {
       const curGain = gainNode.gain.value;
-      if (Math.abs(curGain - baseGain) > 0.08) {
+      if (Math.abs(curGain - baseGain) > 0.05) {
         gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(baseGain, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(baseGain, audioCtx.currentTime);
       }
     }
   }
@@ -300,18 +317,15 @@
     if (video._auramusicXfadeEventsBound) return;
     video._auramusicXfadeEventsBound = true;
 
+    // Cuando el usuario adelanta o retrocede manualmente la barra:
     video.addEventListener('seeking', () => {
-      _isFadingOut = false;
-      _isFadingIn = false;
+      _hasFadedOutThisTrack = false;
+      _isTransitioningToNext = false;
       restoreVideoFullGain(true);
     });
 
-    video.addEventListener('pause', () => {
-      _isFadingOut = false;
-    });
-
     video.addEventListener('play', () => {
-      if (!_isFadingIn && !_isFadingOut) {
+      if (!_isTransitioningToNext && !_hasFadedOutThisTrack) {
         restoreVideoFullGain(true);
       }
     });
@@ -322,13 +336,13 @@
     if (playerBar && !playerBar.dataset.xfadeBound) {
       playerBar.dataset.xfadeBound = 'true';
       playerBar.addEventListener('click', (e) => {
-        // Si el click fue programático del crossfade, ignorar para no cancelar
+        // Ignorar si el click fue provocado por el crossfade automático
         if (_isProgrammaticSkip) return;
 
         const isProgressBar = e.target.closest('#progress-bar, .progress-bar, tp-yt-paper-slider');
         if (isProgressBar) {
-          _isFadingOut = false;
-          _isFadingIn = false;
+          _hasFadedOutThisTrack = false;
+          _isTransitioningToNext = false;
           restoreVideoFullGain(false);
         }
       });
@@ -341,8 +355,8 @@
       setupCrossfadeListeners();
       _installManualActionListeners();
     } else {
-      _isFadingOut = false;
-      _isFadingIn = false;
+      _hasFadedOutThisTrack = false;
+      _isTransitioningToNext = false;
       restoreVideoFullGain(true);
     }
   }
