@@ -3,36 +3,23 @@
 **Fecha**: 3 de Septiembre de 2026  
 **De**: Antigravity (Arquitecto Principal & Backend Logic)  
 **Para**: Trae AI / Claude (Lead Frontend & Local Developer)  
-**Asunto**: 🎯 Solución Definitiva: Eliminación del Reinicio de Pista A en la Transición hacia B
+**Asunto**: 🛡️ Eliminación Definitiva del Doble Salto hacia Pista C (Race Condition Resuelta)
 
 ---
 
 ¡Hola Trae AI!
 
-El Director (Jesuluto) nos reportó un bug muy específico:
-> *"Sigue el bug de cuando pasa a B... el B suena la canción de A."*
+El Director (Jesuluto) nos reportó que al cambiar hacia la Pista B, volvía a hacer un doble skip saltándose a la Pista C.
 
-### 🔬 Análisis Forense de la Causa Raíz:
-Descubrimos con precisión quirúrgica por qué ocurría esto:
-1. **Falso Positivo en `alreadyOnNext`**:
-   - En el handoff final, la condición era: `const alreadyOnNext = (currentVideoId === targetVideoId) || (currentKey !== initialCanonicalKey);`.
-   - Cuando la UI de YouTube Music refrescaba su carátula o metadatos al final de la pista, `currentKey !== initialCanonicalKey` se volvía `true`.
-   - El código asumía erróneamente que YouTube Music *ya* había cambiado a la Pista B (cuando en realidad seguía en la Pista A).
-   - En consecuencia, **NO ejecutaba `triggerNextTrack()`** y aplicaba el descuento de tiempo (`v.currentTime = fadeSec`, ej. 13s) **SOBRE LA PISTA A**.
-   - **Resultado**: La Pista A saltaba al segundo 13 y volvía a sonar desde ahí.
-2. **Candidato de Siguiente Pista No Filtrado**:
-   - En ocasiones, `getNextTrackVideoId()` devolvía el ID del tema actual si la cola no había avanzado el índice.
-   - Al no validar que `candidateId !== currentPlayingVideoId`, precargaba la misma pista actual como Pista B.
+### 🔬 Causa Raíz Detectada:
+Ocurría una colisión de eventos (Race Condition) entre dos motores al mismo tiempo:
+1. **El final natural de YouTube Music**: Al terminar la Pista A en su barra de tiempo, el `<video>` de YouTube disparaba su evento nativo `ended` (que invoca `nextVideo()` internamente).
+2. **El salto del Crossfade**: Al cumplirse `progress >= 1`, nuestro código llamaba a `triggerNextTrack()` casi en el mismo milisegundo.
+3. Al recibir dos órdenes de avance simultáneas, YouTube Music saltaba de A ➔ B y de inmediato de B ➔ C.
 
-### 🛠️ Corrección Quirúrgica Aplicada:
-1. **Filtro Estricto de Pista Siguiente (`isValid(id)`)**:
-   - `candidateId && candidateId.length === 11 && candidateId !== currentVid`.
-   - Es matemáticamente imposible que la Pista B sea igual a la Pista A.
-2. **Comprobación Estricta de Video ID en Handoff**:
-   - `const alreadyOnNext = (currentVideoId && currentVideoId === targetVideoId);`.
-   - Se eliminó la comprobación de `currentKey`. Si YouTube Music no tiene cargado físicamente el ID de la Pista B, **siempre fuerza el avance único mediante `triggerNextTrack()`**.
-3. **Vinculación Estricta del Descuento de Tiempo a la Pista B**:
-   - `_pendingSeekTime` solo puede aplicarse si `curVid === _targetNextVideoId`.
-   - Jamás se aplicará sobre la Pista A; esperará pacientemente a que la Pista B esté físicamente cargada en el `<video>` de YouTube Music para sincronizarla en el segundo correspondiente.
+### 🛠️ Solución Definitiva en `crossfade.js`:
+1. **Desactivación del `ended` natural**: Justo antes de disparar el avance programático, el código pausa el `<video>` saliente (`if (v && !v.paused) v.pause();`). Al pausarse, el navegador **nunca emite el evento `ended`**, anulando el salto automático redundante de YouTube.
+2. **Debounce de 3.5 Segundos en `triggerNextTrack()`**: Si cualquier evento, timer o clic intenta ejecutar un segundo salto dentro de una ventana de 3.5 segundos, el sistema lo **bloquea en seco**.
+3. **Avance Estricto Único**: YouTube Music recibe única y exclusivamente una orden de avance hacia la Pista B.
 
-El paquete `AuraMusic.zip` en el Escritorio ya está actualizado con esta solución matemática. 🎧🚀
+El paquete `AuraMusic.zip` en el Escritorio ya está actualizado con esta versión blindada. 🎧🚀
