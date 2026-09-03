@@ -48,6 +48,7 @@
   let eqFilters = {};
   let isAudioConnected = false;
   let animFrameId = null;
+  let postEQTap = null;
 
   // --- 2. CARGA Y PERSISTENCIA SEGURA (INMUNE A EXTENSION CONTEXT INVALIDATED) ---
   function isExtensionContextValid() {
@@ -192,115 +193,15 @@
       }
     }
   }
-
   // ==========================================================================
-  // 🔀 MOTOR DE CROSSFADE CON SOLAPAMIENTO REAL (GHOST TAIL OVERLAP ENGINE)
+  // 🔀 MOTOR DE CROSSFADE PROFESIONAL (ESTILO SPOTIFY / DJ SUAVE)
   // ==========================================================================
-  
-  // Buffers circulares estáticos para captura de audio PCM (sin asignaciones en bucle)
-  const XFADE_MAX_SECONDS = 12;
-  let ringBufferL = null;
-  let ringBufferR = null;
-  let ringWriteIndex = 0;
-  let ringSampleCount = 0;
-  let recorderNode = null;
-  let ghostTailSource = null;
-  let ghostTailGain = null;
+  let _isProgrammaticSkip = false;
+  let _lastTrackId = '';
+  let _isFadingOut = false;
+  let _isFadingIn = false;
+  let _skipCooldownTs = 0;
 
-  let _xfadeState = {
-    isGhostPlaying: false,
-    isFadingIn: false,
-    ghostStartTime: 0,
-    lastTrackKey: '',
-    skipCooldown: 0
-  };
-
-  // 1. Inicialización del Buffer Circular Pasivo
-  function initCrossfadeRecorder() {
-    if (!audioCtx || recorderNode || !sourceNode) return;
-
-    try {
-      const sampleRate = audioCtx.sampleRate || 44100;
-      const totalSamples = sampleRate * XFADE_MAX_SECONDS;
-      ringBufferL = new Float32Array(totalSamples);
-      ringBufferR = new Float32Array(totalSamples);
-      ringWriteIndex = 0;
-      ringSampleCount = 0;
-
-      // ScriptProcessorNode pasivo de baja latencia (4096 samples = ~85ms @ 48kHz)
-      recorderNode = audioCtx.createScriptProcessor(4096, 2, 2);
-      recorderNode.onaudioprocess = (e) => {
-        if (!state.crossfade) return;
-
-        const inL = e.inputBuffer.getChannelData(0);
-        const inR = e.inputBuffer.numberOfChannels > 1 ? e.inputBuffer.getChannelData(1) : inL;
-        const len = inL.length;
-        const total = ringBufferL.length;
-
-        for (let i = 0; i < len; i++) {
-          ringBufferL[ringWriteIndex] = inL[i];
-          ringBufferR[ringWriteIndex] = inR[i];
-          ringWriteIndex = (ringWriteIndex + 1) % total;
-        }
-        if (ringSampleCount < total) {
-          ringSampleCount = Math.min(total, ringSampleCount + len);
-        }
-      };
-
-      // Conexión pasiva a ganancia nula para evitar duplicar el volumen
-      const dummyGain = audioCtx.createGain();
-      dummyGain.gain.setValueAtTime(0, audioCtx.currentTime);
-      sourceNode.connect(recorderNode);
-      recorderNode.connect(dummyGain);
-      dummyGain.connect(audioCtx.destination);
-
-      console.log('🔀 AuraMusic: Buffer circular de Crossfade (Ghost Tail) conectado.');
-    } catch (e) {
-      console.warn('AuraMusic: No se pudo iniciar el grabador pasivo de crossfade:', e);
-    }
-  }
-
-  // 2. Extracción del AudioBuffer para la cola de la canción (Ghost Tail)
-  function createGhostTailBuffer(durationSeconds) {
-    if (!audioCtx || !ringBufferL || ringSampleCount === 0) return null;
-
-    const sampleRate = audioCtx.sampleRate || 44100;
-    const requestedSamples = Math.min(Math.floor(durationSeconds * sampleRate), ringSampleCount);
-    if (requestedSamples <= sampleRate * 0.5) return null; // Muy corto para fade
-
-    const ghostBuffer = audioCtx.createBuffer(2, requestedSamples, sampleRate);
-    const outL = ghostBuffer.getChannelData(0);
-    const outR = ghostBuffer.getChannelData(1);
-    const total = ringBufferL.length;
-
-    let readIndex = (ringWriteIndex - requestedSamples + total) % total;
-    for (let i = 0; i < requestedSamples; i++) {
-      outL[i] = ringBufferL[readIndex];
-      outR[i] = ringBufferR[readIndex];
-      readIndex = (readIndex + 1) % total;
-    }
-
-    return ghostBuffer;
-  }
-
-  // 3. Detener cualquier solapamiento en curso (Seek, Pause, Skip manual)
-  function stopGhostTailImmediately() {
-    if (ghostTailSource) {
-      try {
-        ghostTailSource.stop();
-        ghostTailSource.disconnect();
-      } catch (e) {}
-      ghostTailSource = null;
-    }
-    if (ghostTailGain) {
-      try { ghostTailGain.disconnect(); } catch (e) {}
-      ghostTailGain = null;
-    }
-    _xfadeState.isGhostPlaying = false;
-    _xfadeState.isFadingIn = false;
-  }
-
-  // 4. Restaurar volumen completo en el <video>
   function restoreVideoFullGain(instant = false) {
     if (!gainNode || !audioCtx) return;
     const baseGain = Math.max(0, Math.min(3.0, (state.volumeBoost || 100) / 100));
@@ -309,99 +210,86 @@
       if (instant) {
         gainNode.gain.setValueAtTime(baseGain, audioCtx.currentTime);
       } else {
-        const curVal = Math.max(0.0001, gainNode.gain.value);
+        const curVal = Math.max(0.001, gainNode.gain.value);
         gainNode.gain.setValueAtTime(curVal, audioCtx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(baseGain, audioCtx.currentTime + 0.3);
       }
     } catch (e) {}
   }
 
-  // 5. Disparador del Solapamiento Real (Ejecutado en timeupdate)
   function handleCrossfadeCheck() {
     if (!state.crossfade || !gainNode || !audioCtx) return;
     const video = document.querySelector('video');
     if (!video || !video.duration || isNaN(video.duration) || video.paused) return;
 
-    if (!recorderNode && isAudioConnected) {
-      initCrossfadeRecorder();
-    }
-
     const dur = video.duration;
     const cur = video.currentTime;
-    const fadeSec = Math.max(1, Math.min(XFADE_MAX_SECONDS, state.crossfadeDuration || 4));
+    const fadeSec = Math.max(1, Math.min(12, state.crossfadeDuration || 4));
     const baseGain = Math.max(0, Math.min(3.0, (state.volumeBoost || 100) / 100));
-    const currentTrackKey = `${video.src}_${Math.floor(dur)}`;
+    const currentTrackId = `${video.src}_${Math.floor(dur)}`;
 
-    // A. DETECCIÓN DE PISTA NUEVA TRAS SOLAPAMIENTO O CAMBIO MANUAL
-    if (currentTrackKey !== _xfadeState.lastTrackKey) {
-      _xfadeState.lastTrackKey = currentTrackKey;
+    // 1. DETECCIÓN DE NUEVA CANCIÓN -> FADE-IN SUAVE
+    if (currentTrackId !== _lastTrackId) {
+      _lastTrackId = currentTrackId;
+      _isFadingOut = false;
+      _isFadingIn = true;
 
-      if (_xfadeState.isGhostPlaying) {
-        // La canción anterior está sonando en el ghost tail en fade-out.
-        // Hacemos Fade-In en la nueva pista desde 0.0001 hasta baseGain en fadeSec segundos!
-        _xfadeState.isFadingIn = true;
-        try {
-          gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-          gainNode.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(baseGain, audioCtx.currentTime + fadeSec);
-        } catch (e) {}
-      } else {
+      try {
+        gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.001, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(baseGain, audioCtx.currentTime + fadeSec);
+        console.log(`🔀 AuraMusic: Entrada suave (Fade-In ${fadeSec}s) en nueva pista.`);
+      } catch (e) {
         restoreVideoFullGain(true);
       }
+
+      setTimeout(() => {
+        _isFadingIn = false;
+      }, (fadeSec + 0.5) * 1000);
       return;
     }
 
-    // Si la canción es más corta que 2x el fade, no aplicamos solapamiento
-    if (dur < fadeSec * 2) return;
+    if (dur < fadeSec * 2) return; // Canción demasiado corta
 
     const rem = dur - cur;
 
-    // B. MOMENTO EXACTO DE ENTRADA AL SOLAPAMIENTO: remainingTime <= fadeSec
-    if (rem <= fadeSec && rem > 0.4 && !_xfadeState.isGhostPlaying) {
+    // 2. FADE-OUT GRADUAL: La canción actual empieza a desvanecerse en sus últimos fadeSec segundos (¡SIN CORTARLA!)
+    if (rem <= fadeSec && rem > 0.6 && !_isFadingOut) {
+      _isFadingOut = true;
+      try {
+        const curGain = Math.max(0.01, gainNode.gain.value);
+        gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(curGain, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + rem);
+        console.log(`🔀 AuraMusic: Desvanecimiento suave (Fade-Out ${rem.toFixed(1)}s restantes).`);
+      } catch (e) {}
+    }
+
+    // 3. PASO CONTINUO A LA SIGUIENTE PISTA (cuando ya está casi en silencio, a falta de 0.5s)
+    if (rem <= 0.5 && rem > 0.05 && _isFadingOut) {
       const now = performance.now();
-      if (now - _xfadeState.skipCooldown < 3000) return; // Anti-doble disparo
+      if (now - _skipCooldownTs < 3500) return;
+      _skipCooldownTs = now;
 
-      const ghostBuf = createGhostTailBuffer(fadeSec);
-      if (ghostBuf) {
-        _xfadeState.isGhostPlaying = true;
-        _xfadeState.ghostStartTime = audioCtx.currentTime;
-        _xfadeState.skipCooldown = now;
+      const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
+      if (nextBtn) {
+        console.log('🔀 AuraMusic: Transicionando a la siguiente canción...');
+        _isProgrammaticSkip = true;
+        nextBtn.click();
+        setTimeout(() => { _isProgrammaticSkip = false; }, 600);
+      }
+    }
 
-        // Crear nodo fantasma que continuará la canción 1
-        ghostTailSource = audioCtx.createBufferSource();
-        ghostTailSource.buffer = ghostBuf;
-
-        ghostTailGain = audioCtx.createGain();
-        ghostTailGain.gain.setValueAtTime(baseGain, audioCtx.currentTime);
-        // Fade-out exponencial suave de igual duración
-        ghostTailGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + fadeSec);
-
-        ghostTailSource.connect(ghostTailGain);
-        ghostTailGain.connect(analyser || audioCtx.destination);
-        ghostTailSource.start();
-
-        // Al terminar el tiempo de fade, limpiar el nodo fantasma
-        ghostTailSource.onended = () => {
-          stopGhostTailImmediately();
-        };
-
-        // Mutear inmediatamente el <video> para evitar eco antes de que cargue la siguiente
-        try {
-          gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-          gainNode.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-        } catch (e) {}
-
-        // Pulsar 'Siguiente' en YouTube Music
-        const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
-        if (nextBtn) {
-          console.log('🔀 AuraMusic: Disparando Solapamiento Real (Ghost Tail activo).');
-          nextBtn.click();
-        }
+    // 4. FUERA DE ZONA DE FADE: Asegurar volumen nominal si no estamos en transición
+    if (!_isFadingOut && !_isFadingIn && rem > fadeSec && cur > fadeSec) {
+      const curGain = gainNode.gain.value;
+      if (Math.abs(curGain - baseGain) > 0.08) {
+        gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(baseGain, audioCtx.currentTime + 0.1);
       }
     }
   }
 
-  // 6. Listeners para eventos del usuario y protección contra glitches
   function setupCrossfadeListeners() {
     const video = document.querySelector('video');
     if (!video) return;
@@ -413,18 +301,17 @@
     video._auramusicXfadeEventsBound = true;
 
     video.addEventListener('seeking', () => {
-      stopGhostTailImmediately();
-      restoreVideoFullGain(false);
+      _isFadingOut = false;
+      _isFadingIn = false;
+      restoreVideoFullGain(true);
     });
 
     video.addEventListener('pause', () => {
-      if (_xfadeState.isGhostPlaying) {
-        stopGhostTailImmediately();
-      }
+      _isFadingOut = false;
     });
 
     video.addEventListener('play', () => {
-      if (!_xfadeState.isGhostPlaying && !_xfadeState.isFadingIn) {
+      if (!_isFadingIn && !_isFadingOut) {
         restoreVideoFullGain(true);
       }
     });
@@ -435,10 +322,14 @@
     if (playerBar && !playerBar.dataset.xfadeBound) {
       playerBar.dataset.xfadeBound = 'true';
       playerBar.addEventListener('click', (e) => {
-        const isControl = e.target.closest('.next-button, .previous-button, #progress-bar');
-        if (isControl) {
-          stopGhostTailImmediately();
-          setTimeout(() => restoreVideoFullGain(false), 200);
+        // Si el click fue programático del crossfade, ignorar para no cancelar
+        if (_isProgrammaticSkip) return;
+
+        const isProgressBar = e.target.closest('#progress-bar, .progress-bar, tp-yt-paper-slider');
+        if (isProgressBar) {
+          _isFadingOut = false;
+          _isFadingIn = false;
+          restoreVideoFullGain(false);
         }
       });
     }
@@ -447,11 +338,11 @@
   function applyCrossfade(enabled) {
     if (enabled) {
       initAudioEngine();
-      initCrossfadeRecorder();
       setupCrossfadeListeners();
       _installManualActionListeners();
     } else {
-      stopGhostTailImmediately();
+      _isFadingOut = false;
+      _isFadingIn = false;
       restoreVideoFullGain(true);
     }
   }
@@ -493,7 +384,14 @@
         eqFilters[label] = filter;
       });
 
-      lastNode.connect(gainNode);
+      // Tap POST-EQ: punto de derivación para el grabador de Crossfade (Ghost Tail).
+      // Así el buffer PCM graba audio YA ecualizado, no audio crudo del <video>.
+      // El gain=1.0 no altera la señal en absoluto (unity gain).
+      postEQTap = audioCtx.createGain();
+      postEQTap.gain.setValueAtTime(1.0, audioCtx.currentTime);
+      lastNode.connect(postEQTap);
+      postEQTap.connect(gainNode);
+
       gainNode.connect(analyser);
       analyser.connect(audioCtx.destination);
 
