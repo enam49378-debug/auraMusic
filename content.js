@@ -30,7 +30,9 @@
     playbackSpeed: 1.0,
     cleanMode: true,
     crossfade: false,
-    crossfadeDuration: 4, // 1 a 12 segundos
+    crossfadeDuration: 5, // 1 a 12 segundos
+    crossfadeMode: 'real', // 'real' (Doble Reproductor Simultáneo) o 'fallback' (Fundido Secuencial)
+    crossfadeCurve: 'equal-power', // 'equal-power', 'smoothstep', 'linear'
     eq: {
       '60Hz': 0,
       '250Hz': 0,
@@ -194,15 +196,31 @@
     }
   }
   // ==========================================================================
-  // 🔀 MOTOR DE CROSSFADE PROFESIONAL AURA-PRO (ESTILO SPOTIFY / ESTUDIO)
+  // 🔀 MOTOR DE CROSSFADE PROFESIONAL AURA-PRO (MODO REAL DUAL + MODO FALLBACK)
   // ==========================================================================
+  const XFADE_STATE = {
+    IDLE: 'IDLE',
+    PREPARING_NEXT: 'PREPARING_NEXT',
+    CROSSFADE_READY: 'CROSSFADE_READY',
+    CROSSFADE_ACTIVE: 'CROSSFADE_ACTIVE',
+    NEXT_TRACK_ACTIVE: 'NEXT_TRACK_ACTIVE'
+  };
+
+  let _xfadeStatus = XFADE_STATE.IDLE;
   let _currentTrackCanonicalId = '';
   let _hasFadedOutThisTrack = false;
   let _isTransitioningToNext = false;
   let _isProgrammaticSkip = false;
   let _lastSkipTime = 0;
 
-  // Identificador canónico e inmutable de la canción actual (basado en portada + título)
+  // Shadow Player Controller (Player B)
+  let shadowPlayerIframe = null;
+  let shadowNextVideoId = '';
+  let shadowIsReady = false;
+  let shadowFadeInterval = null;
+  let shadowMsgHandler = null;
+
+  // 1. Identificador canónico e inmutable de la pista actual
   function _getCanonicalTrackKey() {
     const img = document.querySelector('ytmusic-player-bar .image, #song-image img');
     const title = document.querySelector('ytmusic-player-bar .title, .middle-controls .title');
@@ -210,6 +228,219 @@
     const text = title?.textContent?.trim() || '';
     if (!src && !text) return '';
     return `${src}||${text}`;
+  }
+
+  // 2. Extracción del ID de la siguiente canción de la cola de YouTube Music
+  function getNextTrackVideoId() {
+    // A. API interna del reproductor de YouTube si está disponible
+    try {
+      const player = document.querySelector('#movie_player');
+      if (player && typeof player.getPlaylist === 'function' && typeof player.getPlaylistIndex === 'function') {
+        const list = player.getPlaylist();
+        const idx = player.getPlaylistIndex();
+        if (Array.isArray(list) && idx >= 0 && idx + 1 < list.length) {
+          const id = list[idx + 1];
+          if (id && typeof id === 'string' && id.length === 11) return id;
+        }
+      }
+    } catch (e) {}
+
+    // B. Elementos de la cola en el DOM
+    try {
+      const items = document.querySelectorAll('ytmusic-player-queue-item, ytmusic-responsive-list-item-renderer');
+      let foundCurrent = false;
+      for (const item of items) {
+        const isSelected = item.hasAttribute('selected') || 
+                           item.classList.contains('selected') || 
+                           item.getAttribute('aria-selected') === 'true' ||
+                           item.querySelector('[aria-selected="true"]');
+        if (isSelected) {
+          foundCurrent = true;
+          continue;
+        }
+        if (foundCurrent) {
+          const link = item.querySelector('a[href*="watch?v="]');
+          if (link && link.href) {
+            const m = link.href.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+            if (m) return m[1];
+          }
+          const img = item.querySelector('img[src*="/vi/"]');
+          if (img && img.src) {
+            const m = img.src.match(/\/vi\/([a-zA-Z0-9_-]{11})\//);
+            if (m) return m[1];
+          }
+        }
+      }
+    } catch (e) {}
+
+    return null;
+  }
+
+  // 3. Funciones matemáticas para curvas de ganancia
+  function calculateGainCurve(progress, curveType = 'equal-power') {
+    const p = Math.max(0, Math.min(1, progress));
+    if (curveType === 'equal-power') {
+      // Curva Equal-Power (Spotify): suma de potencias = 1
+      const gainA = Math.cos(p * 0.5 * Math.PI);
+      const gainB = Math.sin(p * 0.5 * Math.PI);
+      return { gainA, gainB };
+    } else if (curveType === 'smoothstep') {
+      // Curva en S sedosa: 3p^2 - 2p^3
+      const s = p * p * (3 - 2 * p);
+      return { gainA: 1 - s, gainB: s };
+    } else {
+      // Rampa lineal clásica
+      return { gainA: 1 - p, gainB: p };
+    }
+  }
+
+  // 4. Gestión del Shadow Player (Player B para solapamiento simultáneo real)
+  function _sendShadowCommand(func, args = []) {
+    if (!shadowPlayerIframe || !shadowPlayerIframe.contentWindow) return;
+    try {
+      shadowPlayerIframe.contentWindow.postMessage(JSON.stringify({
+        event: 'command',
+        func: func,
+        args: args
+      }), '*');
+    } catch (e) {}
+  }
+
+  function destroyShadowPlayer() {
+    if (shadowFadeInterval) {
+      clearInterval(shadowFadeInterval);
+      shadowFadeInterval = null;
+    }
+    if (shadowMsgHandler) {
+      window.removeEventListener('message', shadowMsgHandler);
+      shadowMsgHandler = null;
+    }
+    if (shadowPlayerIframe) {
+      try {
+        _sendShadowCommand('stopVideo');
+        _sendShadowCommand('pauseVideo');
+        shadowPlayerIframe.remove();
+      } catch (e) {}
+      shadowPlayerIframe = null;
+    }
+    const host = document.getElementById('auramusic-shadow-host');
+    if (host) host.innerHTML = '';
+    shadowNextVideoId = '';
+    shadowIsReady = false;
+  }
+
+  function cancelShadowCrossfade(reason = 'manual_reset') {
+    destroyShadowPlayer();
+    _xfadeStatus = XFADE_STATE.IDLE;
+    _hasFadedOutThisTrack = false;
+    _isTransitioningToNext = false;
+    restoreVideoFullGain(true);
+    console.log(`🔀 AuraMusic: Crossfade cancelado limpiamente (${reason}).`);
+  }
+
+  function prepareShadowPlayer(videoId) {
+    if (shadowPlayerIframe && shadowNextVideoId === videoId) return;
+    destroyShadowPlayer();
+
+    shadowNextVideoId = videoId;
+    shadowIsReady = false;
+    _xfadeStatus = XFADE_STATE.PREPARING_NEXT;
+
+    let host = document.getElementById('auramusic-shadow-host');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'auramusic-shadow-host';
+      host.style.cssText = 'position:fixed;bottom:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-9999;';
+      document.body.appendChild(host);
+    }
+
+    const iframe = document.createElement('iframe');
+    iframe.id = 'auramusic-shadow-iframe';
+    iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&controls=0&mute=1&playsinline=1&origin=${encodeURIComponent(window.location.origin)}`;
+    iframe.style.cssText = 'width:1px;height:1px;border:none;';
+    iframe.allow = 'autoplay';
+
+    shadowPlayerIframe = iframe;
+    host.appendChild(iframe);
+
+    const onMsg = (e) => {
+      try {
+        const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+        if (data.event === 'onReady' || (data.event === 'infoDelivery' && data.info && data.info.playerState !== undefined)) {
+          shadowIsReady = true;
+          _xfadeStatus = XFADE_STATE.CROSSFADE_READY;
+          console.log(`🔀 AuraMusic: Shadow Player B preparado para "${videoId}" (Estado: CROSSFADE_READY).`);
+        }
+      } catch (err) {}
+    };
+    window.addEventListener('message', onMsg);
+    shadowMsgHandler = onMsg;
+
+    // Timeout de seguridad: si no responde en 4 segundos, asumir listo para no bloquear
+    setTimeout(() => {
+      if (_xfadeStatus === XFADE_STATE.PREPARING_NEXT) {
+        shadowIsReady = true;
+        _xfadeStatus = XFADE_STATE.CROSSFADE_READY;
+      }
+    }, 4000);
+  }
+
+  function startShadowCrossfade(fadeSec, baseGain) {
+    if (_xfadeStatus === XFADE_STATE.CROSSFADE_ACTIVE) return;
+    _xfadeStatus = XFADE_STATE.CROSSFADE_ACTIVE;
+
+    console.log(`🔀 AuraMusic: 🔥 SOLAPAMIENTO REAL INICIADO (${fadeSec}s). Player A baja, Player B arranca desde 0:00.`);
+
+    // Iniciar Player B en segundo 0 con volumen 0
+    _sendShadowCommand('unMute');
+    _sendShadowCommand('seekTo', [0, true]);
+    _sendShadowCommand('setVolume', [0]);
+    _sendShadowCommand('playVideo');
+
+    const startTime = performance.now();
+    const durationMs = fadeSec * 1000;
+    const curveType = state.crossfadeCurve || 'equal-power';
+
+    if (shadowFadeInterval) clearInterval(shadowFadeInterval);
+    shadowFadeInterval = setInterval(() => {
+      const elapsed = performance.now() - startTime;
+      const progress = Math.min(1, elapsed / durationMs);
+      const { gainA, gainB } = calculateGainCurve(progress, curveType);
+
+      // Player A (Nativo YTM): Web Audio GainNode
+      if (gainNode && audioCtx) {
+        try {
+          gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+          gainNode.gain.setValueAtTime(gainA * baseGain, audioCtx.currentTime);
+        } catch (e) {}
+      }
+
+      // Player B (Shadow): Volumen 0 a 100
+      const shadowVol = Math.round(gainB * 100 * Math.min(1, baseGain));
+      _sendShadowCommand('setVolume', [shadowVol]);
+
+      if (progress >= 1) {
+        clearInterval(shadowFadeInterval);
+        shadowFadeInterval = null;
+        _xfadeStatus = XFADE_STATE.NEXT_TRACK_ACTIVE;
+
+        console.log(`🔀 AuraMusic: Fin del solapamiento (${fadeSec}s). Handoff a YouTube Music nativo...`);
+        // Handoff: Player A terminó, Player B ya va por el segundo fadeSec
+        const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
+        if (nextBtn) {
+          _isTransitioningToNext = true;
+          _isProgrammaticSkip = true;
+          nextBtn.click();
+          setTimeout(() => { _isProgrammaticSkip = false; }, 800);
+        }
+
+        // Mantener Player B activo 1.2s más mientras YouTube carga la pista para evitar huecos
+        setTimeout(() => {
+          destroyShadowPlayer();
+          _xfadeStatus = XFADE_STATE.IDLE;
+        }, 1200);
+      }
+    }, 35);
   }
 
   function restoreVideoFullGain(instant = false) {
@@ -227,6 +458,7 @@
     } catch (e) {}
   }
 
+  // 5. Bucle maestro de detección y disparo de crossfade
   function handleCrossfadeCheck() {
     if (!state.crossfade || !gainNode || !audioCtx) return;
     const video = document.querySelector('video');
@@ -234,72 +466,108 @@
 
     const dur = video.duration;
     const cur = video.currentTime;
-    const fadeSec = Math.max(1, Math.min(12, state.crossfadeDuration || 4));
+    const fadeSec = Math.max(1, Math.min(12, state.crossfadeDuration || 5));
     const baseGain = Math.max(0, Math.min(3.0, (state.volumeBoost || 100) / 100));
     const trackKey = _getCanonicalTrackKey();
+    const isRealMode = state.crossfadeMode === 'real';
 
-    // 1. DETECCIÓN DE CAMBIO DE CANCIÓN
+    // A. DETECCIÓN DE CAMBIO DE CANCIÓN
     if (trackKey && trackKey !== _currentTrackCanonicalId) {
       _currentTrackCanonicalId = trackKey;
       _hasFadedOutThisTrack = false;
 
-      // Si venimos de una transición automática entre canciones:
       if (_isTransitioningToNext) {
         _isTransitioningToNext = false;
-        try {
-          gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-          // La nueva canción entra suave (desde 5%) y sube en rampa al 100%
-          gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
-          const inTime = Math.min(fadeSec, 2.8);
-          gainNode.gain.linearRampToValueAtTime(baseGain, audioCtx.currentTime + inTime);
-          console.log(`🔀 AuraMusic: Entrada en Fade-In (${inTime}s) de la nueva canción.`);
-        } catch (e) {
+
+        if (isRealMode) {
+          // Modo Real: La canción B ya sonó durante fadeSec segundos en el Shadow Player.
+          // Sincronizamos el video nativo en el segundo fadeSec para no repetir la intro:
+          try {
+            if (video && isFinite(video.duration) && video.duration > fadeSec) {
+              video.currentTime = fadeSec;
+              console.log(`🔀 AuraMusic: Handoff exitoso -> Video nativo sincronizado en el segundo ${fadeSec}s.`);
+            }
+          } catch (e) {}
           restoreVideoFullGain(true);
+        } else {
+          // Modo Fallback: Fade-In suave
+          try {
+            gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            const inTime = Math.min(fadeSec, 2.8);
+            gainNode.gain.linearRampToValueAtTime(baseGain, audioCtx.currentTime + inTime);
+            console.log(`🔀 AuraMusic: Entrada en Fade-In suave (${inTime}s).`);
+          } catch (e) {
+            restoreVideoFullGain(true);
+          }
         }
       } else {
-        // Reproducción manual (usuario elige canción): volumen 100% inmediato sin cortes
+        // Reproducción manual: 100% de volumen inmediato sin recortes
+        cancelShadowCrossfade('manual_track_start');
         restoreVideoFullGain(true);
         console.log('🔀 AuraMusic: Reproducción manual -> Volumen 100% inmediato.');
       }
       return;
     }
 
-    if (dur < fadeSec * 2) return; // Pistas muy cortas
+    if (dur < fadeSec * 2) return; // Pistas demasiado cortas
 
     const rem = dur - cur;
 
-    // 2. FADE-OUT SUAVE DE LA CANCIÓN ACTUAL (Faltando fadeSec segundos)
-    // Dejamos que la canción A se desvanezca naturalmente hacia el final sin cortarla de golpe
-    if (rem <= fadeSec && rem > 1.2 && !_hasFadedOutThisTrack) {
-      _hasFadedOutThisTrack = true;
-      try {
-        gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-        const curGain = Math.max(0.01, gainNode.gain.value);
-        gainNode.gain.setValueAtTime(curGain, audioCtx.currentTime);
-        // Desvanecimiento suave y progresivo hasta el final de la pista
-        gainNode.gain.linearRampToValueAtTime(0.02, audioCtx.currentTime + rem);
-        console.log(`🔀 AuraMusic: Fade-Out suave de ${fadeSec}s activo (${rem.toFixed(1)}s restantes).`);
-      } catch (e) {}
-    }
+    // B. MODO REAL: MÁQUINA DE ESTADOS CON PRECARGA Y SOLAPAMIENTO
+    if (isRealMode) {
+      // 1. PREPARACIÓN (Faltando fadeSec + 12 segundos)
+      if (rem <= fadeSec + 12 && rem > fadeSec && _xfadeStatus === XFADE_STATE.IDLE) {
+        const nextId = getNextTrackVideoId();
+        if (nextId) {
+          console.log(`🔀 AuraMusic: Preparando Shadow Player B con videoId "${nextId}"...`);
+          prepareShadowPlayer(nextId);
+        } else {
+          // Si no hay videoId en la cola, pasar a fallback
+          _xfadeStatus = 'FALLBACK_READY';
+        }
+      }
 
-    // 3. CAMBIO SIN HUECOS (Disparar a falta de 1.1s cuando el volumen ya es tenue para absorber la carga de YouTube)
-    if (rem <= 1.1 && rem > 0.05 && _hasFadedOutThisTrack && !_isTransitioningToNext) {
-      const now = performance.now();
-      if (now - _lastSkipTime < 3500) return;
-      _lastSkipTime = now;
-
-      const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
-      if (nextBtn) {
-        console.log('🔀 AuraMusic: Conectando con la siguiente canción...');
-        _isTransitioningToNext = true;
-        _isProgrammaticSkip = true;
-        nextBtn.click();
-        setTimeout(() => { _isProgrammaticSkip = false; }, 800);
+      // 2. DISPARO DEL SOLAPAMIENTO (Faltando exactamente fadeSec segundos)
+      if (rem <= fadeSec && rem > 0.4 && (_xfadeStatus === XFADE_STATE.CROSSFADE_READY || _xfadeStatus === XFADE_STATE.PREPARING_NEXT)) {
+        startShadowCrossfade(fadeSec, baseGain);
+        return;
       }
     }
 
-    // 4. MANTENER VOLUMEN NOMINAL AL 100% DURANTE LA REPRODUCCIÓN NORMAL
-    if (!_hasFadedOutThisTrack && !_isTransitioningToNext && rem > fadeSec && cur > 1.5) {
+    // C. MODO FALLBACK (O si el Shadow Player no estaba disponible)
+    if (!isRealMode || _xfadeStatus === 'FALLBACK_READY') {
+      // Fade-out suave en los últimos segundos
+      if (rem <= fadeSec && rem > 1.2 && !_hasFadedOutThisTrack) {
+        _hasFadedOutThisTrack = true;
+        try {
+          gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+          const curGain = Math.max(0.01, gainNode.gain.value);
+          gainNode.gain.setValueAtTime(curGain, audioCtx.currentTime);
+          gainNode.gain.linearRampToValueAtTime(0.02, audioCtx.currentTime + rem);
+          console.log(`🔀 AuraMusic: Fade-Out secuencial suave (${rem.toFixed(1)}s restantes).`);
+        } catch (e) {}
+      }
+
+      // Disparo de siguiente pista en el sweet spot (1.1s)
+      if (rem <= 1.1 && rem > 0.05 && _hasFadedOutThisTrack && !_isTransitioningToNext) {
+        const now = performance.now();
+        if (now - _lastSkipTime < 3500) return;
+        _lastSkipTime = now;
+
+        const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
+        if (nextBtn) {
+          console.log('🔀 AuraMusic: Conectando con la siguiente canción (Fallback)...');
+          _isTransitioningToNext = true;
+          _isProgrammaticSkip = true;
+          nextBtn.click();
+          setTimeout(() => { _isProgrammaticSkip = false; }, 800);
+        }
+      }
+    }
+
+    // D. MANTENER VOLUMEN AL 100% FUERA DE LA ZONA DE FADE
+    if (_xfadeStatus === XFADE_STATE.IDLE && !_hasFadedOutThisTrack && !_isTransitioningToNext && rem > fadeSec + 1 && cur > 1.5) {
       const curGain = gainNode.gain.value;
       if (Math.abs(curGain - baseGain) > 0.05) {
         gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
@@ -320,13 +588,17 @@
 
     // Cuando el usuario adelanta o retrocede manualmente la barra:
     video.addEventListener('seeking', () => {
-      _hasFadedOutThisTrack = false;
-      _isTransitioningToNext = false;
-      restoreVideoFullGain(true);
+      cancelShadowCrossfade('seeking');
+    });
+
+    video.addEventListener('pause', () => {
+      if (_xfadeStatus === XFADE_STATE.CROSSFADE_ACTIVE) {
+        _sendShadowCommand('pauseVideo');
+      }
     });
 
     video.addEventListener('play', () => {
-      if (!_isTransitioningToNext && !_hasFadedOutThisTrack) {
+      if (_xfadeStatus === XFADE_STATE.IDLE && !_isTransitioningToNext && !_hasFadedOutThisTrack) {
         restoreVideoFullGain(true);
       }
     });
@@ -340,10 +612,9 @@
         if (_isProgrammaticSkip) return;
 
         const isProgressBar = e.target.closest('#progress-bar, .progress-bar, tp-yt-paper-slider');
-        if (isProgressBar) {
-          _hasFadedOutThisTrack = false;
-          _isTransitioningToNext = false;
-          restoreVideoFullGain(false);
+        const isSkipBtn = e.target.closest('.next-button, .previous-button, #next-button, #previous-button');
+        if (isProgressBar || isSkipBtn) {
+          cancelShadowCrossfade(isProgressBar ? 'progress_bar_seek' : 'manual_skip_click');
         }
       });
     }
@@ -355,9 +626,7 @@
       setupCrossfadeListeners();
       _installManualActionListeners();
     } else {
-      _hasFadedOutThisTrack = false;
-      _isTransitioningToNext = false;
-      restoreVideoFullGain(true);
+      cancelShadowCrossfade('crossfade_disabled');
     }
   }
 
@@ -759,10 +1028,31 @@
               </div>
               <div id="crossfade-slider-container" style="display: ${state.crossfade ? 'block' : 'none'}; margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06);">
                 <div class="auramusic-row" style="margin-bottom: 6px;">
-                  <span class="auramusic-sublabel">Duración de la transición</span>
-                  <span id="crossfade-duration-val" style="font-weight:700; color:var(--auramusic-primary);">${state.crossfadeDuration || 4}s</span>
+                  <span class="auramusic-sublabel">Duración del solapamiento</span>
+                  <span id="crossfade-duration-val" style="font-weight:700; color:var(--auramusic-primary);">${state.crossfadeDuration || 5}s</span>
                 </div>
-                <input type="range" class="auramusic-range" id="crossfade-duration-slider" min="1" max="12" step="1" value="${state.crossfadeDuration || 4}">
+                <input type="range" class="auramusic-range" id="crossfade-duration-slider" min="1" max="12" step="1" value="${state.crossfadeDuration || 5}">
+
+                <div style="margin-top: 12px;">
+                  <div class="auramusic-row" style="margin-bottom: 4px;">
+                    <span class="auramusic-sublabel">Modo de Transición</span>
+                  </div>
+                  <select class="auramusic-select" id="crossfade-mode-select">
+                    <option value="real" ${state.crossfadeMode === 'real' ? 'selected' : ''}>🔥 Modo Real (Doble Reproductor Simultáneo)</option>
+                    <option value="fallback" ${state.crossfadeMode === 'fallback' ? 'selected' : ''}>⏳ Modo Fallback (Fundido Secuencial)</option>
+                  </select>
+                </div>
+
+                <div style="margin-top: 10px;">
+                  <div class="auramusic-row" style="margin-bottom: 4px;">
+                    <span class="auramusic-sublabel">Curva de Ganancia Sonora</span>
+                  </div>
+                  <select class="auramusic-select" id="crossfade-curve-select">
+                    <option value="equal-power" ${state.crossfadeCurve === 'equal-power' ? 'selected' : ''}>Equal Power (Spotify - Recomendada)</option>
+                    <option value="smoothstep" ${state.crossfadeCurve === 'smoothstep' ? 'selected' : ''}>Smoothstep (Curva en S sedosa)</option>
+                    <option value="linear" ${state.crossfadeCurve === 'linear' ? 'selected' : ''}>Lineal</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -956,6 +1246,8 @@
     const crossfadeContainer = document.getElementById('crossfade-slider-container');
     const crossfadeSlider = document.getElementById('crossfade-duration-slider');
     const crossfadeVal = document.getElementById('crossfade-duration-val');
+    const crossfadeModeSelect = document.getElementById('crossfade-mode-select');
+    const crossfadeCurveSelect = document.getElementById('crossfade-curve-select');
 
     if (toggleCrossfade) {
       toggleCrossfade.addEventListener('change', (e) => {
@@ -970,9 +1262,25 @@
 
     if (crossfadeSlider) {
       crossfadeSlider.addEventListener('input', (e) => {
-        state.crossfadeDuration = parseInt(e.target.value, 10) || 4;
+        state.crossfadeDuration = parseInt(e.target.value, 10) || 5;
         if (crossfadeVal) crossfadeVal.textContent = `${state.crossfadeDuration}s`;
         saveSettings();
+      });
+    }
+
+    if (crossfadeModeSelect) {
+      crossfadeModeSelect.addEventListener('change', (e) => {
+        state.crossfadeMode = e.target.value || 'real';
+        saveSettings();
+        console.log(`🔀 AuraMusic: Modo de Crossfade cambiado a "${state.crossfadeMode}".`);
+      });
+    }
+
+    if (crossfadeCurveSelect) {
+      crossfadeCurveSelect.addEventListener('change', (e) => {
+        state.crossfadeCurve = e.target.value || 'equal-power';
+        saveSettings();
+        console.log(`🔀 AuraMusic: Curva de Crossfade cambiada a "${state.crossfadeCurve}".`);
       });
     }
 
@@ -1002,11 +1310,15 @@
     const crossfadeContainer = document.getElementById('crossfade-slider-container');
     const crossfadeSlider = document.getElementById('crossfade-duration-slider');
     const crossfadeVal = document.getElementById('crossfade-duration-val');
+    const crossfadeModeSelect = document.getElementById('crossfade-mode-select');
+    const crossfadeCurveSelect = document.getElementById('crossfade-curve-select');
 
     if (toggleCrossfade) toggleCrossfade.checked = !!state.crossfade;
     if (crossfadeContainer) crossfadeContainer.style.display = state.crossfade ? 'block' : 'none';
-    if (crossfadeSlider) crossfadeSlider.value = state.crossfadeDuration || 4;
-    if (crossfadeVal) crossfadeVal.textContent = `${state.crossfadeDuration || 4}s`;
+    if (crossfadeSlider) crossfadeSlider.value = state.crossfadeDuration || 5;
+    if (crossfadeVal) crossfadeVal.textContent = `${state.crossfadeDuration || 5}s`;
+    if (crossfadeModeSelect) crossfadeModeSelect.value = state.crossfadeMode || 'real';
+    if (crossfadeCurveSelect) crossfadeCurveSelect.value = state.crossfadeCurve || 'equal-power';
   }
 
   // --- 9. INICIALIZACIÓN GLOBAL CUANDO EL DOM ESTÉ LISTO ---
@@ -1638,18 +1950,168 @@
 
     // Salto en la barra de tiempo
     const progressBg = document.getElementById('cinema-progress-bg');
-    progressBg.addEventListener('click', (e) => {
+    progressBg.addEventListener('mousedown', (e) => {
+      cinemaSeekLockUntil = Date.now() + 250;
+      cinemaLastStablePct = -1;
       const video = document.querySelector('video');
-      if (!video || !video.duration) return;
+      if (!video || !video.duration || !isFinite(video.duration)) return;
       const rect = progressBg.getBoundingClientRect();
       const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      video.currentTime = pct * video.duration;
+      const t = pct * video.duration;
+      video.currentTime = t;
+      const fill = document.getElementById('cinema-progress-fill');
+      if (fill) {
+        fill.style.transition = 'none !important';
+        fill.style.width = `${Math.max(0, Math.min(100, pct * 100))}%`;
+      }
+    });
+    progressBg.addEventListener('click', (e) => {
+      cinemaSeekLockUntil = Date.now() + 200;
+      cinemaLastStablePct = -1;
+      const video = document.querySelector('video');
+      if (!video || !video.duration || !isFinite(video.duration)) return;
+      const rect = progressBg.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const t = pct * video.duration;
+      video.currentTime = t;
+      const fill = document.getElementById('cinema-progress-fill');
+      if (fill) {
+        fill.style.transition = 'none !important';
+        fill.style.width = `${Math.max(0, Math.min(100, pct * 100))}%`;
+        void fill.offsetHeight;
+      }
     });
   }
 
   let lastCinemaTrackId = '';
   let isUpdatingCinemaTrack = false;
   let cinemaTrackGen = 0;
+  let lastCinemaActiveIdx = -1;
+  let pendingCinemaTrackUpdate = null;
+  let cinemaGraceUntil = 0;
+  let cinemaSeekLockUntil = 0;
+  let cinemaLastStablePct = -1;
+  let cinemaLastStableTime = -1;
+  let preloadLyricsCache = {};
+  let preloadTriggeredForTrackId = '';
+  let preloadNextTrackId = '';
+
+  function makeLyricsCacheKey(title, artist, duration) {
+    const t = (title || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const a = (artist || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const d = Math.round(duration || 0);
+    return `${t}:::${a}:::${d}`;
+  }
+
+  function getPredictedNextTrack() {
+    try {
+      const queueItems = document.querySelectorAll('ytmusic-player-queue-item, .queue-item, [role="listitem"] ytmusic-responsive-list-item-renderer, .middle-controls yt-formatted-string');
+      let nextTitle = '';
+      let nextArtist = '';
+      for (const el of queueItems) {
+        try {
+          const titleEl = el.querySelector('.title, .flex-column yt-formatted-string:first-child, .song-title');
+          const artistEl = el.querySelector('.byline, .flex-column yt-formatted-string:last-child, .artist-name, .secondary-flex-columns');
+          if (titleEl) {
+            const tx = titleEl.textContent.trim();
+            if (tx && tx.length > 1) {
+              const curArtist = (navigator.mediaSession && navigator.mediaSession.metadata && navigator.mediaSession.metadata.artist) ? navigator.mediaSession.metadata.artist.trim() : '';
+              const curTitle = (navigator.mediaSession && navigator.mediaSession.metadata && navigator.mediaSession.metadata.title) ? navigator.mediaSession.metadata.title.trim() : '';
+              const localCurTitle = document.querySelector('ytmusic-player-bar .title, ytmusic-player-bar yt-formatted-string.title');
+              const localCurArtist = document.querySelector('ytmusic-player-bar .byline, ytmusic-player-bar yt-formatted-string.byline');
+              const actTitle = (curTitle || (localCurTitle ? localCurTitle.textContent.trim() : '')).toLowerCase();
+              const actArtist = (curArtist || (localCurArtist ? localCurArtist.textContent.trim() : '')).toLowerCase();
+              if (tx.toLowerCase() !== actTitle && tx.toLowerCase().replace(/\s+/g, '') !== actTitle.replace(/\s+/g, '')) {
+                nextTitle = tx;
+                if (artistEl) {
+                  let at = artistEl.textContent.trim();
+                  const splitIdx = at.indexOf('•');
+                  if (splitIdx > 0) at = at.slice(0, splitIdx).trim();
+                  nextArtist = at;
+                }
+                return { title: nextTitle, artist: nextArtist };
+              }
+            }
+          }
+        } catch (e) {}
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  async function preloadNextTrackLyricsIfNearEnd() {
+    if (!isCinemaActive) return;
+    const video = document.querySelector('video');
+    if (!video || !isFinite(video.duration) || video.duration <= 0 || isNaN(video.currentTime)) return;
+    const timeLeft = video.duration - video.currentTime;
+    const currentDuration = video.duration;
+    const curTrackKey = lastCinemaTrackId;
+    if (!curTrackKey) return;
+
+    const video2 = document.querySelector('video');
+    const curTitle = (navigator.mediaSession && navigator.mediaSession.metadata && navigator.mediaSession.metadata.title) || (document.querySelector('ytmusic-player-bar .title, ytmusic-player-bar yt-formatted-string.title')?.textContent?.trim());
+    const curArtist = (navigator.mediaSession && navigator.mediaSession.metadata && navigator.mediaSession.metadata.artist) || (document.querySelector('ytmusic-player-bar .byline, ytmusic-player-bar yt-formatted-string.byline')?.textContent?.trim());
+    if (!curTitle) return;
+
+    if (timeLeft <= 12 && preloadTriggeredForTrackId !== curTrackKey) {
+      const pred = getPredictedNextTrack();
+      if (!pred || !pred.title) return;
+      preloadTriggeredForTrackId = curTrackKey;
+      const nextTrackKey = `${pred.title}:::${pred.artist || ''}`;
+      preloadNextTrackId = nextTrackKey;
+      const cacheKey = makeLyricsCacheKey(pred.title, pred.artist || '', Math.max(0, currentDuration));
+      if (preloadLyricsCache[cacheKey]) {
+        console.log('⚡ AuraMusic: Letra siguiente canción YA está en cache (hotload!):', nextTrackKey);
+        return;
+      }
+      console.log('🔮 AuraMusic: PRELOADING letra canción SIGUIENTE en background (faltan ~12s):', nextTrackKey);
+      try {
+        const estDuration = Math.max(120, Math.round(currentDuration));
+        const lyr = await fetchSyncedLyrics(pred.title, pred.artist || '', estDuration);
+        preloadLyricsCache[cacheKey] = { lyrics: lyr, fetchedAt: Date.now() };
+        console.log('✅ AuraMusic: LETRA PRECARGADA lista!:', nextTrackKey);
+      } catch (e) {
+        console.warn('AuraMusic: Falló preload de letra, nada grave...', e);
+      }
+    }
+  }
+
+  function resetCinemaProgressImmediate() {
+    const fill = document.getElementById('cinema-progress-fill');
+    const curSpan = document.getElementById('cinema-current-time');
+    const totSpan = document.getElementById('cinema-total-time');
+    const waTimePill = document.getElementById('cinema-wa-time');
+
+    cinemaGraceUntil = Date.now() + 500;
+    cinemaSeekLockUntil = 0;
+    cinemaLastStablePct = -1;
+    cinemaLastStableTime = -1;
+
+    if (fill) {
+      fill.style.transition = 'none !important';
+      fill.style.width = '0%';
+      void fill.offsetHeight;
+    }
+    if (curSpan) curSpan.textContent = '0:00';
+    if (totSpan) totSpan.textContent = '0:00';
+    if (waTimePill) waTimePill.textContent = '0:00 / 0:00';
+  }
+
+  function resetCinemaLyricsStateImmediate() {
+    currentLyrics = [];
+    lastCinemaActiveIdx = -1;
+    isTranslationActive = false;
+    const transBtn = document.getElementById('cinema-translate-btn');
+    if (transBtn) transBtn.classList.remove('active');
+    const wrapper = document.getElementById('cinema-lyrics-wrapper');
+    if (wrapper) wrapper.innerHTML = '<div class="cinema-lyric-line active-line">Cargando canción...</div>';
+    const typingBubble = document.getElementById('whatsapp-typing-bubble');
+    if (typingBubble) typingBubble.style.display = 'none';
+    const topStatus = document.querySelector('.whatsapp-top-status');
+    if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> en línea';
+    const container = document.getElementById('cinema-right-scroll');
+    if (container) container.scrollTo({ top: 0, behavior: 'instant' });
+  }
 
   function getCurrentTrackInfo() {
     let title = '';
@@ -1695,75 +2157,131 @@
     if (title && trackId !== lastCinemaTrackId) {
       lastCinemaTrackId = trackId;
       console.log('🔄 AuraMusic: Cambio de canción en vivo detectado:', trackId);
+      resetCinemaProgressImmediate();
+      resetCinemaLyricsStateImmediate();
       updateCinemaTrack(title, artist);
     }
   }
 
   async function updateCinemaTrack(title, artist) {
-    if (isUpdatingCinemaTrack) return;
-    isUpdatingCinemaTrack = true;
     const curGen = ++cinemaTrackGen;
+    pendingCinemaTrackUpdate = { title, artist, gen: curGen };
+
+    resetCinemaProgressImmediate();
+    resetCinemaLyricsStateImmediate();
+
+    if (isUpdatingCinemaTrack) {
+      return;
+    }
+    isUpdatingCinemaTrack = true;
 
     try {
-      const trackTitleEl = document.getElementById('cinema-track-title');
-      const trackArtistEl = document.getElementById('cinema-track-artist');
-      const artImg = document.getElementById('cinema-art-img');
-      const wrapper = document.getElementById('cinema-lyrics-wrapper');
-      const video = document.querySelector('video');
+      while (pendingCinemaTrackUpdate && pendingCinemaTrackUpdate.gen === cinemaTrackGen) {
+        const t = pendingCinemaTrackUpdate.title;
+        const a = pendingCinemaTrackUpdate.artist;
+        pendingCinemaTrackUpdate = null;
 
-      const cleanTitle = title || document.title.replace(' - YouTube Music', '').replace(' | YouTube Music', '').trim() || 'Canción';
-      const cleanArtist = artist || 'Artista';
+        const thisGen = cinemaTrackGen;
 
-      if (trackTitleEl) trackTitleEl.textContent = cleanTitle;
-      if (trackArtistEl) trackArtistEl.textContent = cleanArtist;
+        const trackTitleEl = document.getElementById('cinema-track-title');
+        const trackArtistEl = document.getElementById('cinema-track-artist');
+        const artImg = document.getElementById('cinema-art-img');
+        const wrapper = document.getElementById('cinema-lyrics-wrapper');
+        const video = document.querySelector('video');
 
-      // Transición suave de portada
-      const newCover = getHighResCoverUrl() || 'https://music.youtube.com/img/on_platform_logo.svg';
-      if (artImg && newCover) {
-        artImg.style.opacity = '0.3';
-        artImg.style.transform = 'scale(0.96)';
-        artImg.src = newCover;
-        artImg.onload = () => {
-          artImg.style.opacity = '1';
-          artImg.style.transform = 'scale(1)';
-          updateDynamicCoverColor(); // Actualiza colores dinámicos del fondo
-        };
+        const cleanTitle = t || document.title.replace(' - YouTube Music', '').replace(' | YouTube Music', '').trim() || 'Canción';
+        const cleanArtist = a || 'Artista';
+
+        if (trackTitleEl) trackTitleEl.textContent = cleanTitle;
+        if (trackArtistEl) trackArtistEl.textContent = cleanArtist;
+
+        const newCover = getHighResCoverUrl() || 'https://music.youtube.com/img/on_platform_logo.svg';
+        if (artImg && newCover) {
+          artImg.style.opacity = '0.3';
+          artImg.style.transform = 'scale(0.96)';
+          artImg.src = newCover;
+          artImg.onload = () => {
+            if (thisGen !== cinemaTrackGen) return;
+            artImg.style.opacity = '1';
+            artImg.style.transform = 'scale(1)';
+            try { updateDynamicCoverColor(); } catch (e) {}
+          };
+        }
+
+        const waTopTitle = document.getElementById('whatsapp-top-title');
+        const waTopAvatar = document.getElementById('cinema-top-art-img');
+        const waUserAvatar = document.getElementById('whatsapp-user-avatar');
+        if (waTopTitle) waTopTitle.textContent = `${cleanTitle} • ${cleanArtist}`;
+        if (waTopAvatar) {
+          waTopAvatar.src = newCover;
+          waTopAvatar.style.display = (state.theme === 'whatsapp') ? 'block' : 'none';
+        }
+        if (waUserAvatar) waUserAvatar.src = newCover;
+
+        if (state.theme === 'whatsapp') {
+          try { populateWhatsAppQueueList(cleanTitle, cleanArtist, newCover); } catch (e) {}
+        }
+
+        const duration = video ? video.duration : 180;
+
+        let lyrics = null;
+        let usedPreload = false;
+        // 🎯 FEATURE C: Check precarga inteligente. Si la letra CANCIÓN B está pre-cargada, NO mostramos "Sincronizando letra..."
+        try {
+          const cacheKey = makeLyricsCacheKey(t, a, duration);
+          if (preloadLyricsCache[cacheKey]) {
+            lyrics = preloadLyricsCache[cacheKey].lyrics;
+            usedPreload = true;
+            console.log('⚡ AuraMusic: HOTLOAD! Letra precargada aplicada SIN mensaje de carga:', cleanTitle);
+          } else {
+            // Probamos también preloadNextTrackId si coincide (para crossfade "adivinado" en cola YouTube)
+            const predictedId = preloadNextTrackId;
+            const myId = `${cleanTitle.trim().toLowerCase()}:::${cleanArtist.trim().toLowerCase()}`;
+            if (predictedId && predictedId.trim().toLowerCase().split(':::')[0] === cleanTitle.trim().toLowerCase()) {
+              for (const k of Object.keys(preloadLyricsCache)) {
+                if (!usedPreload && preloadLyricsCache[k]) {
+                  lyrics = preloadLyricsCache[k].lyrics;
+                  usedPreload = true;
+                  preloadLyricsCache[cacheKey] = preloadLyricsCache[k];
+                  console.log('⚡ AuraMusic: HOTLOAD por predicción idéntica! Letra aplicada:', cleanTitle);
+                  break;
+                }
+              }
+            }
+          }
+        } catch (e) { usedPreload = false; }
+
+        // Si hubo preload => NO pintamos "Sincronizando letra..." => mensaje desaparece completamente.
+        if (!usedPreload && wrapper) {
+          wrapper.innerHTML = '<div class="cinema-lyric-line active-line">Sincronizando letra...</div>';
+        }
+
+        if (!lyrics) {
+          lyrics = await fetchSyncedLyrics(t, a, duration);
+        }
+
+        if (thisGen !== cinemaTrackGen) continue;
+
+        let finalLyrics = lyrics;
+        if (isTranslationActive) {
+          const targetLang = (navigator.language || 'es').split('-')[0].toLowerCase();
+          finalLyrics = await translateLyrics(lyrics, targetLang);
+          if (thisGen !== cinemaTrackGen) continue;
+        }
+
+        if (usedPreload === false) {
+          const finalCacheKey = makeLyricsCacheKey(t, a, duration);
+          if (!preloadLyricsCache[finalCacheKey]) {
+            preloadLyricsCache[finalCacheKey] = { lyrics: finalLyrics, fetchedAt: Date.now() };
+          }
+        }
+
+        currentLyrics = finalLyrics;
+        lastCinemaActiveIdx = -1;
+        renderCinemaLyricsDOM();
+        const rightScroll = document.getElementById('cinema-right-scroll');
+        if (rightScroll) rightScroll.scrollTo({ top: 0, behavior: 'instant' });
       }
-
-      // ACTUALIZAR ELEMENTOS DEL MODO WHATSAPP
-      const waTopTitle = document.getElementById('whatsapp-top-title');
-      const waTopAvatar = document.getElementById('cinema-top-art-img');
-      const waUserAvatar = document.getElementById('whatsapp-user-avatar');
-      if (waTopTitle) waTopTitle.textContent = `${cleanTitle} • ${cleanArtist}`;
-      if (waTopAvatar) {
-        waTopAvatar.src = newCover;
-        waTopAvatar.style.display = (state.theme === 'whatsapp') ? 'block' : 'none';
-      }
-      if (waUserAvatar) waUserAvatar.src = newCover;
-
-      // Poblar cola de reproducción de WhatsApp
-      if (state.theme === 'whatsapp') {
-        populateWhatsAppQueueList(cleanTitle, cleanArtist, newCover);
-      }
-
-      if (wrapper) {
-        wrapper.innerHTML = '<div class="cinema-lyric-line active-line">Sincronizando letra...</div>';
-      }
-
-      const duration = video ? video.duration : 180;
-      const lyrics = await fetchSyncedLyrics(title, artist, duration);
-
-      // Descartar si cambió la canción mientras cargaba
-      if (curGen !== cinemaTrackGen) return;
-
-      if (isTranslationActive) {
-        const targetLang = (navigator.language || 'es').split('-')[0].toLowerCase();
-        currentLyrics = await translateLyrics(lyrics, targetLang);
-      } else {
-        currentLyrics = lyrics;
-      }
-
-      renderCinemaLyricsDOM();
     } catch (e) {
       console.error('Error actualizando track en modo cine:', e);
     } finally {
@@ -1811,140 +2329,213 @@
   }
 
   function startCinemaSyncLoop() {
-    let lastActiveIdx = -1;
+    lastCinemaActiveIdx = -1;
     let frameCounter = 0;
+    let _lastSeekWriteVideo = -1;
 
     function sync() {
       if (!isCinemaActive) return;
 
-      // Verificar cambio de canción cada 10 cuadros (tiempo real instantáneo)
+      checkCinemaTrackChange();
+      preloadNextTrackLyricsIfNearEnd();
       frameCounter++;
-      if (frameCounter % 10 === 0) {
-        checkCinemaTrackChange();
-      }
 
       const video = document.querySelector('video');
       if (video) {
         const currentTime = video.currentTime;
         const duration = video.duration || 1;
+        const nowTs = Date.now();
+        const inGracePeriod = nowTs < cinemaGraceUntil;
+        const inSeekLockPeriod = nowTs < cinemaSeekLockUntil;
+        const isSeekingLive = video.seeking === true;
 
-        // Actualizar barra de progreso y tiempos
         const fill = document.getElementById('cinema-progress-fill');
         const curSpan = document.getElementById('cinema-current-time');
         const totSpan = document.getElementById('cinema-total-time');
         const playBtn = document.getElementById('cinema-play-btn');
 
-        if (fill) fill.style.width = `${(currentTime / duration) * 100}%`;
+        if (currentLyrics.length === 0 || inGracePeriod || inSeekLockPeriod || isSeekingLive) {
+          if (fill) {
+            fill.style.transition = 'none !important';
+            if (currentLyrics.length === 0 || inGracePeriod) {
+              fill.style.width = '0%';
+            } else {
+              if (duration > 0 && !isNaN(currentTime) && !isNaN(duration) && isFinite(duration) && isFinite(currentTime)) {
+                const pct = Math.max(0, Math.min(100, (currentTime / duration) * 100));
+                fill.style.width = `${pct}%`;
+                cinemaLastStablePct = pct;
+              } else if (cinemaLastStablePct >= 0) {
+                fill.style.width = `${cinemaLastStablePct}%`;
+              }
+            }
+          }
+          if ((currentLyrics.length === 0 || inGracePeriod)) {
+            if (curSpan) curSpan.textContent = '0:00';
+            if (totSpan) totSpan.textContent = '0:00';
+          } else {
+            if (curSpan && !isNaN(currentTime)) curSpan.textContent = formatTime(currentTime);
+            if (totSpan && !isNaN(duration) && isFinite(duration)) totSpan.textContent = formatTime(duration);
+          }
+        } else {
+          let validPct = -1;
+          if ((duration > 0) && !isNaN(currentTime) && !isNaN(duration) && isFinite(duration) && isFinite(currentTime)) {
+            const rawPct = (currentTime / duration) * 100;
+            const dt = (cinemaLastStableTime >= 0) ? (currentTime - cinemaLastStableTime) : 0.1;
+            let expectedPct = -1;
+            if (cinemaLastStablePct >= 0 && cinemaLastStableTime >= 0 && dt > 0 && dt < 2.5) {
+              const perSec = 100 / duration;
+              expectedPct = cinemaLastStablePct + (dt * perSec);
+            }
+            let skipThisFrame = false;
+            if (cinemaLastStablePct >= 0 && expectedPct >= 0 && Math.abs(rawPct - cinemaLastStablePct) > 15) {
+              if (Math.abs(rawPct - expectedPct) > 3.5) {
+                skipThisFrame = true;
+              }
+            }
+            if (!skipThisFrame) {
+              validPct = Math.max(0, Math.min(100, rawPct));
+              cinemaLastStablePct = validPct;
+              cinemaLastStableTime = currentTime;
+              if (_lastSeekWriteVideo !== currentTime) {
+                fill.style.transition = '';
+                fill.style.width = `${validPct}%`;
+                _lastSeekWriteVideo = currentTime;
+              }
+              if (curSpan && !isNaN(currentTime)) curSpan.textContent = formatTime(currentTime);
+              if (totSpan && !isNaN(duration) && isFinite(duration)) totSpan.textContent = formatTime(duration);
+            } else if (cinemaLastStablePct >= 0) {
+              validPct = cinemaLastStablePct;
+              fill.style.transition = 'none !important';
+              fill.style.width = `${validPct}%`;
+            }
+          } else if (cinemaLastStablePct >= 0) {
+            validPct = cinemaLastStablePct;
+            fill.style.transition = 'none !important';
+            fill.style.width = `${validPct}%`;
+          }
+        }
         if (state.theme === 'jesuluto' && typeof updateJesulutoAnimation === 'function') {
           updateJesulutoAnimation(currentTime, video && !video.paused);
         }
-        if (curSpan) curSpan.textContent = formatTime(currentTime);
-        if (totSpan) totSpan.textContent = formatTime(duration);
         if (playBtn) playBtn.textContent = video.paused ? '▶' : '⏸';
 
-        // Compensación auditiva perceptiva de 50ms para sincronización milimétrica instantánea
         const effectiveTime = currentTime + 0.05;
 
-        // Buscar línea activa de letra (-1 si es la intro instrumental)
-        let activeIdx = -1;
-        for (let i = 0; i < currentLyrics.length; i++) {
-          if (effectiveTime >= currentLyrics[i].time) {
-            activeIdx = i;
-          } else {
-            break;
+        if (currentLyrics.length > 0) {
+          let activeIdx = -1;
+          for (let i = 0; i < currentLyrics.length; i++) {
+            if (effectiveTime >= currentLyrics[i].time) {
+              activeIdx = i;
+            } else {
+              break;
+            }
           }
-        }
 
-        
-        // GESTIÓN DINÁMICA DE MENSAJES Y "ESCRIBIENDO..." PARA WHATSAPP
-        if (state.theme === 'whatsapp') {
-          const allLines = document.querySelectorAll('#cinema-lyrics-wrapper .cinema-lyric-line');
-          const typingBubble = document.getElementById('whatsapp-typing-bubble');
-          const topStatus = document.querySelector('.whatsapp-top-status');
-          const waPlayBtn = document.getElementById('cinema-wa-play-btn');
-          const waTimePill = document.getElementById('cinema-wa-time');
 
-          if (waPlayBtn) waPlayBtn.textContent = (video && !video.paused) ? '⏸' : '▶';
-          if (waTimePill) waTimePill.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
+          if (state.theme === 'whatsapp') {
+            const allLines = document.querySelectorAll('#cinema-lyrics-wrapper .cinema-lyric-line');
+            const typingBubble = document.getElementById('whatsapp-typing-bubble');
+            const topStatus = document.querySelector('.whatsapp-top-status');
+            const waPlayBtn = document.getElementById('cinema-wa-play-btn');
+            const waTimePill = document.getElementById('cinema-wa-time');
 
-          // 1. Mostrar solo los mensajes que ya llegaron o están sonando (wa-sent)
-          allLines.forEach((l) => {
-            const lTime = parseFloat(l.dataset.time);
-            if (effectiveTime >= lTime) {
-              if (!l.classList.contains('wa-sent')) {
-                l.classList.add('wa-sent');
+            if (waPlayBtn) waPlayBtn.textContent = (video && !video.paused) ? '⏸' : '▶';
+            if (waTimePill && !isNaN(currentTime) && !isNaN(duration) && isFinite(duration)) {
+              waTimePill.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
+            }
+
+            allLines.forEach((l) => {
+              const lTime = parseFloat(l.dataset.time);
+              if (!isNaN(lTime) && effectiveTime >= lTime) {
+                if (!l.classList.contains('wa-sent')) {
+                  l.classList.add('wa-sent');
+                  const container = document.getElementById('cinema-right-scroll');
+                  if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+                }
+              } else {
+                l.classList.remove('wa-sent');
+              }
+            });
+
+            const isPlaying = video && !video.paused;
+            const nextIdx = activeIdx + 1;
+            if (nextIdx < currentLyrics.length && isPlaying && typingBubble) {
+              const timeToNext = currentLyrics[nextIdx].time - effectiveTime;
+              if (timeToNext <= 2.5 && timeToNext > 0) {
+                typingBubble.style.display = 'flex';
+                if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> escribiendo...';
                 const container = document.getElementById('cinema-right-scroll');
                 if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+              } else {
+                typingBubble.style.display = 'none';
+                if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> en línea';
               }
-            } else {
-              l.classList.remove('wa-sent');
-            }
-          });
-
-          // 2. Indicador de "Escribiendo..." para el próximo verso
-          const isPlaying = video && !video.paused;
-          const nextIdx = activeIdx + 1;
-          if (nextIdx < currentLyrics.length && isPlaying && typingBubble) {
-            const timeToNext = currentLyrics[nextIdx].time - effectiveTime;
-            if (timeToNext <= 2.5 && timeToNext > 0) {
-              typingBubble.style.display = 'flex';
-              if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> escribiendo...';
-              const container = document.getElementById('cinema-right-scroll');
-              if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-            } else {
+            } else if (typingBubble) {
               typingBubble.style.display = 'none';
               if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> en línea';
             }
-          } else if (typingBubble) {
-            typingBubble.style.display = 'none';
-            if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> en línea';
           }
-        }
 
-        if (activeIdx !== lastActiveIdx) {
-          lastActiveIdx = activeIdx;
-          const allLines = document.querySelectorAll('.cinema-lyric-line');
-          allLines.forEach((l, idx) => {
-            if (idx === activeIdx) {
-              l.classList.add('active-line');
-              // Auto-scroll sedoso al foco áureo (38% de la pantalla) sin tirones
-              const container = document.getElementById('cinema-right-scroll');
-              if (container) {
-                const cRect = container.getBoundingClientRect();
-                const lRect = l.getBoundingClientRect();
-                const targetScroll = container.scrollTop + (lRect.top - cRect.top) - (cRect.height * 0.38);
-                container.scrollTo({ top: targetScroll, behavior: 'smooth' });
-              }
-            } else {
-              l.classList.remove('active-line');
-              const words = l.querySelectorAll('.k-word');
-              if (idx < activeIdx) {
-                words.forEach(w => w.className = 'k-word sung');
-                l.classList.add('sung-line');
+          if (activeIdx !== lastCinemaActiveIdx) {
+            lastCinemaActiveIdx = activeIdx;
+            const allLines = document.querySelectorAll('.cinema-lyric-line');
+            allLines.forEach((l, idx) => {
+              if (idx === activeIdx) {
+                l.classList.add('active-line');
+                const container = document.getElementById('cinema-right-scroll');
+                if (container) {
+                  const cRect = container.getBoundingClientRect();
+                  const lRect = l.getBoundingClientRect();
+                  const targetScroll = container.scrollTop + (lRect.top - cRect.top) - (cRect.height * 0.38);
+                  container.scrollTo({ top: targetScroll, behavior: 'smooth' });
+                }
               } else {
-                words.forEach(w => w.className = 'k-word');
-              }
-            }
-          });
-        }
-
-        // Actualización ultra sincronizada palabra por palabra en tiempo real (60 FPS)
-        if (activeIdx >= 0 && activeIdx < currentLyrics.length) {
-          const activeLineEl = document.querySelector(`.cinema-lyric-line[data-index="${activeIdx}"]`);
-          if (activeLineEl) {
-            const words = activeLineEl.querySelectorAll('.k-word');
-            words.forEach(w => {
-              const start = parseFloat(w.dataset.start);
-              const end = parseFloat(w.dataset.end);
-              if (effectiveTime >= end) {
-                w.className = 'k-word sung';
-              } else if (effectiveTime >= start && effectiveTime < end) {
-                w.className = 'k-word active';
-              } else {
-                w.className = 'k-word';
+                l.classList.remove('active-line');
+                const words = l.querySelectorAll('.k-word');
+                if (idx < activeIdx) {
+                  words.forEach(w => w.className = 'k-word sung');
+                  l.classList.add('sung-line');
+                } else {
+                  words.forEach(w => w.className = 'k-word');
+                  l.classList.remove('sung-line');
+                }
               }
             });
           }
+
+          if (activeIdx >= 0 && activeIdx < currentLyrics.length) {
+            const activeLineEl = document.querySelector(`.cinema-lyric-line[data-index="${activeIdx}"]`);
+            if (activeLineEl) {
+              const words = activeLineEl.querySelectorAll('.k-word');
+              words.forEach(w => {
+                const start = parseFloat(w.dataset.start);
+                const end = parseFloat(w.dataset.end);
+                if (!isNaN(start) && !isNaN(end)) {
+                  if (effectiveTime >= end) {
+                    w.className = 'k-word sung';
+                  } else if (effectiveTime >= start && effectiveTime < end) {
+                    w.className = 'k-word active';
+                  } else {
+                    w.className = 'k-word';
+                  }
+                }
+              });
+            }
+          }
+        } else {
+          const allLines = document.querySelectorAll('.cinema-lyric-line');
+          allLines.forEach(l => {
+            if (l.dataset.index !== undefined) {
+              l.classList.remove('active-line', 'sung-line', 'wa-sent');
+              const ws = l.querySelectorAll('.k-word');
+              ws.forEach(w => w.className = 'k-word');
+            }
+          });
+          const typingBubble = document.getElementById('whatsapp-typing-bubble');
+          if (typingBubble) typingBubble.style.display = 'none';
+          const topStatus = document.querySelector('.whatsapp-top-status');
+          if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> en línea';
+          lastCinemaActiveIdx = -1;
         }
       }
 

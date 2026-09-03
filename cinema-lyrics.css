@@ -1364,7 +1364,7 @@ body.auramusic-theme-whatsapp .whatsapp-checks {
 }
 
 /* BURBUJA DE "ESCRIBIENDO..." (TYPING INDICATOR) */
-.wa-typing-bubble {
+body.auramusic-theme-whatsapp .wa-typing-bubble {
   align-self: flex-end;
   margin-left: auto;
   margin-right: 0;
@@ -1378,14 +1378,14 @@ body.auramusic-theme-whatsapp .whatsapp-checks {
   animation: waMessagePop 0.25s ease-out;
 }
 
-.wa-typing-text {
+body.auramusic-theme-whatsapp .wa-typing-text {
   font-size: 0.85rem;
   color: #00a884;
   font-weight: 600;
   margin-right: 4px;
 }
 
-.wa-dot {
+body.auramusic-theme-whatsapp .wa-dot {
   width: 6px;
   height: 6px;
   background: #00a884;
@@ -1393,12 +1393,22 @@ body.auramusic-theme-whatsapp .whatsapp-checks {
   animation: waDotBlink 1.4s infinite ease-in-out both;
 }
 
-.wa-dot:nth-child(2) { animation-delay: 0.2s; }
-.wa-dot:nth-child(3) { animation-delay: 0.4s; }
+body.auramusic-theme-whatsapp .wa-dot:nth-child(2) { animation-delay: 0.2s; }
+body.auramusic-theme-whatsapp .wa-dot:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes waDotBlink {
   0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
   40% { transform: scale(1.1); opacity: 1; }
+}
+
+/* OCULTAR por DEFECTO barra de input + emojis de WhatsApp en TEMAS QUE NO SON WHATSAPP (Bug "escribe un mensaje" aparecía en todos los temas) */
+.cinema-whatsapp-input-bar {
+  display: none !important;
+}
+
+/* OCULTAR wa-typing-bubble fuera de tema whatsapp */
+.wa-typing-bubble {
+  display: none !important;
 }
 
 /* Barra Inferior Fija WhatsApp Web */

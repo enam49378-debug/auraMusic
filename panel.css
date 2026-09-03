@@ -374,3 +374,28 @@
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
+
+/* Select Dropdown */
+.auramusic-select {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  font-family: inherit;
+}
+
+.auramusic-select:hover, .auramusic-select:focus {
+  border-color: var(--auramusic-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.auramusic-select option {
+  background: #18181b;
+  color: #fff;
+}
