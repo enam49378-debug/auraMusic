@@ -452,7 +452,13 @@
         <div class="song-title">Ama De Mi Sol</div>
         <div class="song-artist">Milo J • Audio Real Oficial (songA.mp3)</div>
 
-        <audio controls id="audio-a" src="songA.mp3"></audio>
+        <audio controls id="audio-a" src="songA.mp3" preload="auto"></audio>
+
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-secondary" id="btn-jump-a" style="padding: 6px 14px; font-size: 0.85rem; width: 100%;">
+            ⏩ Saltar directo al final (segundo 165 de 176)
+          </button>
+        </div>
 
         <div class="vol-meter-box">
           <div class="vol-labels">
@@ -668,25 +674,29 @@
       const fadeSec = parseInt(sliderDur.value, 10) || 8;
       const curveType = selectCurve.value;
 
-      // Saltar audioA a sus últimos fadeSec segundos
-      const durA = audioA.duration || 176;
-      const jumpPoint = Math.max(0, durA - fadeSec);
+      // Saltar audioA a sus últimos fadeSec segundos (duración real de Ama De Mi Sol: 176s)
+      const durA = (audioA.duration && !isNaN(audioA.duration) && audioA.duration > 5) ? audioA.duration : 176.2;
+      const jumpPoint = Math.max(0, durA - fadeSec - 0.5);
 
       log(`⚡ DISPARANDO SOLAPAMIENTO SIMULTÁNEO EN VIVO (${fadeSec}s)...`, 'highlight');
-      log(`Adelantando 'Ama De Mi Sol' al segundo ${jumpPoint.toFixed(1)}s con volumen 100%...`);
+      log(`Adelantando 'Ama De Mi Sol' al segundo ${jumpPoint.toFixed(1)}s (de ${durA.toFixed(1)}s)...`);
 
+      audioA.pause();
       audioA.currentTime = jumpPoint;
       audioA.volume = 1.0;
-      audioA.play();
+      audioA.play().then(() => {
+        audioA.currentTime = jumpPoint;
+      }).catch(() => {});
       cardA.classList.add('active');
 
       // Arrancar audioB en 0:00 con volumen 0% en el MISMO MILISEGUNDO
+      audioB.pause();
       audioB.currentTime = 0;
       audioB.volume = 0.0;
-      audioB.play();
+      audioB.play().catch(() => {});
       cardB.classList.add('active');
 
-      log(`🔥 ¡AMBAS CANCIONES REALES SONANDO A LA VEZ! 'Ama De Mi Sol' baja mientras 'Solifican12' sube desde 0:00.`, 'alert');
+      log(`🔥 ¡AMBAS CANCIONES REALES SONANDO A LA VEZ! 'Ama De Mi Sol' en el final (${jumpPoint.toFixed(1)}s) y 'Solifican12' en 0:00.`, 'alert');
 
       const startTime = performance.now();
       const durationMs = fadeSec * 1000;
@@ -713,6 +723,18 @@
         }
       }, 35);
     });
+
+    // SALTAR DIRECTO AL FINAL DE PISTA A
+    const btnJumpA = document.getElementById('btn-jump-a');
+    if (btnJumpA) {
+      btnJumpA.addEventListener('click', () => {
+        audioA.currentTime = 165;
+        audioA.play().then(() => {
+          audioA.currentTime = 165;
+        }).catch(() => {});
+        log(`⏩ 'Ama De Mi Sol' adelantada directamente al segundo 165 (últimos 11 segundos).`, 'highlight');
+      });
+    }
 
     // PAUSAR TODO
     document.getElementById('btn-stop-all').addEventListener('click', () => {
