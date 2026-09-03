@@ -807,7 +807,7 @@ body.auramusic-theme-apple ytmusic-player-bar .play-pause-button {
 }
 
 /* ==========================================================================
-   DISEÑO 7: 🟢 SPOTIFY (ESTILO OFICIAL SPOTIFY VERDE Y CARBÓN)
+   DISEÑO 7: 🟢 SPOTIFY (ESTRUCTURA Y POSICIONAMIENTO OFICIAL SPOTIFY)
    ========================================================================== */
 body.auramusic-theme-spotify {
   --auramusic-primary: #1ed760;
@@ -823,41 +823,103 @@ body.auramusic-theme-spotify ytmusic-browse-response {
 
 body.auramusic-theme-spotify ytmusic-nav-bar {
   background: #000000 !important;
+  border-bottom: none !important;
 }
 
-body.auramusic-theme-spotify ytmusic-chip-cloud-chip-renderer {
-  border-radius: 20px !important;
-  background: #242424 !important;
-  border: 1px solid #333333 !important;
+/* ESTRUCTURA SPOTIFY: CAJÓN LATERAL EN 2 TARJETAS SEPARADAS */
+body.auramusic-theme-spotify #guide-wrapper {
+  background: transparent !important;
+  padding: 8px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-section-renderer:first-child {
+  background: #121212 !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  margin-bottom: 10px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-section-renderer:nth-child(2) {
+  background: #121212 !important;
+  border-radius: 12px !important;
+  padding: 12px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-entry-renderer {
+  border-radius: 8px !important;
+  margin: 3px 0 !important;
+  color: #b3b3b3 !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-entry-renderer:hover {
+  background: transparent !important;
+  color: #ffffff !important;
+  transform: none !important;
+}
+
+/* ESTRUCTURA SPOTIFY: REPRODUCTOR INFERIOR NEGRO CON CONTROLES CENTRADOS */
+body.auramusic-theme-spotify ytmusic-player-bar {
+  height: 88px !important;
+  background: #000000 !important;
+  border-top: 1px solid #282828 !important;
+  padding: 0 24px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .image.ytmusic-player-bar {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 6px !important;
+  margin-right: 14px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .title.ytmusic-player-bar {
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
   color: #ffffff !important;
 }
 
-body.auramusic-theme-spotify ytmusic-chip-cloud-chip-renderer[is-selected] {
-  background: #ffffff !important;
-  color: #000000 !important;
-  font-weight: 700 !important;
-}
-
-body.auramusic-theme-spotify ytmusic-player-bar {
-  background: #181818 !important;
-  border-top: 1px solid #282828 !important;
-}
-
-body.auramusic-theme-spotify tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
-  background: #1ed760 !important;
-  box-shadow: 0 0 10px rgba(30, 215, 96, 0.5) !important;
-}
-
-body.auramusic-theme-spotify tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
-  background: #ffffff !important;
-  border: 2px solid #1ed760 !important;
-  border-radius: 50% !important;
+body.auramusic-theme-spotify ytmusic-player-bar .byline.ytmusic-player-bar {
+  font-size: 0.8rem !important;
+  color: #b3b3b3 !important;
 }
 
 body.auramusic-theme-spotify ytmusic-player-bar .play-pause-button {
   background: #ffffff !important;
-  border-radius: 50% !important;
   color: #000000 !important;
+  border-radius: 50% !important;
+  width: 44px !important;
+  height: 44px !important;
+  margin: 0 14px !important;
+  transition: transform 0.2s ease !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .play-pause-button:hover {
+  transform: scale(1.08) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .previous-button,
+body.auramusic-theme-spotify ytmusic-player-bar .next-button {
+  color: #b3b3b3 !important;
+  background: transparent !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .previous-button:hover,
+body.auramusic-theme-spotify ytmusic-player-bar .next-button:hover {
+  color: #ffffff !important;
+  transform: none !important;
+}
+
+body.auramusic-theme-spotify tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
+  background: #1ed760 !important;
+  box-shadow: none !important;
+}
+
+body.auramusic-theme-spotify tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
+  background: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6) !important;
+  width: 12px !important;
+  height: 12px !important;
 }
 
 /* ==========================================================================

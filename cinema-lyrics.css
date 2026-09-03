@@ -3,29 +3,58 @@
    (Apple Music, Spotify, Minecraft Arcade, Cyberpunk HUD, Aesthetic, YouTube)
    ========================================================== */
 
-/* Botón Inyectado en la pestaña de Letra */
+/* Botón Inyectado en la pestaña de Letra (Card Flotante Ultra Elegante) */
 #auramusic-cinema-trigger-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: linear-gradient(135deg, var(--auramusic-primary, #00f2fe), var(--auramusic-secondary, #7c4dff));
-  color: #ffffff;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 24px;
-  font-family: inherit;
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-  margin: 12px 0 16px 0;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 15px var(--auramusic-glow, rgba(0, 229, 255, 0.4));
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  user-select: none;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(28px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+  padding: 12px 28px !important;
+  border-radius: 28px !important;
+  font-family: inherit !important;
+  font-weight: 750 !important;
+  font-size: 0.95rem !important;
+  cursor: pointer !important;
+  margin: 16px auto 20px auto !important;
+  width: fit-content !important;
+  min-width: 280px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.06) !important;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  user-select: none !important;
 }
 
 #auramusic-cinema-trigger-btn:hover {
-  transform: scale(1.06) translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 25px var(--auramusic-primary, #00f2fe);
+  background: linear-gradient(135deg, var(--auramusic-primary, #00f2fe), var(--auramusic-secondary, #7c4dff)) !important;
+  transform: translateY(-3px) scale(1.03) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 30px var(--auramusic-glow, rgba(0, 229, 255, 0.5)) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+}
+
+/* Botón de Micrófono / Letras directo en la Barra del Reproductor (Estilo Spotify/Apple) */
+.auramusic-bar-lyrics-btn {
+  background: transparent !important;
+  border: none !important;
+  font-size: 1.25rem !important;
+  cursor: pointer !important;
+  padding: 8px !important;
+  margin: 0 4px !important;
+  border-radius: 50% !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.auramusic-bar-lyrics-btn:hover {
+  transform: scale(1.2) !important;
+  color: #ffffff !important;
+  filter: drop-shadow(0 0 10px var(--auramusic-primary, #00f2fe)) !important;
 }
 
 /* Pantalla Completa Base */

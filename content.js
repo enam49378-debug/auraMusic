@@ -1003,18 +1003,27 @@
       const rawDuration = nextItem ? (nextItem.time - item.time) : 3.5;
       const words = displayText.trim().split(/\s+/).filter(w => w.length > 0);
 
-      // Motor vocal auto-adaptativo inteligente:
-      // Se adapta con fidelidad tanto a baladas lentas con notas sostenidas (como Chachachá) como a temas rápidos
+      // Motor vocal inteligente de densidad por segundo (se acelera en rap y se alarga en baladas):
+      const wordCount = words.length;
+      const wordsPerSec = wordCount / Math.max(0.6, rawDuration);
+
       let totalDuration;
-      if (rawDuration <= 4.8) {
-        // En flujo de canto normal, acompaña la voz del cantante durante el 90% del intervalo
-        totalDuration = Math.max(0.8, rawDuration * 0.90);
-      } else if (rawDuration <= 7.0) {
-        // Pausa intermedia: acompaña hasta el 80% del intervalo o ritmo de 0.52s por palabra
-        totalDuration = Math.max(words.length * 0.52, rawDuration * 0.80);
+      if (rawDuration > 7.0) {
+        // Pausa larga o solo instrumental: acompaña a ritmo vocal natural de la frase
+        totalDuration = Math.min(rawDuration * 0.65, Math.max(2.5, wordCount * 0.45));
       } else {
-        // Instrumental largo (> 7s): ritmo vocal natural holgado (0.62s por palabra), nunca apresurado
-        totalDuration = Math.min(rawDuration * 0.65, Math.max(3.2, words.length * 0.62));
+        // En flujo de canto normal, el tiempo de vocalización se adapta automáticamente:
+        if (wordsPerSec >= 2.2) {
+          // Rap o canto rápido (ej. Tyler en "Okay okay okay..."): entrega veloz y ágil
+          totalDuration = Math.min(rawDuration, wordCount * 0.32);
+        } else if (wordsPerSec <= 1.2) {
+          // Balada o verso lento/sostenido (ej. Kali Uchis en "You live in my dream state"):
+          // Acompaña hasta el 92% para que las notas alargadas no se apaguen
+          totalDuration = Math.max(0.8, rawDuration * 0.92);
+        } else {
+          // Tempo pop moderado
+          totalDuration = Math.max(0.8, rawDuration * 0.88);
+        }
       }
 
       const weights = words.map(w => Math.max(2, w.length));
@@ -1410,20 +1419,33 @@
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   }
 
-  // Inyectar el botón de "Letra Animada" en la pestaña LETRA de YouTube Music
+  // Inyectar el botón de "Letra Animada" en la pestaña LETRA de YouTube Music (Diseño Floating Glass)
   function checkAndInjectLyricsButton() {
-    const lyricsTab = document.querySelector('ytmusic-tab-renderer[page-type="MUSIC_PAGE_TYPE_TRACK_LYRICS"], #tabsContent ytmusic-tab-header-renderer:nth-child(2)');
     const lyricsShelf = document.querySelector('ytmusic-description-shelf-renderer');
 
     if (lyricsShelf && !document.getElementById('auramusic-cinema-trigger-btn')) {
       const btn = document.createElement('button');
       btn.id = 'auramusic-cinema-trigger-btn';
       btn.type = 'button';
-      btn.innerHTML = `<span>✨</span> <span>Ver Letra Animada (Estilo Apple Music)</span>`;
+      btn.innerHTML = `<span>✨</span> <span>Abrir Pantalla Completa con Letra Animada</span>`;
       btn.addEventListener('click', openCinemaMode);
 
       lyricsShelf.parentNode.insertBefore(btn, lyricsShelf);
-      console.log('🎤 AuraMusic: Botón de Letra Animada inyectado con éxito!');
+      console.log('🎤 AuraMusic: Botón premium de Letra Animada inyectado con éxito!');
+    }
+
+    // Inyectar también el icono nativo de Micrófono (🎤) directo en la barra del reproductor
+    const rightControls = document.querySelector('ytmusic-player-bar .right-controls-buttons');
+    if (rightControls && !document.getElementById('auramusic-bar-lyrics-btn')) {
+      const barBtn = document.createElement('button');
+      barBtn.id = 'auramusic-bar-lyrics-btn';
+      barBtn.className = 'auramusic-bar-lyrics-btn';
+      barBtn.type = 'button';
+      barBtn.title = 'Letras Animadas en Pantalla Completa (🎤)';
+      barBtn.innerHTML = '🎤';
+      barBtn.addEventListener('click', openCinemaMode);
+      rightControls.insertBefore(barBtn, rightControls.firstChild);
+      console.log('🎤 AuraMusic: Botón de micrófono en barra inferior inyectado con éxito!');
     }
   }
 
