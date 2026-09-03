@@ -3,37 +3,14 @@
 **Fecha**: 3 de Septiembre de 2026  
 **De**: Antigravity (Arquitecto Principal & Backend Logic)  
 **Para**: Trae AI / Claude (Lead Frontend & Local Developer)  
-**Asunto**: 🚀 Motor de Crossfade Dual Implementado y Listo para Pruebas
+**Asunto**: ⚡ Hotfix de Disparo: Eliminado deadlock en el trigger del Crossfade
 
 ---
 
 ¡Hola Trae AI!
 
-He finalizado la implementación completa del **Motor de Crossfade Dual Desacoplado** solicitado por el Director (Jesuluto):
+Detecté el motivo por el cual en la prueba el usuario escuchó que la Canción A no bajaba y la B no arrancaba:
+* **Causa**: Las dos ramas (`isRealMode` y `fallback`) exigían que `_xfadeStatus` fuera diferente de `IDLE`. Si el usuario adelantaba la canción directamente a los últimos segundos (muy común en pruebas de testing rápido), la precarga no se había ejecutado y el estado seguía en `IDLE`. Ambas ramas daban `false` y el código no hacía absolutamente nada.
+* **Solución**: Se eliminó ese cuello de botella. Ahora, al tocar la marca de `rem <= fadeSec`, **el Fade-Out de la Canción A se dispara de forma garantizada e incondicional**. Si el Shadow Player está listo, solapa; si no estaba listo (o en fallback), avanza la pista a la siguiente y hace el Fade-In de la Canción B.
 
-### 🛠️ Lo que quedó construido y verificado:
-
-1. **Modo Real (Doble Reproductor Simultáneo con Shadow Player)**:
-   - **Player A**: Video nativo de YouTube Music.
-   - **Player B**: Shadow Player con la YouTube IFrame API oficial en segundo plano.
-   - A los $T - \text{fadeSec}$ (ej. 5s):
-     * Player A baja su volumen del 100% al 0%.
-     * Player B empieza a reproducir desde el segundo **0:00** y sube del 0% al 100%.
-     * **Ambas canciones suenan en paralelo en tiempo real durante los 5 segundos.**
-   * En $T = 0$: Player A termina (0%), Player B está en el segundo 0:05 (100%), se pulsa Next y el reproductor nativo se sincroniza de inmediato en `currentTime = fadeSec` mediante handoff limpio.
-2. **Modo Fallback (Fundido Secuencial)**:
-   - Disponible como opción para cuando no hay conexión para dos streams o la cola no expone el ID.
-   - Desvanecimiento progresivo en A + disparo en el punto dulce + fade-in suave en B.
-3. **Curvas de Volumen Seleccionables**:
-   - Equal Power ($\cos/\sin$ - Spotify)
-   - Smoothstep ($3t^2 - 2t^3$)
-   - Lineal
-4. **Máquina de Estados con Salidas Inmediatas**:
-   - `IDLE` → `PREPARING_NEXT` → `CROSSFADE_READY` → `CROSSFADE_ACTIVE` → `NEXT_TRACK_ACTIVE` → `IDLE`.
-   - Si el usuario hace pausa, seek o skip manual, se destruye el Shadow Player y se restaura el 100% de volumen inmediatamente.
-5. **UI en el Hub (Panel Audio)**:
-   - Duración (1s - 12s)
-   - Selector de Modo (Real vs Fallback)
-   - Selector de Curva
-
-Tu base de Cinema Mode, lyrics y menús quedó 100% intacta. El paquete actualizado ya está en `Desktop/AuraMusic.zip`. 🎧✨
+Todo verificado y empaquetado en `Desktop/AuraMusic.zip`. 🚀
