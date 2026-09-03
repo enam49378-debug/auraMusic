@@ -83,65 +83,48 @@ tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
   background: var(--auramusic-primary, #00f2fe) !important;
 }
 
-/* CONTENCIÓN ESTRICTA: JAMÁS PERMITIR OVERFLOW HORIZONTAL */
+/* PREVENCIÓN SEGURA DE SCROLL HORIZONTAL (SIN BLOQUEAR EL RENDERIZADO DE CONTENIDO) */
 html,
-body,
-ytmusic-app,
-ytmusic-app-layout,
-#content,
-#browse-page,
-ytmusic-browse-response,
-ytmusic-player-page,
-#main-panel,
-ytmusic-item-section-renderer {
+body {
   overflow-x: hidden !important;
   max-width: 100vw !important;
 }
 
-/* CARRUSELES Y FILAS DE ÁLBUMES (FAVORITOS OLVIDADOS, ETC.):
-   CERO SCROLLBARS HORIZONTALES, NAVEGACIÓN LIMPIA POR FLECHAS */
-ytmusic-carousel,
-ytmusic-carousel-shelf-renderer,
-#items.ytmusic-carousel,
-#items.ytmusic-grid-renderer,
-ytmusic-chip-cloud-renderer,
-#chips.ytmusic-chip-cloud-renderer {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-  overflow-x: hidden !important;
-}
-
+/* Ocultar barras de scroll horizontal de forma puramente visual en carruseles y chips */
+::-webkit-scrollbar:horizontal,
+*::-webkit-scrollbar:horizontal,
 #items.ytmusic-carousel::-webkit-scrollbar,
 ytmusic-carousel::-webkit-scrollbar,
 ytmusic-carousel-shelf-renderer::-webkit-scrollbar,
 ytmusic-chip-cloud-renderer::-webkit-scrollbar,
-#chips.ytmusic-chip-cloud-renderer::-webkit-scrollbar {
+#chips.ytmusic-chip-cloud-renderer::-webkit-scrollbar,
+#guide-wrapper::-webkit-scrollbar:horizontal,
+#guide-content::-webkit-scrollbar:horizontal {
   display: none !important;
   height: 0px !important;
   width: 0px !important;
+  background: transparent !important;
 }
 
-/* CAJÓN LATERAL (SIDEBAR): CERO SCROLLBARS HORIZONTALES NI DESBORDES */
+#items.ytmusic-carousel,
+ytmusic-carousel-shelf-renderer,
+ytmusic-chip-cloud-renderer,
+#chips.ytmusic-chip-cloud-renderer,
 #guide-wrapper,
-#guide-content,
-ytmusic-guide-renderer,
-ytmusic-guide-section-renderer,
-#sections.ytmusic-guide-renderer,
-#items.ytmusic-guide-section-renderer {
-  overflow-x: hidden !important;
+#guide-content {
   scrollbar-width: none !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
+  -ms-overflow-style: none !important;
 }
 
-#guide-wrapper::-webkit-scrollbar,
-#guide-content::-webkit-scrollbar,
-ytmusic-guide-renderer::-webkit-scrollbar,
-#sections.ytmusic-guide-renderer::-webkit-scrollbar,
-#items.ytmusic-guide-section-renderer::-webkit-scrollbar {
-  display: none !important;
-  height: 0px !important;
-  width: 0px !important;
+/* Asegurar que las secciones y carruseles siempre se desplieguen visibles y con su altura natural */
+ytmusic-item-section-renderer,
+ytmusic-carousel-shelf-renderer,
+#items.ytmusic-carousel,
+#browse-page,
+ytmusic-browse-response {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 /* ELEMENTOS DEL MENÚ LATERAL: CONTENIDOS PERFECTAMENTE SIN REBASAR */
