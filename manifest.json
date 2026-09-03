@@ -46,6 +46,7 @@
       ],
       "js": [
         "three.min.js",
+        "crossfade.js",
         "content.js"
       ],
       "run_at": "document_idle"
