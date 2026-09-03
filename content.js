@@ -117,6 +117,7 @@
   const ALL_THEMES = [
     'auramusic-theme-apple',
     'auramusic-theme-spotify',
+    'auramusic-theme-whatsapp',
     'auramusic-theme-oled',
     'auramusic-theme-cyberpunk',
     'auramusic-theme-glass',
@@ -447,6 +448,7 @@
               <div class="auramusic-theme-grid">
                 <button type="button" class="theme-pill-btn" data-theme="apple">🍎 Apple Music</button>
                 <button type="button" class="theme-pill-btn" data-theme="spotify">🟢 Spotify</button>
+                <button type="button" class="theme-pill-btn" data-theme="whatsapp">💬 WhatsApp</button>
                 <button type="button" class="theme-pill-btn" data-theme="aesthetic">🌸 Aesthetic Pastel</button>
                 <button type="button" class="theme-pill-btn" data-theme="minecraft">⛏️ Minecraft Pixel</button>
                 <button type="button" class="theme-pill-btn" data-theme="cyberpunk">🤖 Cyberpunk Mecha</button>
@@ -1052,6 +1054,15 @@
       });
       lineDiv.appendChild(mainLineSpan);
 
+      // Metadatos de mensaje para el tema de WhatsApp (Hora y Doble Check ✓✓)
+      const metaSpan = document.createElement('div');
+      metaSpan.className = 'whatsapp-msg-meta';
+      const m = Math.floor(item.time / 60);
+      const s = Math.floor(item.time % 60);
+      const timeStr = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      metaSpan.innerHTML = `<span class="whatsapp-time">${timeStr}</span> <span class="whatsapp-checks">✓✓</span>`;
+      lineDiv.appendChild(metaSpan);
+
       // Si está traducido, poner la frase original en paréntesis abajito
       if (hasTranslation) {
         const subDiv = document.createElement('div');
@@ -1107,7 +1118,17 @@
             </div>
           </div>
 
-          <div class="cinema-controls">
+          <div class="cinema-whatsapp-input-bar">
+          <span style="font-size: 1.3rem; cursor: pointer;">😊</span>
+          <span style="font-size: 1.3rem; cursor: pointer;">📎</span>
+          <div class="whatsapp-input-box">
+            <span>Escribe un mensaje</span>
+            <span style="animation: blink 1s infinite;">|</span>
+          </div>
+          <span style="font-size: 1.4rem; color: #00a884; cursor: pointer;">🎙️</span>
+        </div>
+
+        <div class="cinema-controls">
             <button type="button" class="cinema-ctrl-btn" id="cinema-prev-btn" title="Anterior">⏮</button>
             <button type="button" class="cinema-play-btn" id="cinema-play-btn" title="Reproducir / Pausar">▶</button>
             <button type="button" class="cinema-ctrl-btn" id="cinema-next-btn" title="Siguiente">⏭</button>
@@ -1380,6 +1401,7 @@
               const words = l.querySelectorAll('.k-word');
               if (idx < activeIdx) {
                 words.forEach(w => w.className = 'k-word sung');
+                l.classList.add('sung-line');
               } else {
                 words.forEach(w => w.className = 'k-word');
               }

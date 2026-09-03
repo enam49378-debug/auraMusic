@@ -1302,3 +1302,140 @@ body.auramusic-theme-spotify tp-yt-paper-item:hover {
   color: #1ed760 !important;
   border-radius: 8px !important;
 }
+
+
+/* ==========================================================================
+   DISEÑO 8: 💬 WHATSAPP (ESTILO OFICIAL WHATSAPP CHAT WEB Y ESTADOS)
+   ========================================================================== */
+body.auramusic-theme-whatsapp {
+  --auramusic-primary: #25d366;
+  --auramusic-secondary: #128c7e;
+  --auramusic-glow: rgba(37, 211, 102, 0.4);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  background: #0b141a !important;
+}
+
+body.auramusic-theme-whatsapp * {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* 1. CABECERA VERDE/OSCURA WHATSAPP WEB */
+body.auramusic-theme-whatsapp ytmusic-nav-bar {
+  background: #202c33 !important;
+  border-bottom: 1px solid #2a3942 !important;
+  height: 62px !important;
+  padding: 0 18px !important;
+}
+
+body.auramusic-theme-whatsapp ytmusic-search-box {
+  background: #111b21 !important;
+  border: 1px solid #2a3942 !important;
+  border-radius: 8px !important;
+  max-width: 480px !important;
+  height: 40px !important;
+  margin: 0 auto !important;
+  color: #e9edef !important;
+}
+
+/* 2. CHIPS ESTILO FILTROS DE CHAT ("TODOS", "NO LEÍDOS", "FAVORITOS") */
+body.auramusic-theme-whatsapp ytmusic-chip-cloud-chip-renderer {
+  border-radius: 20px !important;
+  background: #202c33 !important;
+  border: 1px solid #2a3942 !important;
+  color: #8696a0 !important;
+  font-weight: 500 !important;
+  font-size: 0.86rem !important;
+  height: 32px !important;
+  padding: 0 14px !important;
+  margin-right: 8px !important;
+}
+
+body.auramusic-theme-whatsapp ytmusic-chip-cloud-chip-renderer[is-selected] {
+  background: #0a332c !important;
+  color: #00a884 !important;
+  border-color: #00a884 !important;
+  font-weight: 700 !important;
+}
+
+/* 3. CAJÓN LATERAL TIPO LISTA DE CONVERSACIONES DE WHATSAPP */
+body.auramusic-theme-whatsapp #guide-wrapper {
+  background: #111b21 !important;
+  border-right: 1px solid #222e35 !important;
+}
+
+body.auramusic-theme-whatsapp ytmusic-guide-entry-renderer {
+  border-radius: 10px !important;
+  margin: 4px 8px !important;
+  padding: 6px 12px !important;
+  transition: background 0.2s ease !important;
+  color: #e9edef !important;
+  border-bottom: 1px solid rgba(134, 150, 160, 0.08) !important;
+}
+
+body.auramusic-theme-whatsapp ytmusic-guide-entry-renderer:hover {
+  background: #202c33 !important;
+}
+
+body.auramusic-theme-whatsapp ytmusic-guide-entry-renderer[is-primary] {
+  background: #2a3942 !important;
+  color: #00a884 !important;
+}
+
+/* 4. FONDO DEL CHAT CON PATRÓN DOODLE DE WHATSAPP */
+body.auramusic-theme-whatsapp ytmusic-app,
+body.auramusic-theme-whatsapp ytmusic-browse-response {
+  background-color: #0b141a !important;
+  background-image: radial-gradient(#1f2c34 1px, transparent 1px) !important;
+  background-size: 20px 20px !important;
+}
+
+/* 5. TARJETAS DE MÚSICA TIPO MENSAJE / ESTADOS DE WHATSAPP */
+body.auramusic-theme-whatsapp ytmusic-two-row-item-renderer {
+  background: #111b21 !important;
+  border: 1px solid #222e35 !important;
+  border-radius: 12px !important;
+  padding: 12px !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+body.auramusic-theme-whatsapp ytmusic-two-row-item-renderer:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 10px rgba(37, 211, 102, 0.2) !important;
+  border-color: #00a884 !important;
+}
+
+body.auramusic-theme-whatsapp ytmusic-two-row-item-renderer .title.ytmusic-two-row-item-renderer {
+  color: #e9edef !important;
+  font-weight: 600 !important;
+}
+
+body.auramusic-theme-whatsapp ytmusic-two-row-item-renderer .subtitle.ytmusic-two-row-item-renderer {
+  color: #8696a0 !important;
+}
+
+/* 6. REPRODUCTOR INFERIOR ESTILO NOTA DE VOZ DE WHATSAPP */
+body.auramusic-theme-whatsapp ytmusic-player-bar {
+  background: #202c33 !important;
+  border-top: 1px solid #2a3942 !important;
+  height: 84px !important;
+}
+
+body.auramusic-theme-whatsapp ytmusic-player-bar .play-pause-button {
+  background: #00a884 !important;
+  color: #111b21 !important;
+  border-radius: 50% !important;
+  width: 44px !important;
+  height: 44px !important;
+  box-shadow: 0 4px 14px rgba(0, 168, 132, 0.4) !important;
+}
+
+body.auramusic-theme-whatsapp tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
+  background: #00a884 !important;
+}
+
+body.auramusic-theme-whatsapp tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
+  background: #00a884 !important;
+  border: 2px solid #ffffff !important;
+  width: 14px !important;
+  height: 14px !important;
+}

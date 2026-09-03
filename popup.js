@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const allThemes = [
     'auramusic-theme-apple',
     'auramusic-theme-spotify',
+    'auramusic-theme-whatsapp',
     'auramusic-theme-oled',
     'auramusic-theme-cyberpunk',
     'auramusic-theme-glass',
