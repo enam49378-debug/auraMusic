@@ -83,55 +83,79 @@ tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
   background: var(--auramusic-primary, #00f2fe) !important;
 }
 
-/* PREVENCIÓN SEGURA DE SCROLL HORIZONTAL (SIN BLOQUEAR EL RENDERIZADO DE CONTENIDO) */
+/* CONTENCIÓN GLOBAL: PÁGINA Y MENÚ LATERAL */
 html,
 body {
   overflow-x: hidden !important;
   max-width: 100vw !important;
 }
 
-/* Ocultar barras de scroll horizontal de forma puramente visual en carruseles y chips */
-::-webkit-scrollbar:horizontal,
-*::-webkit-scrollbar:horizontal,
-#items.ytmusic-carousel::-webkit-scrollbar,
-ytmusic-carousel::-webkit-scrollbar,
-ytmusic-carousel-shelf-renderer::-webkit-scrollbar,
-ytmusic-chip-cloud-renderer::-webkit-scrollbar,
-#chips.ytmusic-chip-cloud-renderer::-webkit-scrollbar,
-#guide-wrapper::-webkit-scrollbar:horizontal,
-#guide-content::-webkit-scrollbar:horizontal {
-  display: none !important;
-  height: 0px !important;
-  width: 0px !important;
-  background: transparent !important;
-}
-
-#items.ytmusic-carousel,
-ytmusic-carousel-shelf-renderer,
-ytmusic-chip-cloud-renderer,
-#chips.ytmusic-chip-cloud-renderer,
-#guide-wrapper,
-#guide-content {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
-/* Asegurar que las secciones y carruseles siempre se desplieguen visibles y con su altura natural */
-ytmusic-item-section-renderer,
-ytmusic-carousel-shelf-renderer,
-#items.ytmusic-carousel,
-#browse-page,
-ytmusic-browse-response {
-  display: block !important;
+/* 1. EN EL INICIO: EL SCROLL HORIZONTAL SÍ ESTÁ PRESENTE Y FUNCIONANDO */
+#items.ytmusic-carousel {
+  overflow-x: auto !important;
+  scrollbar-width: thin !important;
+  display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
 }
 
-/* ELEMENTOS DEL MENÚ LATERAL: CONTENIDOS PERFECTAMENTE SIN REBASAR */
+#items.ytmusic-carousel::-webkit-scrollbar:horizontal {
+  display: block !important;
+  height: 6px !important;
+}
+
+#items.ytmusic-carousel::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-radius: 6px !important;
+}
+
+#items.ytmusic-carousel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-radius: 6px !important;
+}
+
+#items.ytmusic-carousel::-webkit-scrollbar-thumb:hover {
+  background: var(--auramusic-primary, #00f2fe) !important;
+}
+
+/* 2. EN LOS BOTONES DE AL LADO (MENÚ LATERAL): CERO DESBORDE Y CERO SCROLL HORIZONTAL */
+#guide-wrapper,
+#guide-content,
+ytmusic-guide-renderer,
+ytmusic-guide-section-renderer,
+#sections.ytmusic-guide-renderer,
+#items.ytmusic-guide-section-renderer,
+tp-yt-paper-listbox.ytmusic-guide-section-renderer {
+  overflow-x: hidden !important;
+  scrollbar-width: none !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#guide-wrapper::-webkit-scrollbar:horizontal,
+#guide-content::-webkit-scrollbar:horizontal,
+ytmusic-guide-renderer::-webkit-scrollbar:horizontal,
+#sections.ytmusic-guide-renderer::-webkit-scrollbar:horizontal,
+#items.ytmusic-guide-section-renderer::-webkit-scrollbar:horizontal {
+  display: none !important;
+  height: 0px !important;
+  width: 0px !important;
+}
+
+/* Los botones laterales se ajustan limpiamente sin salirse hacia los lados */
 ytmusic-guide-entry-renderer {
   box-sizing: border-box !important;
-  max-width: calc(100% - 16px) !important;
   width: auto !important;
+  margin: 4px 8px !important;
+  max-width: calc(100% - 16px) !important;
+  overflow: hidden !important;
+}
+
+ytmusic-guide-entry-renderer tp-yt-paper-item {
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  padding: 0 14px !important;
 }
 
 #guide-builder-item,
