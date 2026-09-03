@@ -857,7 +857,22 @@
     return true;
   }
 
-  // MOTOR PRINCIPAL: Google Translate Clients5 oficial (Sin límites, instantáneo y máxima fidelidad)
+  async function translateSingleLine(text, targetLang = 'es') {
+    try {
+      const url = `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=${targetLang}&q=${encodeURIComponent(text)}`;
+      const res = await fetch(url);
+      if (!res.ok) return { text, isDifferent: false };
+      const data = await res.json();
+      const trans = data[0][0];
+      const lang = (data[0][1] || '').toLowerCase();
+      const isDiff = isValidTranslationText(trans) && trans.toLowerCase() !== text.toLowerCase() && lang !== targetLang;
+      return { text: trans, isDifferent: isDiff };
+    } catch (e) {
+      return { text, isDifferent: false };
+    }
+  }
+
+  // MOTOR INTELIGENTE DE DOS PASOS: Traduce en bloque y aísla frases en otro idioma (ej. "We're just having fun")
   async function translateLyrics(lyrics, targetLang = 'es') {
     if (!lyrics || lyrics.length === 0) return lyrics;
     const cacheKey = `${lastCinemaTrackId}:::${targetLang}`;
@@ -869,29 +884,42 @@
       const allText = lyrics.map(l => l.text).join('\n');
       const googleUrl = `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=${targetLang}&q=${encodeURIComponent(allText)}`;
 
-      const res = await fetch(googleUrl);
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data) && data[0] && typeof data[0][0] === 'string') {
-          const rawTrans = data[0][0];
-          const transLines = rawTrans.split('\n');
-
-          const translatedList = lyrics.map((item, idx) => {
-            const trans = (transLines[idx] || '').trim();
-            const isDifferent = isValidTranslationText(trans) && trans.toLowerCase() !== item.text.toLowerCase();
-            return {
-              ...item,
-              translatedText: isDifferent ? trans : null,
-              originalText: item.text
-            };
-          });
-
-          lyricsTranslationCache[cacheKey] = translatedList;
-          console.log('✅ AuraMusic: Letra traducida exitosamente con Google Translate oficial.');
-          return translatedList;
+      let batchLines = [];
+      try {
+        const res = await fetch(googleUrl);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data[0] && typeof data[0][0] === 'string') {
+            batchLines = data[0][0].split('\n');
+          }
         }
-      }
-      throw new Error('Google fallback');
+      } catch (e) {}
+
+      // Paso 2: Verificar líneas individualmente si la canción es mixta (frases en inglés dentro de temas en español)
+      const translatedList = await Promise.all(lyrics.map(async (item, idx) => {
+        const batchTrans = (batchLines[idx] || '').trim();
+        const isBatchDiff = isValidTranslationText(batchTrans) && batchTrans.toLowerCase() !== item.text.toLowerCase();
+
+        if (isBatchDiff) {
+          return {
+            ...item,
+            translatedText: batchTrans,
+            originalText: item.text
+          };
+        }
+
+        // Si el lote general no la cambió (porque la canción es mayormente en español), aislar esta frase
+        const single = await translateSingleLine(item.text, targetLang);
+        return {
+          ...item,
+          translatedText: single.isDifferent ? single.text : null,
+          originalText: item.text
+        };
+      }));
+
+      lyricsTranslationCache[cacheKey] = translatedList;
+      console.log('✅ AuraMusic: Traducción inteligente completada verso por verso.');
+      return translatedList;
     } catch (err) {
       console.warn('Google Translate no disponible, usando motor de respaldo seguro...', err);
       return await fallbackTranslateLyrics(lyrics, targetLang, cacheKey);
@@ -974,7 +1002,12 @@
       const nextItem = itemsToRender[index + 1];
       const rawDuration = nextItem ? (nextItem.time - item.time) : 3.5;
       const words = displayText.trim().split(/\s+/).filter(w => w.length > 0);
-      const totalDuration = Math.max(0.8, rawDuration);
+
+      // Sincronización vocal realista: un cantante pronuncia a ~0.4s por palabra.
+      // La animación TERMINA cuando el cantante termina de cantar, NUNCA se arrastra por silencios largos.
+      const estimatedVocalTime = words.length * 0.42;
+      const maxAllowedVocalTime = rawDuration > 2.0 ? (rawDuration * 0.65) : (rawDuration * 0.9);
+      const totalDuration = Math.min(rawDuration, Math.max(0.8, Math.min(estimatedVocalTime, maxAllowedVocalTime)));
 
       const weights = words.map(w => Math.max(2, w.length));
       const totalWeight = weights.reduce((a, b) => a + b, 0);
