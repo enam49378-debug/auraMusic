@@ -25,6 +25,7 @@
   // Trackers de canciones para el relevo continuo (A -> B -> C -> D)
   let _currentPlayingVideoId = '';
   let _upcomingNextVideoId = '';
+  let _targetNextVideoId = '';
   let _companionAudio = null;
   let _companionReady = false;
 
@@ -302,7 +303,7 @@
 
     const previousId = _currentPlayingVideoId;
     _currentPlayingVideoId = targetVideoId;
-    const initialCanonicalKey = _currentTrackCanonicalId;
+    _targetNextVideoId = targetVideoId;
 
     console.log(`🔀 AuraMusic: 🔥 SOLAPAMIENTO SIMULTÁNEO INICIADO (${fadeSec}s) hacia pista "${targetVideoId}".`);
 
@@ -350,12 +351,11 @@
 
         console.log(`🔀 AuraMusic: Fin del solapamiento (${fadeSec}s). Verificando si YouTube Music ya cambió...`);
 
-        // Comprobar si YouTube Music ya avanzó automáticamente a la Pista B por haber terminado la Pista A
+        // Comprobar estrictamente si YouTube Music ya avanzó a la Pista B
         const player = document.querySelector('#movie_player');
         const currentVideoId = player?.getVideoData?.()?.video_id || '';
-        const currentKey = getCanonicalTrackKey();
 
-        const alreadyOnNext = (currentVideoId && currentVideoId === targetVideoId) || (currentKey && currentKey !== initialCanonicalKey);
+        const alreadyOnNext = (currentVideoId && currentVideoId === targetVideoId);
 
         if (alreadyOnNext) {
           console.log(`🔀 AuraMusic: YouTube Music ya está en Pista B ("${targetVideoId}"). ¡No se dispara salto adicional para no saltar a la Pista C!`);
@@ -365,6 +365,7 @@
               v.currentTime = fadeSec;
               console.log(`🔀 AuraMusic: Intro de Pista B descontado -> Sincronizado en ${fadeSec}s.`);
               _pendingSeekTime = 0;
+              _targetNextVideoId = '';
             } catch (e) {}
           }
         } else {
@@ -405,11 +406,13 @@
     const trackKey = getCanonicalTrackKey();
 
     // Sincronización instantánea de intro descontado en la nueva pista (B) tan pronto como empieza en 0:00
-    if (_pendingSeekTime > 0 && cur < 2.0 && dur > _pendingSeekTime) {
+    const curVid = document.querySelector('#movie_player')?.getVideoData?.()?.video_id || '';
+    if (_pendingSeekTime > 0 && curVid && curVid === _targetNextVideoId && cur < 3.0 && dur > _pendingSeekTime) {
       try {
         video.currentTime = _pendingSeekTime;
-        console.log(`🔀 AuraMusic: Intro de Pista B descontado con éxito -> Sincronizado en ${_pendingSeekTime}s.`);
+        console.log(`🔀 AuraMusic: Intro de Pista B ("${curVid}") descontado con éxito -> Sincronizado en ${_pendingSeekTime}s.`);
         _pendingSeekTime = 0;
+        _targetNextVideoId = '';
       } catch (e) {}
     }
 
@@ -417,6 +420,8 @@
     if (trackKey && trackKey !== _currentTrackCanonicalId) {
       console.log(`🔀 AuraMusic: 🔄 Nueva pista activa: "${trackKey}". Relevo completado: B pasa a ser A.`);
       _currentTrackCanonicalId = trackKey;
+      _currentPlayingVideoId = curVid || '';
+      _targetNextVideoId = '';
       _hasFadedOutThisTrack = false;
       _isTransitioningToNext = false;
       _xfadeStatus = XFADE_STATE.IDLE;
