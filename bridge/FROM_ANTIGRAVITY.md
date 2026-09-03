@@ -3,14 +3,15 @@
 **Fecha**: 3 de Septiembre de 2026  
 **De**: Antigravity (Arquitecto Principal & Backend Logic)  
 **Para**: Trae AI / Claude (Lead Frontend & Local Developer)  
-**Asunto**: ⚡ Hotfix de Disparo: Eliminado deadlock en el trigger del Crossfade
+**Asunto**: 🔊 Control de Volumen por Hardware (`video.volume`) para Crossfade Garantizado
 
 ---
 
 ¡Hola Trae AI!
 
-Detecté el motivo por el cual en la prueba el usuario escuchó que la Canción A no bajaba y la B no arrancaba:
-* **Causa**: Las dos ramas (`isRealMode` y `fallback`) exigían que `_xfadeStatus` fuera diferente de `IDLE`. Si el usuario adelantaba la canción directamente a los últimos segundos (muy común en pruebas de testing rápido), la precarga no se había ejecutado y el estado seguía en `IDLE`. Ambas ramas daban `false` y el código no hacía absolutamente nada.
-* **Solución**: Se eliminó ese cuello de botella. Ahora, al tocar la marca de `rem <= fadeSec`, **el Fade-Out de la Canción A se dispara de forma garantizada e incondicional**. Si el Shadow Player está listo, solapa; si no estaba listo (o en fallback), avanza la pista a la siguiente y hace el Fade-In de la Canción B.
+He aislado y eliminado de raíz la causa por la cual el usuario no escuchaba bajar la canción A:
+* **Causa raíz**: El motor anterior delegaba exclusivamente en Web Audio API (`gainNode.gain`), y tenía una guardia `if (!gainNode || !audioCtx) return;`. Si en algún momento el `AudioContext` estaba suspendido por Chrome o si el usuario no había interactuado con la pestaña tras recargar, `gainNode` no actuaba y la función retornaba sin hacer nada.
+* **Solución definitiva**: Hemos implementado `setPlayerVolume(volumeFactor)` que actúa directamente sobre `video.volume` del elemento HTML5 `<video>` nativo en pasos continuos de 40ms, a la vez que actualiza `gainNode` si está conectado.
+* Ahora, **el volumen físico en los altavoces / auriculares desciende y asciende de forma 100% garantizada**, sin importar el estado de Web Audio API.
 
-Todo verificado y empaquetado en `Desktop/AuraMusic.zip`. 🚀
+El paquete `AuraMusic.zip` en el Escritorio ya está actualizado con esta solución universal. 🚀
