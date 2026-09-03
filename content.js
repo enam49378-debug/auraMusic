@@ -1087,58 +1087,109 @@
     overlay.innerHTML = `
       <div class="cinema-mesh-bg"></div>
 
+      <!-- Cabecera Superior: Adaptativa a WhatsApp o Estándar -->
       <div class="cinema-top-bar">
-        <button type="button" class="cinema-icon-btn" id="cinema-translate-btn" title="Traducir letra (🌐)">
-          🌐
-        </button>
-        <button type="button" class="cinema-icon-btn cinema-close-btn" id="cinema-close-btn" title="Cerrar (✕)">
-          ✕
-        </button>
+        <div id="cinema-top-left-info">
+          <img id="cinema-top-art-img" src="" alt="Cover" class="whatsapp-top-avatar" style="display:none;">
+          <div class="whatsapp-top-text" id="whatsapp-top-text" style="display:none;">
+            <div class="whatsapp-top-title" id="whatsapp-top-title">Canción</div>
+            <div class="whatsapp-top-status"><span class="wa-online-dot"></span> en línea</div>
+          </div>
+        </div>
+
+        <!-- Controles de Reproducción Integrados en la Cabecera de WhatsApp -->
+        <div id="whatsapp-top-controls" style="display:none;">
+          <button type="button" class="cinema-ctrl-btn" id="cinema-wa-prev-btn" title="Anterior">⏮</button>
+          <button type="button" class="cinema-play-btn" id="cinema-wa-play-btn" title="Reproducir / Pausar">▶</button>
+          <button type="button" class="cinema-ctrl-btn" id="cinema-wa-next-btn" title="Siguiente">⏭</button>
+          <div class="whatsapp-time-pill" id="cinema-wa-time">0:00 / 0:00</div>
+        </div>
+
+        <div class="cinema-top-actions" style="display: flex; align-items: center; gap: 10px;">
+          <button type="button" class="cinema-icon-btn whatsapp-action-icon" style="display:none;" title="Videollamada">📹</button>
+          <button type="button" class="cinema-icon-btn whatsapp-action-icon" style="display:none;" title="Llamada">📞</button>
+          <button type="button" class="cinema-icon-btn" id="cinema-translate-btn" title="Traducir letra (🌐)">🌐</button>
+          <button type="button" class="cinema-icon-btn cinema-close-btn" id="cinema-close-btn" title="Cerrar (✕)">✕</button>
+        </div>
       </div>
 
       <div class="cinema-content-grid">
-        <!-- Columna Izquierda: Portada y Controles -->
+        <!-- Columna Izquierda: Portada estándar O Lista de Chats de WhatsApp (Cola de siguientes canciones) -->
         <div class="cinema-left">
-          <div class="cinema-artwork-box">
-            <img id="cinema-art-img" src="" alt="Portada">
-          </div>
-
-          <div class="cinema-meta-info">
-            <div class="cinema-track-title" id="cinema-track-title">Cargando...</div>
-            <div class="cinema-track-artist" id="cinema-track-artist">Artista</div>
-          </div>
-
-          <div class="cinema-timeline-box">
-            <div class="cinema-progress-bg" id="cinema-progress-bg">
-              <div class="cinema-progress-fill" id="cinema-progress-fill"></div>
+          <!-- Modo estándar (Apple, Spotify, Minecraft, etc.) -->
+          <div class="cinema-standard-left">
+            <div class="cinema-artwork-box">
+              <img id="cinema-art-img" src="" alt="Portada">
             </div>
-            <div class="cinema-time-row">
-              <span id="cinema-current-time">0:00</span>
-              <span id="cinema-total-time">0:00</span>
+            <div class="cinema-meta-info">
+              <div class="cinema-track-title" id="cinema-track-title">Cargando...</div>
+              <div class="cinema-track-artist" id="cinema-track-artist">Artista</div>
+            </div>
+            <div class="cinema-timeline-box">
+              <div class="cinema-progress-bg" id="cinema-progress-bg">
+                <div class="cinema-progress-fill" id="cinema-progress-fill"></div>
+              </div>
+              <div class="cinema-time-row">
+                <span id="cinema-current-time">0:00</span>
+                <span id="cinema-total-time">0:00</span>
+              </div>
+            </div>
+            <div class="cinema-controls">
+              <button type="button" class="cinema-ctrl-btn" id="cinema-prev-btn" title="Anterior">⏮</button>
+              <button type="button" class="cinema-play-btn" id="cinema-play-btn" title="Reproducir / Pausar">▶</button>
+              <button type="button" class="cinema-ctrl-btn" id="cinema-next-btn" title="Siguiente">⏭</button>
             </div>
           </div>
 
-          <div class="cinema-whatsapp-input-bar">
-          <span style="font-size: 1.3rem; cursor: pointer;">😊</span>
-          <span style="font-size: 1.3rem; cursor: pointer;">📎</span>
-          <div class="whatsapp-input-box">
-            <span>Escribe un mensaje</span>
-            <span style="animation: blink 1s infinite;">|</span>
+          <!-- Modo WhatsApp: Lista de Chats con Siguientes Canciones -->
+          <div id="whatsapp-chatlist-panel" style="display:none;">
+            <div class="whatsapp-sidebar-header">
+              <div class="whatsapp-sidebar-user">
+                <img id="whatsapp-user-avatar" src="" alt="Avatar" class="wa-round-avatar">
+                <span style="font-weight: 700; font-size: 1.1rem; color:#e9edef;">Chats</span>
+              </div>
+              <div class="whatsapp-sidebar-icons">
+                <span title="Estados">⭕</span>
+                <span title="Nuevo chat">💬</span>
+                <span title="Menú">⋮</span>
+              </div>
+            </div>
+
+            <div class="whatsapp-search-bar-box">
+              <div class="whatsapp-search-inner">
+                <span>🔍</span>
+                <span>Buscar un chat o iniciar uno nuevo</span>
+              </div>
+            </div>
+
+            <div class="whatsapp-filter-pills">
+              <span class="wa-pill active">Todos</span>
+              <span class="wa-pill">Siguientes</span>
+              <span class="wa-pill">Favoritos</span>
+            </div>
+
+            <!-- Lista de Canciones en la Cola de WhatsApp -->
+            <div class="whatsapp-songs-queue-list" id="whatsapp-songs-queue-list">
+              <!-- Se puebla dinámicamente -->
+            </div>
           </div>
-          <span style="font-size: 1.4rem; color: #00a884; cursor: pointer;">🎙️</span>
         </div>
 
-        <div class="cinema-controls">
-            <button type="button" class="cinema-ctrl-btn" id="cinema-prev-btn" title="Anterior">⏮</button>
-            <button type="button" class="cinema-play-btn" id="cinema-play-btn" title="Reproducir / Pausar">▶</button>
-            <button type="button" class="cinema-ctrl-btn" id="cinema-next-btn" title="Siguiente">⏭</button>
-          </div>
-        </div>
-
-        <!-- Columna Derecha: Letras Cinematográficas -->
+        <!-- Columna Derecha: Letras Cinematográficas (Chat con Burbujas a la Derecha) -->
         <div class="cinema-right" id="cinema-right-scroll">
           <div class="cinema-lyrics-wrapper" id="cinema-lyrics-wrapper">
             <div class="cinema-lyric-line active-line">Cargando letra sincronizada...</div>
+          </div>
+
+          <!-- Barra de Entrada Inferior de WhatsApp -->
+          <div class="cinema-whatsapp-input-bar">
+            <span style="font-size: 1.3rem; cursor: pointer;" title="Emojis">😊</span>
+            <span style="font-size: 1.3rem; cursor: pointer;" title="Adjuntar">📎</span>
+            <div class="whatsapp-input-box">
+              <span id="whatsapp-live-typing-preview">Escribe un mensaje</span>
+              <span style="animation: blink 1s infinite;">|</span>
+            </div>
+            <span style="font-size: 1.4rem; color: #00a884; cursor: pointer;" title="Nota de voz">🎙️</span>
           </div>
         </div>
       </div>
