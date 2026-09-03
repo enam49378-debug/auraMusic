@@ -947,12 +947,21 @@ body.auramusic-theme-spotify ytmusic-carousel-shelf-renderer .strapline {
   font-weight: 600 !important;
 }
 
-/* 4. TARJETAS DE ÁLBUMES SPOTIFY (FONDO #181818 CON ELEVACIÓN EN HOVER) */
+/* 4. TARJETAS COMPACTAS SPOTIFY (7-9 TARJETAS POR FILA CON ELEVACIÓN EN HOVER) */
+body.auramusic-theme-spotify ytmusic-carousel-shelf-renderer {
+  --ytmusic-two-row-item-renderer-width: 180px !important;
+}
+
 body.auramusic-theme-spotify ytmusic-two-row-item-renderer {
   background: #181818 !important;
   border-radius: 8px !important;
-  padding: 14px !important;
+  padding: 12px !important;
   box-sizing: border-box !important;
+  width: 180px !important;
+  min-width: 180px !important;
+  max-width: 200px !important;
+  margin-right: 14px !important;
+  position: relative !important;
   transition: background 0.3s ease, box-shadow 0.3s ease !important;
 }
 
@@ -971,46 +980,75 @@ body.auramusic-theme-spotify ytmusic-two-row-item-renderer .title.ytmusic-two-ro
   font-weight: 700 !important;
   font-size: 0.95rem !important;
   margin-top: 10px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 body.auramusic-theme-spotify ytmusic-two-row-item-renderer .subtitle.ytmusic-two-row-item-renderer {
   color: #b3b3b3 !important;
   font-size: 0.82rem !important;
   margin-top: 4px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
-/* 5. ARTISTAS POPULARES: CARÁTULA EN CÍRCULO PERFECTO (BORDER-RADIUS 50%) */
+/* 5. ARTISTAS POPULARES: CARÁTULA EN CÍRCULO PERFECTO SPOTIFY (50% DE RADIO) */
 body.auramusic-theme-spotify ytmusic-two-row-item-renderer[aspect-ratio="MUSIC_TWO_ROW_ITEM_THUMBNAIL_TYPE_CIRCULAR"] .image-wrapper,
 body.auramusic-theme-spotify ytmusic-two-row-item-renderer[aspect-ratio="MUSIC_TWO_ROW_ITEM_THUMBNAIL_TYPE_CIRCULAR"] img {
   border-radius: 50% !important;
 }
 
-/* 6. EL BOTÓN VERDE FLOTANTE OFICIAL DE SPOTIFY (#1ed760) EN HOVER DE CADA CARD */
-body.auramusic-theme-spotify ytmusic-two-row-item-renderer .play-button,
-body.auramusic-theme-spotify ytmusic-item-thumbnail-overlay-renderer #play-button,
-body.auramusic-theme-spotify ytmusic-two-row-item-renderer ytmusic-play-button-renderer {
-  --ytmusic-play-button-icon-color: #000000 !important;
-  --ytmusic-play-button-background-color: #1ed760 !important;
+/* 6. EL ICÓNICO BOTÓN VERDE DE SPOTIFY: OCULTO POR DEFECTO, EMERGE EN LA ESQUINA INFERIOR DERECHA EN HOVER */
+body.auramusic-theme-spotify ytmusic-item-thumbnail-overlay-renderer {
+  background: transparent !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: flex-end !important;
+  padding: 8px !important;
+  pointer-events: none !important;
 }
 
-body.auramusic-theme-spotify ytmusic-play-button-renderer #button,
-body.auramusic-theme-spotify ytmusic-two-row-item-renderer .play-button {
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer ytmusic-play-button-renderer {
+  opacity: 0 !important;
+  transform: translateY(8px) !important;
+  transition: all 0.25s cubic-bezier(0.3, 0, 0, 1) !important;
+  position: absolute !important;
+  bottom: 8px !important;
+  right: 8px !important;
+  z-index: 10 !important;
+  pointer-events: none !important;
+}
+
+/* SOLO APARECE CUANDO SE PASA EL RATÓN POR ENCIMA DE LA TARJETA */
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer:hover ytmusic-play-button-renderer {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  pointer-events: auto !important;
+}
+
+body.auramusic-theme-spotify ytmusic-play-button-renderer #button {
   background: #1ed760 !important;
   border-radius: 50% !important;
   color: #000000 !important;
   width: 48px !important;
   height: 48px !important;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7), 0 0 15px rgba(30, 215, 96, 0.4) !important;
-  transition: all 0.3s cubic-bezier(0.3, 0, 0, 1) !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6), 0 0 20px rgba(30, 215, 96, 0.4) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
 }
 
-body.auramusic-theme-spotify ytmusic-play-button-renderer #button:hover,
-body.auramusic-theme-spotify ytmusic-two-row-item-renderer .play-button:hover {
+body.auramusic-theme-spotify ytmusic-play-button-renderer #button:hover {
   transform: scale(1.08) !important;
   background: #1fdf64 !important;
+}
+
+body.auramusic-theme-spotify ytmusic-play-button-renderer #button yt-icon,
+body.auramusic-theme-spotify ytmusic-play-button-renderer #button svg {
+  fill: #000000 !important;
+  color: #000000 !important;
 }
 
 /* 7. ESTRUCTURA SPOTIFY: CAJÓN LATERAL EN 2 TARJETAS FLOTANTES SEPARADAS */
@@ -1043,12 +1081,25 @@ body.auramusic-theme-spotify ytmusic-guide-entry-renderer:hover {
   color: #ffffff !important;
 }
 
-/* 8. ESTRUCTURA SPOTIFY: REPRODUCTOR INFERIOR NEGRO DE 3 COLUMNAS */
+/* 8. ESTRUCTURA SPOTIFY: REPRODUCTOR INFERIOR NEGRO EN 3 COLUMNAS REORGANIZADAS */
 body.auramusic-theme-spotify ytmusic-player-bar {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
   height: 88px !important;
   background: #000000 !important;
   border-top: 1px solid #282828 !important;
-  padding: 0 24px !important;
+  padding: 0 20px !important;
+}
+
+/* Columna Izquierda: Información de Canción */
+body.auramusic-theme-spotify ytmusic-player-bar .middle-controls {
+  order: 1 !important;
+  width: 30% !important;
+  max-width: 340px !important;
+  justify-content: flex-start !important;
+  margin: 0 !important;
 }
 
 body.auramusic-theme-spotify ytmusic-player-bar .image.ytmusic-player-bar {
@@ -1069,7 +1120,18 @@ body.auramusic-theme-spotify ytmusic-player-bar .byline.ytmusic-player-bar {
   color: #b3b3b3 !important;
 }
 
-/* Botón central de reproducción blanco Spotify */
+/* Columna Central: Controles de Reproducción y Tiempos */
+body.auramusic-theme-spotify ytmusic-player-bar .left-controls {
+  order: 2 !important;
+  width: 42% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+}
+
+/* Botón central blanco circular */
 body.auramusic-theme-spotify ytmusic-player-bar .play-pause-button {
   background: #ffffff !important;
   color: #000000 !important;
@@ -1095,6 +1157,15 @@ body.auramusic-theme-spotify ytmusic-player-bar .next-button:hover {
   color: #ffffff !important;
 }
 
+/* Columna Derecha: Volumen y Extras */
+body.auramusic-theme-spotify ytmusic-player-bar .right-controls {
+  order: 3 !important;
+  width: 28% !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  margin: 0 !important;
+}
+
 /* Barra de progreso verde Spotify con knob sutil */
 body.auramusic-theme-spotify tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
   background: #1ed760 !important;
@@ -1108,6 +1179,41 @@ body.auramusic-theme-spotify tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-sli
   width: 12px !important;
   height: 12px !important;
 }
+
+/* Botón de Home en la cabecera */
+#auramusic-spotify-home-btn {
+  background: #1f1f1f;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  border: none;
+  color: #ffffff;
+  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 12px;
+  transition: all 0.2s ease;
+}
+
+#auramusic-spotify-home-btn:hover {
+  transform: scale(1.06);
+  background: #282828;
+}
+
+/* Logo Oficial Spotify en la cabecera */
+.auramusic-spotify-brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.04em;
+  margin-left: 8px;
+}
+
 
 /* ==========================================================================
    MENÚS CONTEXTUALES Y DROPDOWNS PERSONALIZADOS POR CADA DISEÑO

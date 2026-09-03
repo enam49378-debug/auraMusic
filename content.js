@@ -1451,6 +1451,71 @@
 
   setInterval(checkAndInjectLyricsButton, 1500);
 
+  // --- INYECCIÓN DE ELEMENTOS OFICIALES DE SPOTIFY (LOGO, BOTÓN HOME, PLACEHOLDER) ---
+  function updateSpotifyBrandElements() {
+    const isSpotify = state.theme === 'spotify';
+
+    // 1. Buscador: Cambiar placeholder a "¿Qué quieres reproducir?"
+    const searchInput = document.querySelector('ytmusic-search-box input, input#input');
+    if (searchInput) {
+      if (isSpotify && !searchInput.dataset.originalPlaceholder) {
+        searchInput.dataset.originalPlaceholder = searchInput.placeholder;
+        searchInput.placeholder = '¿Qué quieres reproducir?';
+      } else if (!isSpotify && searchInput.dataset.originalPlaceholder) {
+        searchInput.placeholder = searchInput.dataset.originalPlaceholder;
+        delete searchInput.dataset.originalPlaceholder;
+      }
+    }
+
+    // 2. Botón Home (🏠) en barra superior
+    const searchBox = document.querySelector('ytmusic-search-box');
+    if (searchBox) {
+      let homeBtn = document.getElementById('auramusic-spotify-home-btn');
+      if (isSpotify && !homeBtn) {
+        homeBtn = document.createElement('button');
+        homeBtn.id = 'auramusic-spotify-home-btn';
+        homeBtn.title = 'Inicio';
+        homeBtn.innerHTML = '🏠';
+        homeBtn.addEventListener('click', () => {
+          const homeNav = document.querySelector('ytmusic-guide-entry-renderer:first-child a');
+          if (homeNav) homeNav.click();
+        });
+        searchBox.parentNode.insertBefore(homeBtn, searchBox);
+      } else if (!isSpotify && homeBtn) {
+        homeBtn.remove();
+      }
+    }
+
+    // 3. Reemplazo del logo por el de Spotify
+    const logoContainer = document.querySelector('ytmusic-nav-bar #logo');
+    if (logoContainer) {
+      let spotLogo = document.getElementById('auramusic-spotify-logo');
+      if (isSpotify && !spotLogo) {
+        spotLogo = document.createElement('div');
+        spotLogo.id = 'auramusic-spotify-logo';
+        spotLogo.className = 'auramusic-spotify-brand-logo';
+        spotLogo.innerHTML = `
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="#1ed760">
+            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.563.387-.857.207-2.35-1.435-5.308-1.76-8.793-.963-.335.077-.67-.133-.746-.467-.077-.334.132-.67.467-.746 3.808-.87 7.076-.496 9.722 1.112.294.18.386.563.207.857zm1.224-2.72c-.226.368-.71.485-1.077.26-2.69-1.654-6.79-2.134-9.97-1.168-.413.125-.852-.108-.977-.52-.125-.413.108-.852.52-.977 3.633-1.103 8.147-.568 11.244 1.328.368.226.485.71.26 1.077zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71c-.494.15-1.018-.128-1.168-.622-.15-.494.128-1.018.622-1.168 3.532-1.072 9.404-.866 13.115 1.337.445.264.59.838.327 1.282-.264.443-.838.59-1.28.327z"/>
+          </svg>
+          <span style="font-weight: 800; font-size: 1.2rem; color: #ffffff; letter-spacing: -0.04em;">Spotify</span>
+        `;
+        logoContainer.style.display = 'flex';
+        logoContainer.style.alignItems = 'center';
+        logoContainer.appendChild(spotLogo);
+        const originalSvg = logoContainer.querySelector('g#youtube-music-logo, yt-icon, #logo-icon');
+        if (originalSvg) originalSvg.style.display = 'none';
+      } else if (!isSpotify && spotLogo) {
+        spotLogo.remove();
+        const originalSvg = logoContainer.querySelector('g#youtube-music-logo, yt-icon, #logo-icon');
+        if (originalSvg) originalSvg.style.display = '';
+      }
+    }
+  }
+
+  setInterval(updateSpotifyBrandElements, 1200);
+
+
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     init();
   } else {
