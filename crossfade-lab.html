@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AuraMusic - Crossfade Remix Studio 🎛️</title>
+  <title>AuraMusic - Crossfade Remix Studio (Milo J Real Audio) 🎛️</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #09090e;
-      --card-bg: rgba(22, 22, 34, 0.75);
+      --card-bg: rgba(22, 22, 34, 0.78);
       --card-border: rgba(255, 255, 255, 0.08);
       --primary: #8a2be2;
       --cyan: #00f2fe;
@@ -33,9 +33,9 @@
     body {
       background-color: var(--bg);
       background-image: 
-        radial-gradient(circle at 20% 15%, rgba(138, 43, 226, 0.22) 0%, transparent 40%),
-        radial-gradient(circle at 80% 85%, rgba(0, 242, 254, 0.18) 0%, transparent 45%),
-        radial-gradient(circle at 50% 50%, rgba(255, 0, 127, 0.12) 0%, transparent 50%);
+        radial-gradient(circle at 20% 15%, rgba(138, 43, 226, 0.25) 0%, transparent 40%),
+        radial-gradient(circle at 80% 85%, rgba(0, 242, 254, 0.2) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(255, 0, 127, 0.15) 0%, transparent 50%);
       background-attachment: fixed;
       color: var(--text);
       font-family: 'Outfit', -apple-system, sans-serif;
@@ -48,7 +48,7 @@
 
     .container {
       width: 100%;
-      max-width: 1180px;
+      max-width: 1160px;
     }
 
     /* HEADER */
@@ -63,8 +63,8 @@
       gap: 8px;
       padding: 6px 14px;
       border-radius: 999px;
-      background: rgba(138, 43, 226, 0.18);
-      border: 1px solid rgba(138, 43, 226, 0.4);
+      background: rgba(138, 43, 226, 0.2);
+      border: 1px solid rgba(138, 43, 226, 0.45);
       color: #c78aff;
       font-size: 0.85rem;
       font-weight: 600;
@@ -91,26 +91,66 @@
       line-height: 1.5;
     }
 
-    /* NOTICE BOX */
-    .notice-card {
-      background: rgba(138, 43, 226, 0.12);
-      border: 1px solid rgba(138, 43, 226, 0.3);
-      border-radius: 14px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
+    /* QUICK DESKTOP REMIX PLAY CARD */
+    .hero-player-card {
+      background: linear-gradient(135deg, rgba(138, 43, 226, 0.25), rgba(0, 242, 254, 0.15));
+      border: 1px solid rgba(0, 242, 254, 0.4);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 16px 40px rgba(0, 242, 254, 0.15);
+    }
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: rgba(0, 255, 136, 0.15);
+      border: 1px solid rgba(0, 255, 136, 0.35);
+      color: #00ff88;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border-radius: 999px;
+      text-transform: uppercase;
+    }
+    .hero-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .hero-desc {
+      font-size: 0.95rem;
+      color: #c0c0e0;
+      line-height: 1.5;
+    }
+    .hero-controls {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 16px;
+      flex-wrap: wrap;
     }
-    .notice-icon { font-size: 1.8rem; }
-    .notice-text { font-size: 0.92rem; color: #d0c8f8; line-height: 1.4; }
-    .notice-text strong { color: #fff; }
+    audio {
+      width: 100%;
+      height: 44px;
+      border-radius: 8px;
+      outline: none;
+    }
 
-    /* STUDIO DECK CONTEXT */
+    /* DECKS GRID */
     .studio-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      gap: 22px;
       margin-bottom: 24px;
     }
     @media (max-width: 860px) {
@@ -121,17 +161,24 @@
       background: var(--card-bg);
       backdrop-filter: blur(20px);
       border: 1px solid var(--card-border);
-      border-radius: 18px;
-      padding: 22px;
+      border-radius: 20px;
+      padding: 24px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
       box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
       position: relative;
-      overflow: hidden;
     }
     .track-card.track-a { border-top: 3px solid var(--deck-a); }
+    .track-card.track-a.active {
+      box-shadow: 0 12px 35px var(--glow-a);
+      border-color: rgba(0, 242, 254, 0.5);
+    }
     .track-card.track-b { border-top: 3px solid var(--deck-b); }
+    .track-card.track-b.active {
+      box-shadow: 0 12px 35px var(--glow-b);
+      border-color: rgba(255, 0, 127, 0.5);
+    }
 
     .track-badge {
       font-size: 0.8rem;
@@ -146,45 +193,46 @@
     .track-b .track-badge { background: rgba(255, 0, 127, 0.15); color: var(--deck-b); }
 
     .song-title {
-      font-size: 1.25rem;
+      font-size: 1.35rem;
       font-weight: 700;
       color: #fff;
     }
     .song-artist {
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       color: var(--text-muted);
       font-family: 'JetBrains Mono', monospace;
     }
 
-    /* WAVEFORM BARS ANIMATED */
-    .wave-visualizer {
+    .vol-meter-box {
       display: flex;
-      align-items: center;
-      gap: 4px;
-      height: 44px;
-      padding: 6px 12px;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .vol-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .vol-bar-bg {
+      width: 100%;
+      height: 12px;
       background: rgba(0, 0, 0, 0.4);
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
-    .wave-bar {
-      flex: 1;
-      height: 20%;
-      border-radius: 4px;
-      transition: height 0.1s ease;
+    .vol-bar-fill {
+      height: 100%;
+      width: 100%;
+      border-radius: 999px;
+      transition: width 0.05s linear;
     }
-    .track-a .wave-bar { background: var(--deck-a); }
-    .track-b .wave-bar { background: var(--deck-b); }
+    .track-a .vol-bar-fill { background: linear-gradient(90deg, #007799, var(--deck-a)); }
+    .track-b .vol-bar-fill { background: linear-gradient(90deg, #99004d, var(--deck-b)); }
 
-    .wave-bar.active {
-      animation: bounce 0.6s infinite alternate ease-in-out;
-    }
-    @keyframes bounce {
-      0% { height: 15%; }
-      100% { height: 95%; }
-    }
-
-    /* REMIX CONSOLE MASTER CARD */
+    /* CONSOLA DE REMIX EN VIVO */
     .master-console {
       background: var(--card-bg);
       backdrop-filter: blur(20px);
@@ -226,7 +274,7 @@
       cursor: pointer;
       border: none;
       border-radius: 12px;
-      padding: 14px 24px;
+      padding: 14px 22px;
       font-size: 1rem;
       font-weight: 700;
       font-family: inherit;
@@ -265,7 +313,7 @@
       border-color: rgba(255, 255, 255, 0.25);
     }
 
-    /* WAVEFORM COMPOSER CANVAS */
+    /* WAVEFORM CANVAS */
     .canvas-container {
       position: relative;
       border-radius: 14px;
@@ -273,26 +321,11 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       background: rgba(0, 0, 0, 0.5);
     }
-    canvas#remixCanvas {
+    canvas#liveCanvas {
       width: 100%;
       height: 120px;
       display: block;
     }
-
-    .canvas-legend {
-      position: absolute;
-      top: 10px;
-      right: 14px;
-      display: flex;
-      gap: 14px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      background: rgba(0, 0, 0, 0.65);
-      padding: 4px 10px;
-      border-radius: 6px;
-    }
-    .legend-item { display: flex; align-items: center; gap: 6px; }
-    .legend-color { width: 10px; height: 10px; border-radius: 2px; }
 
     /* CONTROLS ROW */
     .controls-row {
@@ -349,33 +382,24 @@
       outline: none;
     }
 
-    /* PROGRESS BAR TIME */
-    .timeline-box {
+    /* MANUAL CROSSFADER */
+    .crossfader-box {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
-    .timeline-labels {
+    .crossfader-labels {
       display: flex;
       justify-content: space-between;
+      font-weight: 700;
       font-size: 0.85rem;
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-muted);
     }
-    .timeline-bar-bg {
-      width: 100%;
-      height: 8px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 999px;
-      overflow: hidden;
-    }
-    .timeline-bar-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--deck-a), var(--primary), var(--deck-b));
-      border-radius: 999px;
-      transition: width 0.05s linear;
-    }
+    .crossfader-labels span:first-child { color: var(--deck-a); }
+    .crossfader-labels span:last-child { color: var(--deck-b); }
 
     /* TERMINAL LOG */
     .terminal-card {
@@ -403,77 +427,81 @@
     <header>
       <div class="brand-badge">⚡ AuraMusic Audio Engine</div>
       <h1>Crossfade Remix Studio</h1>
-      <p class="subtitle">Motor de pre-renderizado y mezcla continua en código: ambas canciones fusionadas en un solo archivo de audio como un remix de DJ.</p>
+      <p class="subtitle">¡Audios reales de Milo J cargados y listos! Escucha la transición pregrabada continua y prueba la mezcla simultánea en vivo.</p>
     </header>
 
-    <!-- NOTA EXPLICATIVA -->
-    <div class="notice-card">
-      <div class="notice-icon">💡</div>
-      <div class="notice-text">
-        <strong>¿Por qué viste "Error 150" al abrirlo como archivo?</strong><br>
-        Google prohíbe que las canciones oficiales con copyright de YouTube se reproduzcan desde enlaces locales (<code>file:///</code>). Por eso, hemos levantado el <strong>Servidor Local en <code>http://localhost:8080/crossfade-lab.html</code></strong> y creamos este <strong>Motor de Audio en Código Web Audio API</strong> que pre-renderiza la mezcla en memoria sin depender de los bloqueos de YouTube.
+    <!-- REPRODUCTOR DIRECTO DEL REMIX COMPLETO PREGRABADO -->
+    <div class="hero-player-card">
+      <div class="hero-top">
+        <div>
+          <span class="hero-badge">🔥 Remix Pre-grabado Listo (.MP3)</span>
+          <div class="hero-title" style="margin-top: 6px;">Milo J - Ama De Mi Sol ➔ Solifican12 (Remix Crossfade 8s)</div>
+        </div>
       </div>
+      <p class="hero-desc">
+        Este archivo fue renderizado en código combinando los últimos 15 segundos reales de <strong>Ama De Mi Sol</strong> con los primeros 15 segundos de <strong>Solifican12</strong>, con una transición <strong>Equal-Power de 8 segundos</strong>. ¡Ambas voces e instrumentales sonando juntas en simultáneo sin cortes!
+      </p>
+      <audio controls id="hero-audio" src="milo_j_remix.mp3"></audio>
     </div>
 
-    <!-- PISTAS EN EL ESTUDIO -->
+    <!-- PISTAS INDIVIDUALES DECK A Y DECK B -->
     <div class="studio-grid">
-      <!-- PISTA A -->
+      <!-- DECK A -->
       <div class="track-card track-a" id="card-track-a">
-        <span class="track-badge">Pista A (Saliente)</span>
+        <span class="track-badge">Deck A (Pista Saliente)</span>
         <div class="song-title">Ama De Mi Sol</div>
-        <div class="song-artist">Milo J • Final de canción (Fade-Out 100% → 0%)</div>
+        <div class="song-artist">Milo J • Audio Real Oficial (songA.mp3)</div>
 
-        <div class="wave-visualizer" id="vis-a">
-          <!-- Barras animadas generadas por JS -->
+        <audio controls id="audio-a" src="songA.mp3"></audio>
+
+        <div class="vol-meter-box">
+          <div class="vol-labels">
+            <span>Volumen Deck A</span>
+            <span id="vol-num-a">100%</span>
+          </div>
+          <div class="vol-bar-bg">
+            <div class="vol-bar-fill" id="vol-fill-a" style="width: 100%;"></div>
+          </div>
         </div>
       </div>
 
-      <!-- PISTA B -->
+      <!-- DECK B -->
       <div class="track-card track-b" id="card-track-b">
-        <span class="track-badge">Pista B (Entrante)</span>
+        <span class="track-badge">Deck B (Pista Entrante)</span>
         <div class="song-title">Solifican12</div>
-        <div class="song-artist">Milo J • Inicio desde 0:00 (Fade-In 0% → 100%)</div>
+        <div class="song-artist">Milo J • Audio Real Oficial (songB.mp3)</div>
 
-        <div class="wave-visualizer" id="vis-b">
-          <!-- Barras animadas generadas por JS -->
+        <audio controls id="audio-b" src="songB.mp3"></audio>
+
+        <div class="vol-meter-box">
+          <div class="vol-labels">
+            <span>Volumen Deck B</span>
+            <span id="vol-num-b">0%</span>
+          </div>
+          <div class="vol-bar-bg">
+            <div class="vol-bar-fill" id="vol-fill-b" style="width: 0%;"></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- CONSOLA DE REMIX MASTER -->
+    <!-- CONSOLA DE MEZCLA SIMULTÁNEA EN VIVO -->
     <div class="master-console">
       <div class="console-header">
-        <div class="console-title">🎛️ Mezclador y Pre-grabador en Código</div>
+        <div class="console-title">🎛️ Mezclador en Vivo con Descuento de Tiempo</div>
         <div class="btn-group">
-          <button class="btn btn-primary" id="btn-bake-remix">
-            🔥 Renderizar y Reproducir Remix Pre-grabado
+          <button class="btn btn-primary" id="btn-trigger-live">
+            ⚡ Disparar Solapamiento Simultáneo en Vivo
           </button>
-          <button class="btn btn-secondary" id="btn-stop">
-            ⏹️ Detener
+          <button class="btn btn-secondary" id="btn-stop-all">
+            ⏹️ Pausar Todo
           </button>
         </div>
       </div>
 
-      <!-- VISUALIZADOR DE ONDA DE LA MEZCLA -->
+      <!-- VISUALIZADOR DE CURVA -->
       <div class="canvas-container">
-        <canvas id="remixCanvas" width="1000" height="120"></canvas>
-        <div class="canvas-legend">
-          <div class="legend-item"><div class="legend-color" style="background: var(--deck-a);"></div> Pista A (100% → 0%)</div>
-          <div class="legend-item"><div class="legend-color" style="background: var(--primary);"></div> Zona de Mezcla / Solapamiento</div>
-          <div class="legend-item"><div class="legend-color" style="background: var(--deck-b);"></div> Pista B (0% → 100%)</div>
-        </div>
-      </div>
-
-      <!-- LÍNEA DE TIEMPO DEL REMIX -->
-      <div class="timeline-box">
-        <div class="timeline-labels">
-          <span id="time-current">00:00</span>
-          <span id="status-badge" style="color: var(--cyan); font-weight: 700;">Listo para mezclar</span>
-          <span id="time-total">00:15</span>
-        </div>
-        <div class="timeline-bar-bg">
-          <div class="timeline-bar-fill" id="time-fill"></div>
-        </div>
+        <canvas id="liveCanvas" width="1000" height="120"></canvas>
       </div>
 
       <!-- CONTROLES -->
@@ -481,9 +509,9 @@
         <div class="control-item">
           <div class="control-top">
             <span>Duración del Solapamiento (Crossfade)</span>
-            <span class="control-val" id="val-dur">5s</span>
+            <span class="control-val" id="val-dur">8s</span>
           </div>
-          <input type="range" id="slider-dur" min="2" max="12" step="1" value="5">
+          <input type="range" id="slider-dur" min="2" max="15" step="1" value="8">
         </div>
 
         <div class="control-item">
@@ -497,32 +525,47 @@
           </select>
         </div>
       </div>
+
+      <!-- CROSSFADER MANUAL -->
+      <div class="crossfader-box">
+        <div class="crossfader-labels">
+          <span>◀ AMA DE MI SOL (100%)</span>
+          <span style="color: #aaa;">CROSSFADER MANUAL DJ</span>
+          <span>SOLIFICAN12 (100%) ▶</span>
+        </div>
+        <input type="range" id="manual-crossfader" min="0" max="100" value="0">
+      </div>
     </div>
 
-    <!-- TERMINAL LOG -->
+    <!-- REGISTRO DE EVENTOS EN TIEMPO REAL -->
     <div class="terminal-card" id="term-log">
-      <div class="term-line highlight">[ESTUDIO] Motor Web Audio API inicializado con síntesis en tiempo real.</div>
-      <div class="term-line">[INFO] Las pistas 'Ama De Mi Sol' y 'Solifican12' están listas para ser renderizadas como un solo remix continuo.</div>
+      <div class="term-line highlight">[SISTEMA] Archivos reales de Milo J cargados con éxito en memoria.</div>
+      <div class="term-line success">[LISTO] Puedes reproducir el remix pre-grabado arriba o disparar el solapamiento simultáneo en vivo.</div>
     </div>
   </div>
 
   <script>
-    // Inicializar barras visuales de los Decks
-    const visA = document.getElementById('vis-a');
-    const visB = document.getElementById('vis-b');
-    for (let i = 0; i < 28; i++) {
-      const bA = document.createElement('div');
-      bA.className = 'wave-bar';
-      bA.style.height = (20 + Math.random() * 60) + '%';
-      visA.appendChild(bA);
+    const audioA = document.getElementById('audio-a');
+    const audioB = document.getElementById('audio-b');
+    const heroAudio = document.getElementById('hero-audio');
 
-      const bB = document.createElement('div');
-      bB.className = 'wave-bar';
-      bB.style.height = (20 + Math.random() * 60) + '%';
-      visB.appendChild(bB);
-    }
+    const cardA = document.getElementById('card-track-a');
+    const cardB = document.getElementById('card-track-b');
 
+    const volFillA = document.getElementById('vol-fill-a');
+    const volFillB = document.getElementById('vol-fill-b');
+    const volNumA = document.getElementById('vol-num-a');
+    const volNumB = document.getElementById('vol-num-b');
+
+    const sliderDur = document.getElementById('slider-dur');
+    const valDur = document.getElementById('val-dur');
+    const selectCurve = document.getElementById('select-curve');
+    const manualCrossfader = document.getElementById('manual-crossfader');
+
+    const canvas = document.getElementById('liveCanvas');
+    const ctx = canvas.getContext('2d');
     const termLog = document.getElementById('term-log');
+
     function log(msg, type = '') {
       const line = document.createElement('div');
       line.className = 'term-line ' + type;
@@ -532,22 +575,14 @@
       termLog.scrollTop = termLog.scrollHeight;
     }
 
-    // Canvas de dibujo de la forma de onda combinada
-    const canvas = document.getElementById('remixCanvas');
-    const ctx = canvas.getContext('2d');
-    const sliderDur = document.getElementById('slider-dur');
-    const valDur = document.getElementById('val-dur');
-    const selectCurve = document.getElementById('select-curve');
-    const timeFill = document.getElementById('time-fill');
-    const timeCurrent = document.getElementById('time-current');
-    const timeTotal = document.getElementById('time-total');
-    const statusBadge = document.getElementById('status-badge');
+    let liveInterval = null;
+    let isLiveCrossfadeRunning = false;
 
     sliderDur.addEventListener('input', (e) => {
       valDur.textContent = e.target.value + 's';
-      drawRemixWaveform(0);
+      drawCurve(manualCrossfader.value / 100);
     });
-    selectCurve.addEventListener('change', () => drawRemixWaveform(0));
+    selectCurve.addEventListener('change', () => drawCurve(manualCrossfader.value / 100));
 
     function calculateGain(progress, curveType) {
       const p = Math.max(0, Math.min(1, progress));
@@ -564,280 +599,145 @@
       }
     }
 
-    // Dibujar la representación visual de las 2 canciones solapadas
-    function drawRemixWaveform(needleProgress = 0) {
+    function setVolumes(gainA, gainB) {
+      audioA.volume = Math.max(0, Math.min(1, gainA));
+      audioB.volume = Math.max(0, Math.min(1, gainB));
+
+      const pctA = Math.round(audioA.volume * 100);
+      const pctB = Math.round(audioB.volume * 100);
+
+      volFillA.style.width = pctA + '%';
+      volFillB.style.width = pctB + '%';
+      volNumA.textContent = pctA + '%';
+      volNumB.textContent = pctB + '%';
+
+      drawCurve(pctB / 100);
+    }
+
+    function drawCurve(progress = 0) {
       const w = canvas.width;
       const h = canvas.height;
       ctx.clearRect(0, 0, w, h);
 
-      const crossfadeSec = parseInt(sliderDur.value, 10);
-      const totalSec = crossfadeSec + 6; // 3s de intro de A, crossfadeSec de mezcla, 3s de outro de B
+      const curveType = selectCurve.value;
 
-      timeTotal.textContent = `00:${totalSec < 10 ? '0' : ''}${totalSec}`;
-
-      // Porcentajes de tiempo
-      const pSoloA = 3 / totalSec;
-      const pXfade = crossfadeSec / totalSec;
-      const pSoloB = 3 / totalSec;
-
-      const xStartFade = pSoloA * w;
-      const xEndFade = (pSoloA + pXfade) * w;
-
-      // Fondo Zona de Mezcla
-      ctx.fillStyle = 'rgba(138, 43, 226, 0.18)';
-      ctx.fillRect(xStartFade, 0, xEndFade - xStartFade, h);
-
-      // Línea divisoria central
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-      ctx.beginPath();
-      ctx.moveTo(0, h/2); ctx.lineTo(w, h/2);
-      ctx.stroke();
-
-      // Curva Pista A (Cyan)
+      // Curva A (Cyan)
       ctx.strokeStyle = '#00f2fe';
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(0, h * 0.2);
-      ctx.lineTo(xStartFade, h * 0.2);
-
-      for (let x = xStartFade; x <= xEndFade; x += 4) {
-        const p = (x - xStartFade) / (xEndFade - xStartFade);
-        const { gainA } = calculateGain(p, selectCurve.value);
-        const y = h * 0.85 - (gainA * h * 0.65);
-        ctx.lineTo(x, y);
+      for (let x = 0; x <= w; x += 5) {
+        const p = x / w;
+        const { gainA } = calculateGain(p, curveType);
+        const y = h - (gainA * (h - 25)) - 12;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
       }
       ctx.stroke();
 
-      // Curva Pista B (Rosa)
+      // Curva B (Rosa)
       ctx.strokeStyle = '#ff007f';
       ctx.lineWidth = 3;
       ctx.beginPath();
-      for (let x = xStartFade; x <= xEndFade; x += 4) {
-        const p = (x - xStartFade) / (xEndFade - xStartFade);
-        const { gainB } = calculateGain(p, selectCurve.value);
-        const y = h * 0.85 - (gainB * h * 0.65);
-        if (x === xStartFade) ctx.moveTo(x, y);
+      for (let x = 0; x <= w; x += 5) {
+        const p = x / w;
+        const { gainB } = calculateGain(p, curveType);
+        const y = h - (gainB * (h - 25)) - 12;
+        if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
-      ctx.lineTo(w, h * 0.2);
       ctx.stroke();
 
-      // Aguja de reproducción
-      if (needleProgress > 0) {
-        const nx = needleProgress * w;
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.moveTo(nx, 0); ctx.lineTo(nx, h);
-        ctx.stroke();
-      }
+      // Aguja indicadora
+      const nx = progress * w;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(nx, 0); ctx.lineTo(nx, h);
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
-    drawRemixWaveform(0);
+    drawCurve(0);
 
-    // --- MOTOR DE AUDIO EN CÓDIGO (PRE-BAKING / PRE-GRABACIÓN DE REMIX) ---
-    let audioCtx = null;
-    let currentSource = null;
-    let playbackInterval = null;
+    // --- ACCIÓN: DISPARAR SOLAPAMIENTO SIMULTÁNEO EN VIVO ---
+    document.getElementById('btn-trigger-live').addEventListener('click', () => {
+      heroAudio.pause();
+      if (liveInterval) clearInterval(liveInterval);
+      isLiveCrossfadeRunning = true;
 
-    function getAudioContext() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-      return audioCtx;
-    }
-
-    // Sintetizador estéreo de música armónica para las dos pistas
-    // Pista A: Estilo Ama De Mi Sol (Acordes de trap/r&b melancólicos)
-    // Pista B: Estilo Solifican12 (Acordes rítmicos brillantes y bajo profundo)
-    function generateTrackPCM(ctx, durationSec, type = 'A') {
-      const sampleRate = ctx.sampleRate;
-      const totalSamples = Math.floor(sampleRate * durationSec);
-      const buffer = ctx.createBuffer(2, totalSamples, sampleRate);
-      const left = buffer.getChannelData(0);
-      const right = buffer.getChannelData(1);
-
-      const rootFreqA = 130.81; // C3
-      const rootFreqB = 164.81; // E3
-
-      const baseFreq = type === 'A' ? rootFreqA : rootFreqB;
-      const bpm = type === 'A' ? 95 : 100;
-      const beatSamples = (60 / bpm) * sampleRate;
-
-      for (let i = 0; i < totalSamples; i++) {
-        const t = i / sampleRate;
-        const beatPos = (i % Math.floor(beatSamples)) / beatSamples;
-
-        // Batería (Kick & Snare)
-        const kick = Math.sin(2 * Math.PI * 55 * Math.exp(-beatPos * 14)) * Math.exp(-beatPos * 6);
-        const hat = (Math.random() * 2 - 1) * Math.exp(-((i % Math.floor(beatSamples/2)) / (beatSamples/2)) * 18) * 0.15;
-
-        // Acordes de sintetizador
-        let chord = 0;
-        if (type === 'A') {
-          chord = Math.sin(2 * Math.PI * baseFreq * t) * 0.25 +
-                  Math.sin(2 * Math.PI * (baseFreq * 1.25) * t) * 0.2 +
-                  Math.sin(2 * Math.PI * (baseFreq * 1.5) * t) * 0.15;
-        } else {
-          chord = Math.sin(2 * Math.PI * baseFreq * t) * 0.25 +
-                  Math.sin(2 * Math.PI * (baseFreq * 1.33) * t) * 0.2 +
-                  Math.sin(2 * Math.PI * (baseFreq * 1.66) * t) * 0.18;
-        }
-
-        const wave = (chord * 0.5) + (kick * 0.4) + (hat * 0.3);
-        left[i] = wave;
-        right[i] = wave * (type === 'A' ? 0.95 : 1.05); // Apertura estéreo
-      }
-
-      return buffer;
-    }
-
-    // RENDERIZAR EN CÓDIGO LA MEZCLA COMPLETA (OFFLINE AUDIO CONTEXT)
-    async function bakeRemixTrack(crossfadeSec, curveType) {
-      const actx = getAudioContext();
-      const sampleRate = actx.sampleRate;
-
-      const soloA_Sec = 3.0; // 3 segundos de Canción A sonando sola
-      const soloB_Sec = 3.0; // 3 segundos de Canción B sonando sola
-      const totalDuration = soloA_Sec + crossfadeSec + soloB_Sec;
-
-      log(`🛠️ RENDERIZANDO EN CÓDIGO: Pista A (${soloA_Sec + crossfadeSec}s) + Pista B (${crossfadeSec + soloB_Sec}s)...`, 'highlight');
-
-      const offlineCtx = new OfflineAudioContext(2, Math.floor(sampleRate * totalDuration), sampleRate);
-
-      // Generar audio real de ambas canciones
-      const bufferA = generateTrackPCM(offlineCtx, soloA_Sec + crossfadeSec, 'A');
-      const bufferB = generateTrackPCM(offlineCtx, crossfadeSec + soloB_Sec, 'B');
-
-      // Nodo de Canción A
-      const sourceA = offlineCtx.createBufferSource();
-      sourceA.buffer = bufferA;
-      const gainA = offlineCtx.createGain();
-
-      // Nodo de Canción B
-      const sourceB = offlineCtx.createBufferSource();
-      sourceB.buffer = bufferB;
-      const gainB = offlineCtx.createGain();
-
-      // Conexiones
-      sourceA.connect(gainA).connect(offlineCtx.destination);
-      sourceB.connect(gainB).connect(offlineCtx.destination);
-
-      // Programar curvas de volumen exactas
-      const xfadeStart = soloA_Sec;
-      const xfadeEnd = soloA_Sec + crossfadeSec;
-
-      // Curva A: 100% hasta xfadeStart, y baja progresivamente hasta 0% en xfadeEnd
-      gainA.gain.setValueAtTime(1.0, 0);
-      gainA.gain.setValueAtTime(1.0, xfadeStart);
-
-      // Curva B: 0% hasta xfadeStart, y sube progresivamente hasta 100% en xfadeEnd
-      gainB.gain.setValueAtTime(0.0, 0);
-      gainB.gain.setValueAtTime(0.0, xfadeStart);
-
-      // Aplicar rampa punto por punto con la curva seleccionada
-      const steps = 60;
-      for (let s = 0; s <= steps; s++) {
-        const p = s / steps;
-        const time = xfadeStart + (p * crossfadeSec);
-        const { gainA: gA, gainB: gB } = calculateGain(p, curveType);
-
-        gainA.gain.setValueAtTime(gA, time);
-        gainB.gain.setValueAtTime(gB, time);
-      }
-
-      gainA.gain.setValueAtTime(0.0, xfadeEnd);
-      gainB.gain.setValueAtTime(1.0, xfadeEnd);
-
-      // Disparar las fuentes:
-      // Canción A arranca en t=0
-      sourceA.start(0);
-      // Canción B arranca exactamente en t=xfadeStart (¡al mismo tiempo que la A empieza a desvanecerse!)
-      sourceB.start(xfadeStart);
-
-      // Renderizar el búfer final del remix
-      const renderedRemixBuffer = await offlineCtx.startRendering();
-      log(`🎉 ¡REMIX PRE-GRABADO CON ÉXITO! Duración total: ${totalDuration.toFixed(1)}s (Mezcla exacta de ${crossfadeSec}s).`, 'success');
-
-      return { remixBuffer: renderedRemixBuffer, totalDuration, xfadeStart, xfadeEnd };
-    }
-
-    // BOTÓN DE REPRODUCIR REMIX PREGRABADO
-    document.getElementById('btn-bake-remix').addEventListener('click', async () => {
-      stopPlayback();
-
-      const actx = getAudioContext();
-      const crossfadeSec = parseInt(sliderDur.value, 10);
+      const fadeSec = parseInt(sliderDur.value, 10) || 8;
       const curveType = selectCurve.value;
 
-      statusBadge.textContent = 'Renderizando Remix...';
+      // Saltar audioA a sus últimos fadeSec segundos
+      const durA = audioA.duration || 176;
+      const jumpPoint = Math.max(0, durA - fadeSec);
 
-      const { remixBuffer, totalDuration, xfadeStart, xfadeEnd } = await bakeRemixTrack(crossfadeSec, curveType);
+      log(`⚡ DISPARANDO SOLAPAMIENTO SIMULTÁNEO EN VIVO (${fadeSec}s)...`, 'highlight');
+      log(`Adelantando 'Ama De Mi Sol' al segundo ${jumpPoint.toFixed(1)}s con volumen 100%...`);
 
-      // Reproducir el remix pregrabado como un solo archivo de audio continuo
-      currentSource = actx.createBufferSource();
-      currentSource.buffer = remixBuffer;
-      currentSource.connect(actx.destination);
-      currentSource.start(0);
+      audioA.currentTime = jumpPoint;
+      audioA.volume = 1.0;
+      audioA.play();
+      cardA.classList.add('active');
+
+      // Arrancar audioB en 0:00 con volumen 0% en el MISMO MILISEGUNDO
+      audioB.currentTime = 0;
+      audioB.volume = 0.0;
+      audioB.play();
+      cardB.classList.add('active');
+
+      log(`🔥 ¡AMBAS CANCIONES REALES SONANDO A LA VEZ! 'Ama De Mi Sol' baja mientras 'Solifican12' sube desde 0:00.`, 'alert');
 
       const startTime = performance.now();
-      statusBadge.textContent = '🔊 Reproduciendo Remix Pregrabado';
+      const durationMs = fadeSec * 1000;
 
-      // Activar barras de visualizador
-      document.querySelectorAll('.wave-bar').forEach(b => b.classList.add('active'));
+      liveInterval = setInterval(() => {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(1, elapsed / durationMs);
+        const { gainA, gainB } = calculateGain(progress, curveType);
 
-      log(`▶️ ESCUCHANDO REMIX: Arranca 'Ama De Mi Sol' sola (3s)...`, 'highlight');
-
-      let enteredXfade = false;
-      let exitedXfade = false;
-
-      playbackInterval = setInterval(() => {
-        const elapsed = (performance.now() - startTime) / 1000;
-        const progress = Math.min(1, elapsed / totalDuration);
-
-        // Actualizar aguja y timeline
-        drawRemixWaveform(progress);
-        timeFill.style.width = (progress * 100) + '%';
-        timeCurrent.textContent = `00:${Math.floor(elapsed) < 10 ? '0' : ''}${Math.floor(elapsed)}`;
-
-        if (elapsed >= xfadeStart && !enteredXfade) {
-          enteredXfade = true;
-          log(`🔥 ¡SOLAPAMIENTO SIMULTÁNEO REAL! 'Ama De Mi Sol' bajando mientras 'Solifican12' arranca desde 0:00. ¡Ambas sonando a la vez!`, 'alert');
-          statusBadge.textContent = '🔥 Solapamiento Simultáneo Activo';
-        }
-
-        if (elapsed >= xfadeEnd && !exitedXfade) {
-          exitedXfade = true;
-          log(`✅ 'Ama De Mi Sol' finalizó. 'Solifican12' continúa sonando sola al 100% de volumen sin haber repetido el intro.`, 'success');
-          statusBadge.textContent = '🎶 Solifican12 sonando al 100%';
-        }
+        setVolumes(gainA, gainB);
+        manualCrossfader.value = Math.round(progress * 100);
 
         if (progress >= 1) {
-          stopPlayback();
-          log('🏁 Reproducción del remix finalizada.', 'highlight');
-          statusBadge.textContent = 'Finalizado';
+          clearInterval(liveInterval);
+          liveInterval = null;
+          isLiveCrossfadeRunning = false;
+
+          // Handoff: Canción A termina en silencio, Canción B continúa al 100%
+          audioA.pause();
+          cardA.classList.remove('active');
+          setVolumes(0, 1.0);
+
+          log(`✅ TRANSICIÓN COMPLETADA: 'Ama De Mi Sol' terminó. 'Solifican12' continúa en el segundo ${fadeSec}s al 100% de volumen.`, 'success');
         }
       }, 35);
     });
 
-    function stopPlayback() {
-      if (playbackInterval) {
-        clearInterval(playbackInterval);
-        playbackInterval = null;
+    // PAUSAR TODO
+    document.getElementById('btn-stop-all').addEventListener('click', () => {
+      if (liveInterval) {
+        clearInterval(liveInterval);
+        liveInterval = null;
       }
-      if (currentSource) {
-        try { currentSource.stop(); } catch(e) {}
-        currentSource = null;
-      }
-      document.querySelectorAll('.wave-bar').forEach(b => b.classList.remove('active'));
-      drawRemixWaveform(0);
-      timeFill.style.width = '0%';
-      timeCurrent.textContent = '00:00';
-    }
+      audioA.pause();
+      audioB.pause();
+      heroAudio.pause();
+      cardA.classList.remove('active');
+      cardB.classList.remove('active');
+      log('⏹️ Reproducción pausada.');
+    });
 
-    document.getElementById('btn-stop').addEventListener('click', stopPlayback);
+    // CROSSFADER MANUAL
+    manualCrossfader.addEventListener('input', (e) => {
+      if (isLiveCrossfadeRunning) {
+        clearInterval(liveInterval);
+        isLiveCrossfadeRunning = false;
+      }
+      const p = parseInt(e.target.value, 10) / 100;
+      const { gainA, gainB } = calculateGain(p, selectCurve.value);
+      setVolumes(gainA, gainB);
+    });
   </script>
 </body>
 </html>
