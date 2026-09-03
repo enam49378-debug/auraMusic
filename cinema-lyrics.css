@@ -1,3 +1,42 @@
+
+/* AISLAMIENTO TOTAL: Los elementos de WhatsApp NUNCA se muestran en otros temas */
+.whatsapp-msg-meta,
+.whatsapp-top-avatar,
+.whatsapp-top-text,
+#whatsapp-top-controls,
+.whatsapp-action-icon,
+#whatsapp-chatlist-panel,
+.cinema-whatsapp-input-bar,
+.whatsapp-encryption-badge,
+.wa-typing-bubble {
+  display: none !important;
+}
+
+body.auramusic-theme-whatsapp .whatsapp-msg-meta {
+  display: flex !important;
+}
+body.auramusic-theme-whatsapp .whatsapp-top-avatar {
+  display: block !important;
+}
+body.auramusic-theme-whatsapp .whatsapp-top-text {
+  display: flex !important;
+}
+body.auramusic-theme-whatsapp #whatsapp-top-controls {
+  display: flex !important;
+}
+body.auramusic-theme-whatsapp .whatsapp-action-icon {
+  display: inline-flex !important;
+}
+body.auramusic-theme-whatsapp #whatsapp-chatlist-panel {
+  display: flex !important;
+}
+body.auramusic-theme-whatsapp .cinema-whatsapp-input-bar {
+  display: flex !important;
+}
+body.auramusic-theme-whatsapp .whatsapp-encryption-badge {
+  display: block !important;
+}
+
 /* ==========================================================
    AURAMUSIC - MODO LETRAS ANIMADAS: MULTI-DISEÑOS RADICALES
    (Apple Music, Spotify, Minecraft Arcade, Cyberpunk HUD, Aesthetic, YouTube)
@@ -1334,4 +1373,14 @@ body.auramusic-theme-whatsapp .whatsapp-input-box {
   display: flex !important;
   align-items: center !important;
   gap: 6px !important;
+}
+
+
+/* EN WHATSAPP: Las frases futuras están ocultas hasta que llegue su segundo */
+body.auramusic-theme-whatsapp .cinema-lyric-line:not(.wa-sent) {
+  display: none !important;
+}
+body.auramusic-theme-whatsapp .cinema-lyric-line.wa-sent {
+  display: flex !important;
+  flex-direction: column !important;
 }

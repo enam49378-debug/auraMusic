@@ -986,24 +986,32 @@
   function renderCinemaLyricsDOM() {
     const wrapper = document.getElementById('cinema-lyrics-wrapper');
     const video = document.querySelector('video');
-    if (!wrapper || !currentLyrics || currentLyrics.length === 0) return;
+    if (!wrapper) return;
 
     wrapper.innerHTML = '';
 
-    if (state.theme === 'whatsapp') {
-      wrapper.innerHTML = `
-        <div class="whatsapp-encryption-badge">
-          <span>🔒 Los mensajes y llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.</span>
-        </div>
-        <div id="whatsapp-messages-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
-        <div id="whatsapp-typing-bubble" class="wa-typing-bubble" style="display: none;">
-          <span class="wa-typing-text">escribiendo</span>
-          <span class="wa-dot"></span>
-          <span class="wa-dot"></span>
-          <span class="wa-dot"></span>
-        </div>
-      `;
+    if (!currentLyrics || currentLyrics.length === 0) {
+      if (state.theme === 'whatsapp') {
+        wrapper.innerHTML = `
+          <div class="whatsapp-encryption-badge">
+            <span>🔒 Los mensajes y llamadas están cifrados de extremo a extremo.</span>
+          </div>
+          <div class="cinema-lyric-line wa-sent active-line">
+            🎵 Letra no disponible o tema instrumental
+            <div class="whatsapp-msg-meta"><span class="whatsapp-time">0:00</span> <span class="whatsapp-checks">✓✓</span></div>
+          </div>
+        `;
+      } else {
+        wrapper.innerHTML = '<div class="cinema-lyric-line active-line">🎵 Letra no disponible para esta canción</div>';
+      }
       return;
+    }
+
+    if (state.theme === 'whatsapp') {
+      const encBadge = document.createElement('div');
+      encBadge.className = 'whatsapp-encryption-badge';
+      encBadge.innerHTML = '<span>🔒 Los mensajes y llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.</span>';
+      wrapper.appendChild(encBadge);
     }
 
     const itemsToRender = currentLyrics;
@@ -1014,7 +1022,6 @@
       lineDiv.dataset.time = item.time;
       lineDiv.dataset.index = index;
 
-      // Si la traducción está activa y hay traducción distinta, usarla como texto principal
       const hasTranslation = isTranslationActive && item.translatedText;
       const displayText = hasTranslation ? item.translatedText : (item.originalText || item.text);
 
@@ -1022,25 +1029,18 @@
       const rawDuration = nextItem ? (nextItem.time - item.time) : 3.5;
       const words = displayText.trim().split(/\s+/).filter(w => w.length > 0);
 
-      // Motor vocal inteligente de densidad por segundo (se acelera en rap y se alarga en baladas):
       const wordCount = words.length;
       const wordsPerSec = wordCount / Math.max(0.6, rawDuration);
 
       let totalDuration;
       if (rawDuration > 7.0) {
-        // Pausa larga o solo instrumental: acompaña a ritmo vocal natural de la frase
         totalDuration = Math.min(rawDuration * 0.65, Math.max(2.5, wordCount * 0.45));
       } else {
-        // En flujo de canto normal, el tiempo de vocalización se adapta automáticamente:
         if (wordsPerSec >= 2.2) {
-          // Rap o canto rápido (ej. Tyler en "Okay okay okay..."): entrega veloz y ágil
           totalDuration = Math.min(rawDuration, wordCount * 0.32);
         } else if (wordsPerSec <= 1.2) {
-          // Balada o verso lento/sostenido (ej. Kali Uchis en "You live in my dream state"):
-          // Acompaña hasta el 92% para que las notas alargadas no se apaguen
           totalDuration = Math.max(0.8, rawDuration * 0.92);
         } else {
-          // Tempo pop moderado
           totalDuration = Math.max(0.8, rawDuration * 0.88);
         }
       }
@@ -1071,21 +1071,22 @@
       });
       lineDiv.appendChild(mainLineSpan);
 
-      // Metadatos de mensaje para el tema de WhatsApp (Hora y Doble Check ✓✓)
-      const metaSpan = document.createElement('div');
-      metaSpan.className = 'whatsapp-msg-meta';
-      const m = Math.floor(item.time / 60);
-      const s = Math.floor(item.time % 60);
-      const timeStr = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-      metaSpan.innerHTML = `<span class="whatsapp-time">${timeStr}</span> <span class="whatsapp-checks">✓✓</span>`;
-      lineDiv.appendChild(metaSpan);
-
-      // Si está traducido, poner la frase original en paréntesis abajito
       if (hasTranslation) {
         const subDiv = document.createElement('div');
         subDiv.className = 'line-original-sub';
         subDiv.textContent = `(${item.originalText})`;
         lineDiv.appendChild(subDiv);
+      }
+
+      // Metadatos de mensaje EXCLUSIVOS para WhatsApp (NUNCA en otros temas)
+      if (state.theme === 'whatsapp') {
+        const metaSpan = document.createElement('div');
+        metaSpan.className = 'whatsapp-msg-meta';
+        const m = Math.floor(item.time / 60);
+        const s = Math.floor(item.time % 60);
+        const timeStr = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        metaSpan.innerHTML = `<span class="whatsapp-time">${timeStr}</span> <span class="whatsapp-checks">✓✓</span>`;
+        lineDiv.appendChild(metaSpan);
       }
 
       lineDiv.addEventListener('click', () => {
@@ -1094,6 +1095,15 @@
 
       wrapper.appendChild(lineDiv);
     });
+
+    if (state.theme === 'whatsapp') {
+      const typingBubble = document.createElement('div');
+      typingBubble.id = 'whatsapp-typing-bubble';
+      typingBubble.className = 'wa-typing-bubble';
+      typingBubble.style.display = 'none';
+      typingBubble.innerHTML = '<span class="wa-typing-text">escribiendo</span><span class="wa-dot"></span><span class="wa-dot"></span><span class="wa-dot"></span>';
+      wrapper.appendChild(typingBubble);
+    }
   }
 
   function createCinemaOverlay() {
@@ -1491,7 +1501,7 @@
         
         // GESTIÓN DINÁMICA DE MENSAJES Y "ESCRIBIENDO..." PARA WHATSAPP
         if (state.theme === 'whatsapp') {
-          const msgContainer = document.getElementById('whatsapp-messages-container');
+          const allLines = document.querySelectorAll('#cinema-lyrics-wrapper .cinema-lyric-line');
           const typingBubble = document.getElementById('whatsapp-typing-bubble');
           const topStatus = document.querySelector('.whatsapp-top-status');
           const waPlayBtn = document.getElementById('cinema-wa-play-btn');
@@ -1500,47 +1510,37 @@
           if (waPlayBtn) waPlayBtn.textContent = (video && !video.paused) ? '⏸' : '▶';
           if (waTimePill) waTimePill.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
 
-          if (msgContainer && typingBubble) {
-            // Rebobinado: Si retrocedió en la canción, quitar mensajes futuros
-            const allRendered = msgContainer.querySelectorAll('.cinema-lyric-line');
-            allRendered.forEach(bubble => {
-              const bTime = parseFloat(bubble.dataset.time);
-              if (bTime > effectiveTime + 0.3) {
-                bubble.remove();
-              }
-            });
-
-            // Enviar mensajes pasados y el actual que ya hayan llegado a su tiempo
-            if (activeIdx >= 0) {
-              for (let k = 0; k <= activeIdx; k++) {
-                if (!msgContainer.querySelector(`.cinema-lyric-line[data-index="${k}"]`)) {
-                  const b = createWhatsAppLyricBubble(currentLyrics[k], k, currentLyrics);
-                  msgContainer.appendChild(b);
-
-                  const container = document.getElementById('cinema-right-scroll');
-                  if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-                }
-              }
-            }
-
-            // Indicador de "Escribiendo..." solo cuando la música está reproduciéndose y el verso está por empezar
-            const isPlaying = video && !video.paused;
-            const nextIdx = activeIdx + 1;
-            if (nextIdx < currentLyrics.length && isPlaying) {
-              const timeToNext = currentLyrics[nextIdx].time - effectiveTime;
-              if (timeToNext <= 2.2 && timeToNext > 0) {
-                typingBubble.style.display = 'flex';
-                if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> escribiendo...';
+          // 1. Mostrar solo los mensajes que ya llegaron o están sonando (wa-sent)
+          allLines.forEach((l) => {
+            const lTime = parseFloat(l.dataset.time);
+            if (effectiveTime >= lTime) {
+              if (!l.classList.contains('wa-sent')) {
+                l.classList.add('wa-sent');
                 const container = document.getElementById('cinema-right-scroll');
                 if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-              } else {
-                typingBubble.style.display = 'none';
-                if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> en línea';
               }
+            } else {
+              l.classList.remove('wa-sent');
+            }
+          });
+
+          // 2. Indicador de "Escribiendo..." para el próximo verso
+          const isPlaying = video && !video.paused;
+          const nextIdx = activeIdx + 1;
+          if (nextIdx < currentLyrics.length && isPlaying && typingBubble) {
+            const timeToNext = currentLyrics[nextIdx].time - effectiveTime;
+            if (timeToNext <= 2.5 && timeToNext > 0) {
+              typingBubble.style.display = 'flex';
+              if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> escribiendo...';
+              const container = document.getElementById('cinema-right-scroll');
+              if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
             } else {
               typingBubble.style.display = 'none';
               if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> en línea';
             }
+          } else if (typingBubble) {
+            typingBubble.style.display = 'none';
+            if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> en línea';
           }
         }
 
