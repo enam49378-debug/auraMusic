@@ -1240,15 +1240,26 @@
       }
     });
 
-    // Controles dentro del modo cine
+    // Controles dentro del modo cine (estándar y WhatsApp)
     const playBtn = document.getElementById('cinema-play-btn');
     const prevBtn = document.getElementById('cinema-prev-btn');
     const nextBtn = document.getElementById('cinema-next-btn');
+    const waPlayBtn = document.getElementById('cinema-wa-play-btn');
+    const waPrevBtn = document.getElementById('cinema-wa-prev-btn');
+    const waNextBtn = document.getElementById('cinema-wa-next-btn');
 
-    playBtn.addEventListener('click', () => {
-      const nativePlay = document.querySelector('.play-pause-button.ytmusic-player-bar');
-      if (nativePlay) nativePlay.click();
-    });
+    function togglePlayback() {
+      const nativePlay = document.querySelector('ytmusic-player-bar .play-pause-button, #play-pause-button');
+      if (nativePlay) {
+        nativePlay.click();
+      } else {
+        const video = document.querySelector('video');
+        if (video) {
+          if (video.paused) video.play();
+          else video.pause();
+        }
+      }
+    }
 
     function triggerQuickTrackPoll() {
       let count = 0;
@@ -1259,17 +1270,25 @@
       }, 250);
     }
 
-    prevBtn.addEventListener('click', () => {
-      const nativePrev = document.querySelector('.previous-button.ytmusic-player-bar');
+    function playPrevTrack() {
+      const nativePrev = document.querySelector('ytmusic-player-bar .previous-button, #previous-button');
       if (nativePrev) nativePrev.click();
       triggerQuickTrackPoll();
-    });
+    }
 
-    nextBtn.addEventListener('click', () => {
-      const nativeNext = document.querySelector('.next-button.ytmusic-player-bar');
+    function playNextTrack() {
+      const nativeNext = document.querySelector('ytmusic-player-bar .next-button, #next-button');
       if (nativeNext) nativeNext.click();
       triggerQuickTrackPoll();
-    });
+    }
+
+    if (playBtn) playBtn.addEventListener('click', togglePlayback);
+    if (prevBtn) prevBtn.addEventListener('click', playPrevTrack);
+    if (nextBtn) nextBtn.addEventListener('click', playNextTrack);
+
+    if (waPlayBtn) waPlayBtn.addEventListener('click', togglePlayback);
+    if (waPrevBtn) waPrevBtn.addEventListener('click', playPrevTrack);
+    if (waNextBtn) waNextBtn.addEventListener('click', playNextTrack);
 
     // Salto en la barra de tiempo
     const progressBg = document.getElementById('cinema-progress-bg');
@@ -1346,11 +1365,14 @@
       const wrapper = document.getElementById('cinema-lyrics-wrapper');
       const video = document.querySelector('video');
 
-      if (trackTitleEl) trackTitleEl.textContent = title || 'Canción';
-      if (trackArtistEl) trackArtistEl.textContent = artist || 'Artista';
+      const cleanTitle = title || document.title.replace(' - YouTube Music', '').replace(' | YouTube Music', '').trim() || 'Canción';
+      const cleanArtist = artist || 'Artista';
+
+      if (trackTitleEl) trackTitleEl.textContent = cleanTitle;
+      if (trackArtistEl) trackArtistEl.textContent = cleanArtist;
 
       // Transición suave de portada
-      const newCover = getHighResCoverUrl();
+      const newCover = getHighResCoverUrl() || 'https://music.youtube.com/img/on_platform_logo.svg';
       if (artImg && newCover) {
         artImg.style.opacity = '0.3';
         artImg.style.transform = 'scale(0.96)';
@@ -1360,6 +1382,22 @@
           artImg.style.transform = 'scale(1)';
           updateDynamicCoverColor(); // Actualiza colores dinámicos del fondo
         };
+      }
+
+      // ACTUALIZAR ELEMENTOS DEL MODO WHATSAPP
+      const waTopTitle = document.getElementById('whatsapp-top-title');
+      const waTopAvatar = document.getElementById('cinema-top-art-img');
+      const waUserAvatar = document.getElementById('whatsapp-user-avatar');
+      if (waTopTitle) waTopTitle.textContent = `${cleanTitle} • ${cleanArtist}`;
+      if (waTopAvatar) {
+        waTopAvatar.src = newCover;
+        waTopAvatar.style.display = (state.theme === 'whatsapp') ? 'block' : 'none';
+      }
+      if (waUserAvatar) waUserAvatar.src = newCover;
+
+      // Poblar cola de reproducción de WhatsApp
+      if (state.theme === 'whatsapp') {
+        populateWhatsAppQueueList(cleanTitle, cleanArtist, newCover);
       }
 
       if (wrapper) {
@@ -1456,6 +1494,11 @@
           const msgContainer = document.getElementById('whatsapp-messages-container');
           const typingBubble = document.getElementById('whatsapp-typing-bubble');
           const topStatus = document.querySelector('.whatsapp-top-status');
+          const waPlayBtn = document.getElementById('cinema-wa-play-btn');
+          const waTimePill = document.getElementById('cinema-wa-time');
+
+          if (waPlayBtn) waPlayBtn.textContent = (video && !video.paused) ? '⏸' : '▶';
+          if (waTimePill) waTimePill.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
 
           if (msgContainer && typingBubble) {
             // Rebobinado: Si retrocedió en la canción, quitar mensajes futuros
@@ -1480,11 +1523,12 @@
               }
             }
 
-            // Indicador de "Escribiendo..." para el siguiente verso que viene
+            // Indicador de "Escribiendo..." solo cuando la música está reproduciéndose y el verso está por empezar
+            const isPlaying = video && !video.paused;
             const nextIdx = activeIdx + 1;
-            if (nextIdx < currentLyrics.length) {
+            if (nextIdx < currentLyrics.length && isPlaying) {
               const timeToNext = currentLyrics[nextIdx].time - effectiveTime;
-              if (timeToNext <= 2.6 && timeToNext > 0) {
+              if (timeToNext <= 2.2 && timeToNext > 0) {
                 typingBubble.style.display = 'flex';
                 if (topStatus) topStatus.innerHTML = '<span class="wa-online-dot"></span> escribiendo...';
                 const container = document.getElementById('cinema-right-scroll');
