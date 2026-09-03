@@ -201,25 +201,78 @@
     }
   }
 
-  // 8. Actualizar la interfaz gráfica de YouTube Music sin provocar dobles saltos
-  function advanceYouTubeUI() {
+  // 8. Actualizar la interfaz gráfica de YouTube Music respetando la lista (Álbum, Playlist y Cola)
+  function advanceToNextTrackInList(targetVideoId) {
     const now = performance.now();
-    if (now - _lastSkipTime < 3500) return;
+    if (now - _lastSkipTime < 2500) return;
     _lastSkipTime = now;
     _isProgrammaticSkip = true;
 
+    // A. Si estamos en una vista de Álbum o Playlist en pantalla, hacer clic en la siguiente fila
+    try {
+      const allRows = Array.from(document.querySelectorAll('ytmusic-responsive-list-item-renderer'));
+      let activeIdx = -1;
+      for (let i = 0; i < allRows.length; i++) {
+        const row = allRows[i];
+        if (row.querySelector('[play-button-state="playing"], .playing-icon, ytmusic-play-button-renderer[state="playing"]') || row.classList.contains('selected')) {
+          activeIdx = i;
+          break;
+        }
+      }
+      if (activeIdx >= 0 && activeIdx + 1 < allRows.length) {
+        const nextRow = allRows[activeIdx + 1];
+        const playBtn = nextRow.querySelector('ytmusic-play-button-renderer, .play-button, #play-button, a[href*="watch?v="]');
+        if (playBtn) {
+          playBtn.click();
+          console.log('🔀 AuraMusic: Siguiente canción seleccionada directamente en la lista del álbum.');
+          setTimeout(() => { _isProgrammaticSkip = false; }, 1200);
+          return;
+        }
+      }
+    } catch (e) {}
+
+    // B. Si la cola lateral de reproducción está activa, avanzar al siguiente elemento de la cola
+    try {
+      const queueItems = Array.from(document.querySelectorAll('ytmusic-player-queue-item'));
+      const activeQueueIdx = queueItems.findIndex(el => 
+        el.hasAttribute('selected') || 
+        el.classList.contains('selected') || 
+        el.querySelector('[play-button-state="playing"]')
+      );
+      if (activeQueueIdx >= 0 && activeQueueIdx + 1 < queueItems.length) {
+        const nextQueueItem = queueItems[activeQueueIdx + 1];
+        const playBtn = nextQueueItem.querySelector('.play-button, ytmusic-play-button-renderer, #play-button');
+        if (playBtn) {
+          playBtn.click();
+          console.log('🔀 AuraMusic: Siguiente canción seleccionada directamente en la cola.');
+          setTimeout(() => { _isProgrammaticSkip = false; }, 1200);
+          return;
+        }
+      }
+    } catch (e) {}
+
+    // C. Por API oficial de YouTube Music (#movie_player)
     try {
       const player = document.querySelector('#movie_player');
       if (player && typeof player.nextVideo === 'function') {
         player.nextVideo();
-        console.log('🔀 AuraMusic: Interfaz de YouTube Music actualizada a la siguiente pista.');
-      } else {
-        const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
-        if (nextBtn) nextBtn.click();
+        if (typeof player.playVideo === 'function') player.playVideo();
+        console.log('🔀 AuraMusic: Siguiente canción activada con movie_player.nextVideo().');
+        setTimeout(() => { _isProgrammaticSkip = false; }, 1200);
+        return;
       }
     } catch (e) {}
 
-    setTimeout(() => { _isProgrammaticSkip = false; }, 1500);
+    // D. Botón siguiente en la barra del reproductor
+    try {
+      const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
+      if (nextBtn) {
+        nextBtn.click();
+        console.log('🔀 AuraMusic: Siguiente canción activada con botón next.');
+      }
+    } catch (e) {}
+
+    setTimeout(() => { _isProgrammaticSkip = false; }, 1200);
   }
 
   // 9. Bloquear el avance automático nativo de YouTube Music (Solo con Crossfade Activo)
@@ -350,7 +403,7 @@
           _upcomingNextVideoId = '';
 
           // Actualizar UI de YouTube Music manteniendo silencio en video nativo
-          advanceYouTubeUI();
+          advanceToNextTrackInList(nextVideoId);
           setTimeout(keepNativeVideoSilent, 150);
           setTimeout(keepNativeVideoSilent, 600);
           setTimeout(keepNativeVideoSilent, 1200);
@@ -398,7 +451,7 @@
           _currentPlayingVideoId = nextVideoId;
           _upcomingNextVideoId = '';
 
-          advanceYouTubeUI();
+          advanceToNextTrackInList(nextVideoId);
           setTimeout(keepNativeVideoSilent, 150);
           setTimeout(keepNativeVideoSilent, 600);
           setTimeout(keepNativeVideoSilent, 1200);
@@ -446,7 +499,7 @@
           _currentPlayingVideoId = nextVideoId;
           _upcomingNextVideoId = '';
 
-          advanceYouTubeUI();
+          advanceToNextTrackInList(nextVideoId);
           setTimeout(keepNativeVideoSilent, 150);
           setTimeout(keepNativeVideoSilent, 600);
           setTimeout(keepNativeVideoSilent, 1200);
@@ -483,6 +536,20 @@
     }
 
     if (isPaused || !dur || dur < 3) return;
+
+    // Sincronizar la barra de tiempo y el menú de YouTube Music con el Deck que está sonando
+    if (_activeDeck !== 'native') {
+      const video = document.querySelector('video');
+      if (video) {
+        if (Math.abs(video.currentTime - cur) > 0.6) {
+          try { video.currentTime = cur; } catch (e) {}
+        }
+        if (video.paused && !isPaused) {
+          try { video.play(); } catch (e) {}
+        }
+        keepNativeVideoSilent();
+      }
+    }
 
     const rem = dur - cur;
     const fadeSec = Math.max(1, Math.min(15, window.state?.crossfadeDuration || 5));
