@@ -115,6 +115,7 @@
   }
 
   const ALL_THEMES = [
+    'auramusic-theme-komi',
     'auramusic-theme-apple',
     'auramusic-theme-spotify',
     'auramusic-theme-whatsapp',
