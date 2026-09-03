@@ -3,28 +3,34 @@
 **Fecha**: 3 de Septiembre de 2026  
 **De**: Antigravity (Arquitecto Principal & Backend Logic)  
 **Para**: Trae AI / Claude (Lead Frontend & Local Developer)  
-**Asunto**: 🛡️ Solución Definitiva: Retención en Canción B + Descuento Instantáneo en Bucle de 50ms
+**Asunto**: 🚀 Refactorización Modular Completa (`crossfade.js`) + Sincronización de Pausa/Play + Cancelación Inmediata
 
 ---
 
 ¡Hola Trae AI!
 
-El Director (Jesuluto) nos reportó el comportamiento exacto que estaba sucediendo:
-* **Lo que funcionó**: La sincronización y el solapamiento sonoro entre A (*Ama De Mi Sol*) y B (*Solifican12*) funcionó de maravilla.
-* **El bug**: Al terminar, la canción se saltaba a C (*Lucia*) y le aplicaba el descuento de 13s a C en vez de a B.
-* **El principio de relevo continuo**: Recordar que cuando B pasa a sonar, B se convierte en la nueva A, y C se convierte en la nueva B para el siguiente crossfade de la cola.
+El Director (Jesuluto) nos hizo una petición arquitectónica excelente:
+> *"¿Por qué mejor no separas el código en vez de tener todo en uno solo? Crea un JS de cada cosa, por ejemplo, un JS para el crossfade."*
 
-### 🛠️ Corrección Quirúrgica:
-1. **Detección de Avance Natural (Evitar salto a C)**:
-   - Cuando la Canción A llega al final de su duración en YouTube Music, el reproductor de YouTube **avanza automáticamente a B por su propio evento `ended`**.
-   - Nuestro código ahora comprueba si YouTube Music ya está en B: si ya está en B, **NO vuelve a llamar a `triggerNextTrack()`**.
-   - Se desactivó por completo la sección D cuando el crossfade está encendido (`!state.crossfade`).
-   - **Resultado**: YouTube Music se queda firmemente en la Canción B (*Solifican12*).
-2. **Descuento Inmediato de Intro en B (Watchdog 50ms)**:
-   - El bucle de 50ms vigila el segundo exacto en que la Canción B arranca (`cur < 2.0`).
-   - En ese mismo instante, sincroniza `video.currentTime = fadeSec` (ej. 13s) para que el intro no se repita.
-3. **Encadenamiento B ➔ A y C ➔ B**:
-   - Al detectar el cambio de pista, el sistema resetea `_currentTrackCanonicalId = trackKey;`, `_hasFadedOutThisTrack = false;` y `_xfadeStatus = XFADE_STATE.IDLE;`.
-   - Ahora la Canción B (*Solifican12*) es la nueva pista A, y la Canción C (*Lucia*) es la nueva pista B que se pre-descarga para el próximo crossfade.
+Y nos reportó tres bugs clave:
+1. **Encadenamiento en bucle**: Al terminar B (*Solifican12*), sonaba A de nuevo en vez de C (*Lucia*).
+2. **Desincronización de Pausa**: Al pausar YouTube Music, se pausaba A pero B seguía sonando de fondo.
+3. **Cancelación al cambiar de pista o adelantar**: Al hacer clic en otra canción o adelantar la barra durante la mezcla, B continuaba sonando externamente.
 
-El archivo `AuraMusic.zip` en el Escritorio ya está actualizado con esta versión. 🎧🚀
+### 🛠️ Lo que construimos:
+1. **Nuevo Módulo Modular `crossfade.js`**:
+   - Registrado en `manifest.json` antes de `content.js`.
+   - Reduce más de 640 líneas de `content.js`, dejándolo limpio y organizado.
+2. **Sincronización Total de Pausa y Reanudación**:
+   - `video.addEventListener('pause')`: Pausa inmediatamente el audio de fondo (`_companionAudio.pause()`).
+   - `video.addEventListener('play')`: Reanuda el audio secundario si el crossfade sigue activo.
+3. **Cancelación Inmediata ante Acciones Manuales**:
+   - Si el usuario hace clic en cualquier canción de la lista, en el botón Siguiente/Anterior o arrastra la barra de tiempo:
+   - Se destruye y silencia inmediatamente `_companionAudio` (`stopAndDestroySecondaryPlayer()`).
+   - El volumen del reproductor principal se restaura al 100% al instante.
+4. **Encadenamiento Limpio de Cola (A ➔ B ➔ C ➔ D)**:
+   - Cuando *Solifican12* (B) toma el relevo, el estado se resetea por completo.
+   - El escáner de cola prepara inmediatamente *Lucia* (C).
+   - Cuando *Solifican12* llega a sus últimos segundos, la transición se realiza hacia *Lucia* (C).
+
+El paquete `AuraMusic.zip` en el Escritorio ya está actualizado con esta arquitectura modular. 🎧🚀
