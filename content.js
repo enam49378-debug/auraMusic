@@ -212,6 +212,7 @@
   let _isTransitioningToNext = false;
   let _isProgrammaticSkip = false;
   let _lastSkipTime = 0;
+  let _pendingSeekTime = 0;
 
   // Shadow Player Controller (Player B)
   let shadowPlayerIframe = null;
@@ -498,21 +499,16 @@
         clearInterval(shadowFadeInterval);
         shadowFadeInterval = null;
         _xfadeStatus = XFADE_STATE.NEXT_TRACK_ACTIVE;
+        _isTransitioningToNext = true;
+        _lastSkipTime = performance.now();
+        _pendingSeekTime = fadeSec; // Descontar los segundos de la intro en la Canción B
 
-        console.log(`🔀 AuraMusic: Fin del solapamiento (${fadeSec}s). Handoff a YouTube Music nativo...`);
+        console.log(`🔀 AuraMusic: Fin del solapamiento (${fadeSec}s). Disparando avance ÚNICO a Canción B...`);
 
-        // Handoff: Disparamos la siguiente canción en YouTube Music
+        // Handoff: Disparamos la siguiente canción en YouTube Music exactamente UNA SOLA VEZ
         triggerNextTrack();
 
-        // Tras el salto, sincronizamos el video nativo en el segundo fadeSec para no repetir la intro
         setTimeout(() => {
-          const video = document.querySelector('video');
-          if (video && isFinite(video.duration) && video.duration > fadeSec) {
-            try {
-              video.currentTime = fadeSec;
-              console.log(`🔀 AuraMusic: Handoff exitoso -> Video nativo sincronizado en el segundo ${fadeSec}s.`);
-            } catch (e) {}
-          }
           setPlayerVolume(1.0);
 
           if (_companionAudio) {
@@ -527,8 +523,7 @@
           }
 
           destroyShadowPlayer();
-          _xfadeStatus = XFADE_STATE.IDLE;
-        }, 900);
+        }, 1200);
       }
     }, 30);
   }
@@ -626,20 +621,36 @@
     if (trackKey && trackKey !== _currentTrackCanonicalId) {
       _currentTrackCanonicalId = trackKey;
       _hasFadedOutThisTrack = false;
+      _xfadeStatus = XFADE_STATE.IDLE;
 
       if (_fadeInterval) {
         clearInterval(_fadeInterval);
         _fadeInterval = null;
       }
 
+      // Aplicar descuento de tiempo exacto a la Canción B (avanzar los segundos del crossfade)
+      if (_pendingSeekTime > 0) {
+        const seekTarget = _pendingSeekTime;
+        _pendingSeekTime = 0;
+        setTimeout(() => {
+          try {
+            const v = document.querySelector('video');
+            if (v && isFinite(v.duration) && v.duration > seekTarget) {
+              v.currentTime = seekTarget;
+              console.log(`🔀 AuraMusic: Intro de Canción B descontado con éxito -> Sincronizado en el segundo ${seekTarget}s.`);
+            }
+          } catch (e) {}
+        }, 350);
+      }
+
       if (_isTransitioningToNext) {
         _isTransitioningToNext = false;
         console.log(`🔀 AuraMusic: Canción B iniciada -> Iniciando Fade-In suave hacia el 100%...`);
 
-        setPlayerVolume(0.05);
+        setPlayerVolume(0.15);
 
         const inStartTime = performance.now();
-        const inDurationMs = Math.min(fadeSec, 3.5) * 1000;
+        const inDurationMs = Math.min(fadeSec, 3.0) * 1000;
         const inCurve = state.crossfadeCurve || 'equal-power';
 
         _fadeInterval = setInterval(() => {
@@ -708,11 +719,12 @@
       }, 30);
     }
 
-    // D. DISPARO DE LA SIGUIENTE PISTA (Para modo secuencial o transición garantizada)
-    if (rem <= 1.2 && rem > 0.05 && _hasFadedOutThisTrack && !_isTransitioningToNext && _xfadeStatus !== XFADE_STATE.CROSSFADE_ACTIVE) {
+    // D. DISPARO DE LA SIGUIENTE PISTA (Solo para modo IDLE / secuencial sin crossfade activo)
+    if (rem <= 1.2 && rem > 0.05 && _hasFadedOutThisTrack && !_isTransitioningToNext && _xfadeStatus === XFADE_STATE.IDLE) {
       const now = performance.now();
-      if (now - _lastSkipTime < 3500) return;
+      if (now - _lastSkipTime < 4000) return;
       _lastSkipTime = now;
+      _isTransitioningToNext = true;
       triggerNextTrack();
     }
   }
