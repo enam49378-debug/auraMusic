@@ -443,129 +443,140 @@
     }, 35);
   }
 
+  let _fadeInterval = null;
+
+  // Control universal de volumen: altera video.volume (Hardware HTML5) y gainNode (Web Audio) juntos
+  function setPlayerVolume(volumeFactor) {
+    const vf = Math.max(0, Math.min(1, volumeFactor));
+
+    // 1. Control directo en el elemento <video> (Garantizado al 100% sin importar Web Audio)
+    const video = document.querySelector('video');
+    if (video) {
+      try {
+        video.volume = vf;
+      } catch (e) {}
+    }
+
+    // 2. Control en Web Audio GainNode si está disponible
+    if (gainNode && audioCtx && audioCtx.state !== 'closed') {
+      try {
+        const baseGain = Math.max(0, Math.min(3.0, (state.volumeBoost || 100) / 100));
+        gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(vf * baseGain, audioCtx.currentTime);
+      } catch (e) {}
+    }
+  }
+
   function restoreVideoFullGain(instant = false) {
-    if (!gainNode || !audioCtx) return;
-    const baseGain = Math.max(0, Math.min(3.0, (state.volumeBoost || 100) / 100));
-    try {
-      gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-      if (instant) {
-        gainNode.gain.setValueAtTime(baseGain, audioCtx.currentTime);
-      } else {
-        const curVal = Math.max(0.01, gainNode.gain.value);
-        gainNode.gain.setValueAtTime(curVal, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(baseGain, audioCtx.currentTime + 0.25);
-      }
-    } catch (e) {}
+    if (_fadeInterval) {
+      clearInterval(_fadeInterval);
+      _fadeInterval = null;
+    }
+    setPlayerVolume(1.0);
   }
 
   // 5. Bucle maestro de detección y disparo de crossfade
   function handleCrossfadeCheck() {
-    if (!state.crossfade || !gainNode || !audioCtx) return;
+    if (!state.crossfade) return;
     const video = document.querySelector('video');
     if (!video || !video.duration || isNaN(video.duration) || video.paused) return;
+
+    // Si Web Audio no se ha iniciado, intentar conectarlo silenciosamente
+    if (!isAudioConnected) {
+      initAudioEngine();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
 
     const dur = video.duration;
     const cur = video.currentTime;
     const fadeSec = Math.max(1, Math.min(12, state.crossfadeDuration || 5));
-    const baseGain = Math.max(0, Math.min(3.0, (state.volumeBoost || 100) / 100));
     const trackKey = _getCanonicalTrackKey();
-    const isRealMode = state.crossfadeMode === 'real';
 
     // A. DETECCIÓN DE CAMBIO DE CANCIÓN
     if (trackKey && trackKey !== _currentTrackCanonicalId) {
       _currentTrackCanonicalId = trackKey;
       _hasFadedOutThisTrack = false;
 
+      if (_fadeInterval) {
+        clearInterval(_fadeInterval);
+        _fadeInterval = null;
+      }
+
       if (_isTransitioningToNext) {
         _isTransitioningToNext = false;
+        console.log(`🔀 AuraMusic: Canción B detectada -> Iniciando Fade-In suave subiendo al 100%...`);
 
-        if (isRealMode) {
-          // Modo Real: La canción B ya sonó durante fadeSec segundos en el Shadow Player.
-          // Sincronizamos el video nativo en el segundo fadeSec para no repetir la intro:
-          try {
-            if (video && isFinite(video.duration) && video.duration > fadeSec) {
-              video.currentTime = fadeSec;
-              console.log(`🔀 AuraMusic: Handoff exitoso -> Video nativo sincronizado en el segundo ${fadeSec}s.`);
-            }
-          } catch (e) {}
-          restoreVideoFullGain(true);
-        } else {
-          // Modo Fallback: Fade-In suave
-          try {
-            gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-            gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            const inTime = Math.min(fadeSec, 2.8);
-            gainNode.gain.linearRampToValueAtTime(baseGain, audioCtx.currentTime + inTime);
-            console.log(`🔀 AuraMusic: Entrada en Fade-In suave (${inTime}s).`);
-          } catch (e) {
-            restoreVideoFullGain(true);
+        // Arrancar suavemente en volumen bajo
+        setPlayerVolume(0.05);
+
+        const inStartTime = performance.now();
+        const inDurationMs = Math.min(fadeSec, 3.5) * 1000;
+        const inCurve = state.crossfadeCurve || 'equal-power';
+
+        _fadeInterval = setInterval(() => {
+          const elapsed = performance.now() - inStartTime;
+          const progress = Math.min(1, elapsed / inDurationMs);
+          const { gainB } = calculateGainCurve(progress, inCurve);
+          setPlayerVolume(gainB);
+
+          if (progress >= 1) {
+            clearInterval(_fadeInterval);
+            _fadeInterval = null;
+            setPlayerVolume(1.0);
+            console.log('🔀 AuraMusic: Fade-In completado. Volumen restaurado al 100%.');
           }
-        }
+        }, 40);
       } else {
         // Reproducción manual: 100% de volumen inmediato sin recortes
-        cancelShadowCrossfade('manual_track_start');
-        restoreVideoFullGain(true);
+        setPlayerVolume(1.0);
         console.log('🔀 AuraMusic: Reproducción manual -> Volumen 100% inmediato.');
       }
       return;
     }
 
-    if (dur < fadeSec * 2) return; // Pistas demasiado cortas
+    if (dur < 3) return; // Pistas menores a 3s
 
     const rem = dur - cur;
 
-    // B. PREPARACIÓN ANTICIPADA EN MODO REAL (Faltando entre fadeSec+15s y fadeSec)
-    if (isRealMode && rem <= fadeSec + 15 && rem > fadeSec && _xfadeStatus === XFADE_STATE.IDLE) {
-      const nextId = getNextTrackVideoId();
-      if (nextId) {
-        console.log(`🔀 AuraMusic: Precargando siguiente pista "${nextId}"...`);
-        prepareShadowPlayer(nextId);
-      }
-    }
-
-    // C. INICIO DEL CROSSFADE (Garantizado al tocar rem <= fadeSec)
-    if (rem <= fadeSec && rem > 0.3 && !_hasFadedOutThisTrack) {
+    // B. FADE-OUT SUAVE DE LA CANCIÓN A (Al tocar rem <= fadeSec)
+    if (rem <= fadeSec && rem > 0.2 && !_hasFadedOutThisTrack) {
       _hasFadedOutThisTrack = true;
+      console.log(`🔀 AuraMusic: 📉 Iniciando Fade-Out de Canción A (Quedan ${rem.toFixed(1)}s, Duración fade: ${fadeSec}s)...`);
 
-      // Si estamos en Modo Real y el Shadow Player está disponible, activamos solapamiento real:
-      if (isRealMode && (_xfadeStatus === XFADE_STATE.CROSSFADE_READY || shadowPlayerIframe)) {
-        startShadowCrossfade(fadeSec, baseGain);
-        return;
-      }
+      if (_fadeInterval) clearInterval(_fadeInterval);
+      const fadeStartVol = (video.volume !== undefined && !isNaN(video.volume)) ? video.volume : 1.0;
+      const startTime = performance.now();
+      const fadeDurationMs = Math.max(800, rem * 1000);
+      const curve = state.crossfadeCurve || 'equal-power';
 
-      // Si Shadow Player no estaba listo o estamos en Modo Fallback:
-      // Fade-Out garantizado en la canción actual
-      try {
-        gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-        const curGain = Math.max(0.01, gainNode.gain.value);
-        gainNode.gain.setValueAtTime(curGain, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + rem);
-        console.log(`🔀 AuraMusic: Fade-Out activo en Canción A (${rem.toFixed(1)}s restantes)...`);
-      } catch (e) {}
+      _fadeInterval = setInterval(() => {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(1, elapsed / fadeDurationMs);
+        const { gainA } = calculateGainCurve(progress, curve);
+        setPlayerVolume(gainA * fadeStartVol);
+
+        if (progress >= 1) {
+          clearInterval(_fadeInterval);
+          _fadeInterval = null;
+        }
+      }, 40);
     }
 
-    // D. DISPARO DE LA SIGUIENTE PISTA (Para modo Fallback o transición garantizada)
-    if (rem <= 1.2 && rem > 0.05 && _hasFadedOutThisTrack && !_isTransitioningToNext && _xfadeStatus !== XFADE_STATE.CROSSFADE_ACTIVE) {
+    // C. DISPARO DE LA SIGUIENTE PISTA (A falta de 1.2s para absorber la latencia de carga de YouTube)
+    if (rem <= 1.2 && rem > 0.05 && _hasFadedOutThisTrack && !_isTransitioningToNext) {
       const now = performance.now();
       if (now - _lastSkipTime < 3500) return;
       _lastSkipTime = now;
 
       const nextBtn = document.querySelector('ytmusic-player-bar .next-button, #next-button');
       if (nextBtn) {
-        console.log('🔀 AuraMusic: Conectando con la siguiente canción...');
+        console.log('🔀 AuraMusic: ⏭️ Disparando siguiente pista en YouTube Music...');
         _isTransitioningToNext = true;
         _isProgrammaticSkip = true;
         nextBtn.click();
         setTimeout(() => { _isProgrammaticSkip = false; }, 800);
-      }
-    }
-
-    // D. MANTENER VOLUMEN AL 100% FUERA DE LA ZONA DE FADE
-    if (_xfadeStatus === XFADE_STATE.IDLE && !_hasFadedOutThisTrack && !_isTransitioningToNext && rem > fadeSec + 1 && cur > 1.5) {
-      const curGain = gainNode.gain.value;
-      if (Math.abs(curGain - baseGain) > 0.05) {
-        gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(baseGain, audioCtx.currentTime);
       }
     }
   }
@@ -582,18 +593,18 @@
 
     // Cuando el usuario adelanta o retrocede manualmente la barra:
     video.addEventListener('seeking', () => {
-      cancelShadowCrossfade('seeking');
-    });
-
-    video.addEventListener('pause', () => {
-      if (_xfadeStatus === XFADE_STATE.CROSSFADE_ACTIVE) {
-        _sendShadowCommand('pauseVideo');
+      if (_fadeInterval) {
+        clearInterval(_fadeInterval);
+        _fadeInterval = null;
       }
+      _hasFadedOutThisTrack = false;
+      _isTransitioningToNext = false;
+      setPlayerVolume(1.0);
     });
 
     video.addEventListener('play', () => {
-      if (_xfadeStatus === XFADE_STATE.IDLE && !_isTransitioningToNext && !_hasFadedOutThisTrack) {
-        restoreVideoFullGain(true);
+      if (!_isTransitioningToNext && !_hasFadedOutThisTrack) {
+        setPlayerVolume(1.0);
       }
     });
   }
@@ -608,7 +619,13 @@
         const isProgressBar = e.target.closest('#progress-bar, .progress-bar, tp-yt-paper-slider');
         const isSkipBtn = e.target.closest('.next-button, .previous-button, #next-button, #previous-button');
         if (isProgressBar || isSkipBtn) {
-          cancelShadowCrossfade(isProgressBar ? 'progress_bar_seek' : 'manual_skip_click');
+          if (_fadeInterval) {
+            clearInterval(_fadeInterval);
+            _fadeInterval = null;
+          }
+          _hasFadedOutThisTrack = false;
+          _isTransitioningToNext = false;
+          setPlayerVolume(1.0);
         }
       });
     }
@@ -620,7 +637,13 @@
       setupCrossfadeListeners();
       _installManualActionListeners();
     } else {
-      cancelShadowCrossfade('crossfade_disabled');
+      if (_fadeInterval) {
+        clearInterval(_fadeInterval);
+        _fadeInterval = null;
+      }
+      _hasFadedOutThisTrack = false;
+      _isTransitioningToNext = false;
+      setPlayerVolume(1.0);
     }
   }
 
@@ -2110,14 +2133,13 @@
   function getCurrentTrackInfo() {
     let title = '';
     let artist = '';
+    let currentSrc = '';
 
-    // 1. MediaSession API (Oficial y ultra confiable)
     if (navigator.mediaSession && navigator.mediaSession.metadata) {
       title = navigator.mediaSession.metadata.title || '';
       artist = navigator.mediaSession.metadata.artist || '';
     }
 
-    // 2. Selectores de ytmusic-player-bar
     if (!title) {
       const titleEl = document.querySelector('ytmusic-player-bar .title, ytmusic-player-bar yt-formatted-string.title');
       if (titleEl) title = titleEl.textContent.trim();
@@ -2127,7 +2149,6 @@
       if (artistEl) artist = artistEl.textContent.trim();
     }
 
-    // 3. Document Title
     if (!title && document.title) {
       const clean = document.title.replace(' - YouTube Music', '').replace(' | YouTube Music', '').trim();
       if (clean.includes(' - ')) {
@@ -2139,14 +2160,28 @@
       }
     }
 
-    return { title, artist };
+    const vid = document.querySelector('video');
+    if (vid && vid.currentSrc) currentSrc = vid.currentSrc;
+
+    return { title, artist, currentSrc };
   }
 
   function checkCinemaTrackChange() {
     if (!isCinemaActive) return;
 
-    const { title, artist } = getCurrentTrackInfo();
-    const trackId = `${title}:::${artist}`;
+    const { title, artist, currentSrc } = getCurrentTrackInfo();
+    const shortSrc = (currentSrc || '').split('?')[0].slice(-40);
+    const trackId = `${title}:::${artist}:::${shortSrc}`;
+
+    const video = document.querySelector('video');
+    const wasNearEnd = typeof window._auramusicLastCurrentTime === 'number' && window._auramusicLastCurrentTime > 5;
+    const nowNearStart = video && !isNaN(video.currentTime) && video.currentTime < 0.8 && video.duration > 5;
+    if (wasNearEnd && nowNearStart) {
+      console.log('🔄 AuraMusic: DETECTADO CAMBIO POR REINICIO 0s (canción nueva)');
+      lastCinemaTrackId = '';
+      window._auramusicLastCurrentTime = 0;
+    }
+    if (video && !isNaN(video.currentTime)) window._auramusicLastCurrentTime = video.currentTime;
 
     if (title && trackId !== lastCinemaTrackId) {
       lastCinemaTrackId = trackId;
@@ -2339,6 +2374,22 @@
         const currentTime = video.currentTime;
         const duration = video.duration || 1;
         const nowTs = Date.now();
+
+        const durationFinite = duration > 0 && !isNaN(duration) && isFinite(duration);
+        const timeFinite = !isNaN(currentTime) && isFinite(currentTime);
+
+        const isSongNearOrAtEnd = durationFinite && timeFinite && (video.ended === true || (currentTime >= duration - 0.08));
+        const isNewSongJustStarted = durationFinite && timeFinite && (currentTime < 0.6) && (duration > 5) && (nowTs > cinemaSeekLockUntil);
+
+        if (isSongNearOrAtEnd) {
+          cinemaGraceUntil = Math.max(cinemaGraceUntil, nowTs + 1500);
+        }
+        if (isNewSongJustStarted && lastCinemaTrackId && nowTs > cinemaGraceUntil - 300) {
+          cinemaGraceUntil = Math.max(cinemaGraceUntil, nowTs + 400);
+          cinemaLastStablePct = -1;
+          cinemaLastStableTime = -1;
+        }
+
         const inGracePeriod = nowTs < cinemaGraceUntil;
         const inSeekLockPeriod = nowTs < cinemaSeekLockUntil;
         const isSeekingLive = video.seeking === true;
@@ -2351,10 +2402,13 @@
         if (currentLyrics.length === 0 || inGracePeriod || inSeekLockPeriod || isSeekingLive) {
           if (fill) {
             fill.style.transition = 'none !important';
-            if (currentLyrics.length === 0 || inGracePeriod) {
+            if (isSongNearOrAtEnd) {
+              fill.style.width = '100%';
+              cinemaLastStablePct = 100;
+            } else if (currentLyrics.length === 0 || inGracePeriod) {
               fill.style.width = '0%';
             } else {
-              if (duration > 0 && !isNaN(currentTime) && !isNaN(duration) && isFinite(duration) && isFinite(currentTime)) {
+              if (durationFinite && timeFinite) {
                 const pct = Math.max(0, Math.min(100, (currentTime / duration) * 100));
                 fill.style.width = `${pct}%`;
                 cinemaLastStablePct = pct;
@@ -2363,16 +2417,19 @@
               }
             }
           }
-          if ((currentLyrics.length === 0 || inGracePeriod)) {
+          if (isSongNearOrAtEnd) {
+            if (curSpan && durationFinite) curSpan.textContent = formatTime(duration);
+            if (totSpan && durationFinite) totSpan.textContent = formatTime(duration);
+          } else if ((currentLyrics.length === 0 || inGracePeriod)) {
             if (curSpan) curSpan.textContent = '0:00';
             if (totSpan) totSpan.textContent = '0:00';
           } else {
             if (curSpan && !isNaN(currentTime)) curSpan.textContent = formatTime(currentTime);
-            if (totSpan && !isNaN(duration) && isFinite(duration)) totSpan.textContent = formatTime(duration);
+            if (totSpan && durationFinite) totSpan.textContent = formatTime(duration);
           }
         } else {
           let validPct = -1;
-          if ((duration > 0) && !isNaN(currentTime) && !isNaN(duration) && isFinite(duration) && isFinite(currentTime)) {
+          if (durationFinite && timeFinite) {
             const rawPct = (currentTime / duration) * 100;
             const dt = (cinemaLastStableTime >= 0) ? (currentTime - cinemaLastStableTime) : 0.1;
             let expectedPct = -1;
@@ -2381,13 +2438,23 @@
               expectedPct = cinemaLastStablePct + (dt * perSec);
             }
             let skipThisFrame = false;
-            if (cinemaLastStablePct >= 0 && expectedPct >= 0 && Math.abs(rawPct - cinemaLastStablePct) > 15) {
+
+            const inFinalZone = rawPct >= 92;
+            if (!inFinalZone && cinemaLastStablePct >= 0 && expectedPct >= 0 && Math.abs(rawPct - cinemaLastStablePct) > 15) {
               if (Math.abs(rawPct - expectedPct) > 3.5) {
                 skipThisFrame = true;
               }
             }
+            if (!skipThisFrame && cinemaLastStablePct >= 0 && rawPct < cinemaLastStablePct - 1.2) {
+              skipThisFrame = true;
+            }
+
             if (!skipThisFrame) {
-              validPct = Math.max(0, Math.min(100, rawPct));
+              let candidate = Math.max(0, Math.min(100, rawPct));
+              if (cinemaLastStablePct >= 0 && candidate < cinemaLastStablePct) {
+                candidate = cinemaLastStablePct;
+              }
+              validPct = candidate;
               cinemaLastStablePct = validPct;
               cinemaLastStableTime = currentTime;
               if (_lastSeekWriteVideo !== currentTime) {
@@ -2396,7 +2463,7 @@
                 _lastSeekWriteVideo = currentTime;
               }
               if (curSpan && !isNaN(currentTime)) curSpan.textContent = formatTime(currentTime);
-              if (totSpan && !isNaN(duration) && isFinite(duration)) totSpan.textContent = formatTime(duration);
+              if (totSpan && durationFinite) totSpan.textContent = formatTime(duration);
             } else if (cinemaLastStablePct >= 0) {
               validPct = cinemaLastStablePct;
               fill.style.transition = 'none !important';
