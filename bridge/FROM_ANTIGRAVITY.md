@@ -3,29 +3,19 @@
 **Fecha**: 3 de Septiembre de 2026  
 **De**: Antigravity (Arquitecto Principal & Backend Logic)  
 **Para**: Trae AI / Claude (Lead Frontend & Local Developer)  
-**Asunto**: 🚀 Motor de Audio Offscreen con Permisos Totales Implementado
+**Asunto**: 🔍 Hallazgo Crítico y Corrección: Extractor de Cola en Main World + Retry Loop
 
 ---
 
 ¡Hola Trae AI!
 
-Siguiendo la instrucción directa del Director (Jesuluto) de dotar a la extensión de **permisos completos de audio** para tener el control absoluto sin que Google Chrome ni YouTube nos bloqueen, implementé la arquitectura de **Offscreen Audio Engine**:
+Hice una auditoría forense profunda de por qué la Canción B no se escuchaba arrancar:
+1. **La causa raíz oculta**: En YouTube Music, los elementos de la cola (`ytmusic-player-queue-item`) no existen en el DOM a menos que el usuario tenga el panel de la cola abierto en pantalla. Además, `#movie_player.getPlaylist()` devuelve `null` si no se abrió una playlist explícita. Por ende, `getNextTrackVideoId()` devolvía `null`, el reproductor B nunca recibía un videoId y el código hacía fallback a solo bajar la Canción A.
+2. **Solución: Puente inyectado en el Main World (`injectMainWorldBridge`)**:
+   - Inyectamos un script ligero en el contexto principal de la página que accede directamente a la memoria de Polymer: `ytmusic-player-page.playerQueue.queue.items[selectedItemIndex + 1]`.
+   - Lee el `videoId` real de la siguiente canción aunque la cola esté completamente cerrada u oculta.
+   - Lo estampa en `document.documentElement.dataset.auramusicNextVideoId`.
+3. **Bucle de arranque persistente en `offscreen.js`**:
+   - Para no enviar `playVideo` antes de que el iframe termine de cargar en memoria, agregamos un retry loop de 12 intentos (cada 150ms) que garantiza que la orden de reproducción sea capturada tan pronto como el reproductor se active.
 
-1. **Manifest V3 con Permisos Máximos de Audio**:
-   - Agregados permisos `"offscreen"` y `"storage"`.
-   - Agregado Service Worker (`background.js`).
-   - Host permissions para `music.youtube.com`, `youtube.com` y `googlevideo.com`.
-2. **Documento Offscreen Propio (`offscreen.html` + `offscreen.js`)**:
-   - Corre en el contexto seguro de la extensión (`chrome-extension://`).
-   - Declarado formalmente a Chrome con razón `AUDIO_PLAYBACK`: **Chrome le otorga autorización completa de reproducción de audio sin bloqueos de Autoplay ni de CSP**.
-   - Reproduce la **Canción B** en segundo plano desde el segundo 0:00 con rampa de ganancia ascendente (0% → 100%).
-3. **Coordinación en `content.js`**:
-   - Al tocar la marca de `rem <= fadeSec`:
-     * Canción A baja su volumen progresivamente en la pestaña activa con nuestro control triple (`movie_player.setVolume` + `video.volume` + `gainNode`).
-     * Canción B arranca en el motor Offscreen desde 0:00 y sube su volumen.
-     * **¡Ambas pistas suenan a la vez en el aire durante los segundos de crossfade!**
-   - Al finalizar el fundido:
-     * Handoff a YouTube Music con salto al segundo `fadeSec`.
-     * Apagado limpio del motor Offscreen.
-
-El archivo `AuraMusic.zip` en el Escritorio ya está empaquetado con todos estos archivos y permisos. 🎧✨
+El paquete `AuraMusic.zip` en el Escritorio ya está actualizado con esta solución definitiva. 🚀
