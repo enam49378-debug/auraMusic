@@ -1,140 +1,194 @@
 /**
- * AuraMusic - Pantalla de Carga e Intro de Inicio (Splash Screen)
- * Se ejecuta en document_start para cubrir la página antes de que se renderice nada,
- * ocultando cualquier parpadeo (FOUC) mientras se aplican los temas y módulos.
+ * AuraMusic - Intro Cinemática de Inicio (YouTube on TV Startup)
+ * Ejecuta en document_start la animación y sonido oficial de inicio estilo Google / YouTube on TV.
+ * Cubre 100% la pantalla para evitar FOUC y ofrecer una experiencia premium idéntica a YouTube en Smart TVs.
  */
 (function () {
   'use strict';
 
-  // 1. Comprobar si el usuario desactivó la intro en ajustes
-  try {
-    const saved = localStorage.getItem('auramusic_settings');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed && parsed.splashScreen === false) {
-        return;
-      }
-    }
-  } catch (_) {}
-
-  const startTime = Date.now();
-  const MIN_DISPLAY_MS = 850;      // Tiempo mínimo agradable para apreciar la intro
-  const MAX_SAFETY_TIMEOUT_MS = 3800; // Respaldo máximo para garantizar que nunca se bloquee
-  let isDismissed = false;
-
-  function getVersion() {
+  function getSettings() {
     try {
-      if (typeof chrome !== 'undefined' && chrome.runtime?.getManifest) {
-        return chrome.runtime.getManifest().version || '1.3.2';
-      }
+      const saved = localStorage.getItem('auramusic_settings');
+      if (saved) return JSON.parse(saved);
     } catch (_) {}
-    return '1.3.2';
+    return { splashScreen: true, splashSound: true };
   }
 
-  function injectSplash() {
-    if (document.getElementById('auramusic-splash-screen')) return;
+  let activeVideo = null;
+  let isDismissed = false;
+  let isReadyToDismiss = false;
+  const startTime = Date.now();
+  const MIN_PLAY_MS = 3600; // Garantiza que suene el icónico acorde de YouTube
+  const MAX_SAFETY_TIMEOUT_MS = 7400; // Duración total del video
+
+  function getStartupVideoUrl() {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
+        return chrome.runtime.getURL('assets/startup.mp4');
+      }
+    } catch (_) {}
+    return 'assets/startup.mp4';
+  }
+
+  function createSplash(isManualPreview = false) {
+    const settings = getSettings();
+    if (!isManualPreview && settings.splashScreen === false) {
+      return;
+    }
+
+    const existing = document.getElementById('auramusic-splash-screen');
+    if (existing) existing.remove();
+
+    isDismissed = false;
+    isReadyToDismiss = false;
+
+    const soundEnabled = isManualPreview ? true : (settings.splashSound !== false);
+    const videoUrl = getStartupVideoUrl();
 
     const splash = document.createElement('div');
     splash.id = 'auramusic-splash-screen';
-    splash.setAttribute('role', 'status');
-    splash.setAttribute('aria-live', 'polite');
-
-    const ver = getVersion();
+    splash.setAttribute('role', 'dialog');
+    splash.setAttribute('aria-label', 'AuraMusic Intro');
 
     splash.innerHTML = `
-      <div class="auramusic-splash-backdrop">
-        <div class="splash-orb splash-orb-1"></div>
-        <div class="splash-orb splash-orb-2"></div>
-        <div class="splash-orb splash-orb-3"></div>
-        <div class="splash-mesh-grid"></div>
-      </div>
+      <video id="auramusic-startup-video" playsinline preload="auto">
+        <source src="${videoUrl}" type="video/mp4">
+      </video>
 
-      <div class="auramusic-splash-content" id="auramusic-splash-card">
-        <div class="splash-emblem-box">
-          <div class="splash-glow-ring"></div>
-          <div class="splash-logo-sparkle">✨</div>
+      <div class="splash-tv-overlay">
+        <div class="splash-top-bar">
+          <span class="splash-brand-badge">AuraMusic • YouTube on TV</span>
+          <button type="button" class="splash-sound-btn" id="splash-sound-toggle">
+            ${soundEnabled ? '🔊 Sonido Activado' : '🔇 Silenciado'}
+          </button>
         </div>
 
-        <div class="splash-title-wrap">
-          <h1 class="splash-main-title">AuraMusic</h1>
-          <span class="splash-version-pill">v${ver}</span>
-        </div>
-
-        <p class="splash-tagline">Personalizador Avanzado para YouTube Music</p>
-
-        <div class="splash-progress-track">
-          <div class="splash-progress-fill" id="splash-progress-bar" style="width: 25%;"></div>
-        </div>
-
-        <div class="splash-status-container">
-          <span class="splash-status-spinner"></span>
-          <span class="splash-status-text" id="splash-status-label">Iniciando interfaz y temas...</span>
-        </div>
-
-        <div class="splash-hint-text">
-          Presiona <kbd>Esc</kbd> o haz clic para continuar
+        <div class="splash-bottom-bar">
+          <div class="splash-tv-hint">
+            Haz clic o presiona <kbd>Esc</kbd> para omitir
+          </div>
         </div>
       </div>
     `;
 
-    // Saltarse la intro con un clic o tecla Escape
-    splash.addEventListener('click', () => dismissSplash(true));
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && document.getElementById('auramusic-splash-screen')) {
-        dismissSplash(true);
-      }
-    }, { once: true });
+    const video = splash.querySelector('#auramusic-startup-video');
+    const soundBtn = splash.querySelector('#splash-sound-toggle');
+    activeVideo = video;
 
-    // Inyectar de inmediato en el contenedor raíz
-    const target = document.body || document.documentElement;
-    if (target) {
-      target.appendChild(splash);
-    } else {
-      document.addEventListener('DOMContentLoaded', () => {
-        if (!document.getElementById('auramusic-splash-screen')) {
-          (document.body || document.documentElement).appendChild(splash);
+    // Configurar audio
+    video.volume = 0.85;
+    video.muted = !soundEnabled;
+
+    // Intentar reproducir con sonido
+    const tryPlay = () => {
+      const p = video.play();
+      if (p !== undefined) {
+        p.catch((err) => {
+          // Si Chrome bloquea el audio automático previo a la interacción del usuario:
+          console.warn('AuraMusic: Autoplay con audio restringido por Chrome. Iniciando silenciado...', err);
+          video.muted = true;
+          if (soundBtn) soundBtn.textContent = '🔇 Silenciado (Clic para activar)';
+          video.play().catch(() => {});
+        });
+      }
+    };
+
+    // Botón de sonido
+    if (soundBtn) {
+      soundBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        video.muted = !video.muted;
+        if (!video.muted) {
+          video.volume = 0.85;
+          soundBtn.textContent = '🔊 Sonido Activado';
+        } else {
+          soundBtn.textContent = '🔇 Silenciado';
         }
       });
     }
-  }
 
-  function updateStatus(text, percent = null) {
-    if (isDismissed) return;
-    const label = document.getElementById('splash-status-label');
-    const bar = document.getElementById('splash-progress-bar');
-    if (label && text) label.textContent = text;
-    if (bar && typeof percent === 'number') {
-      bar.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+    // Saltar con clic o tecla Escape / Espacio
+    splash.addEventListener('click', () => dismissSplash(true));
+    const onKey = (e) => {
+      if (e.key === 'Escape' || e.key === ' ') {
+        window.removeEventListener('keydown', onKey);
+        dismissSplash(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+
+    // Al terminar el video
+    video.addEventListener('ended', () => {
+      dismissSplash(false);
+    });
+
+    video.addEventListener('error', () => {
+      console.warn('AuraMusic: Error cargando video de inicio, continuando.');
+      dismissSplash(true);
+    });
+
+    // Inyectar en el documento
+    const container = document.body || document.documentElement;
+    if (container) {
+      container.appendChild(splash);
+      tryPlay();
+    } else {
+      document.addEventListener('DOMContentLoaded', () => {
+        (document.body || document.documentElement).appendChild(splash);
+        tryPlay();
+      });
     }
+
+    // Temporizador máximo de seguridad
+    setTimeout(() => {
+      dismissSplash(false);
+    }, MAX_SAFETY_TIMEOUT_MS);
   }
 
   function dismissSplash(immediate = false) {
     if (isDismissed) return;
+    isDismissed = true;
+
     const splash = document.getElementById('auramusic-splash-screen');
     if (!splash) return;
 
-    const elapsed = Date.now() - startTime;
-    const delay = (immediate || elapsed >= MIN_DISPLAY_MS) ? 0 : (MIN_DISPLAY_MS - elapsed);
+    // Desvanecer el volumen suavemente para un cierre profesional
+    try {
+      if (activeVideo && !activeVideo.paused && !activeVideo.muted) {
+        let vol = activeVideo.volume;
+        const fadeTimer = setInterval(() => {
+          vol = Math.max(0, vol - 0.18);
+          activeVideo.volume = vol;
+          if (vol <= 0) {
+            clearInterval(fadeTimer);
+            try { activeVideo.pause(); } catch (_) {}
+          }
+        }, 30);
+      }
+    } catch (_) {}
 
+    splash.classList.add('splash-dismissed');
     setTimeout(() => {
-      if (isDismissed) return;
-      isDismissed = true;
-
-      updateStatus('✨ ¡Todo listo!', 100);
-
-      setTimeout(() => {
-        splash.classList.add('splash-dismissed');
-        setTimeout(() => {
-          splash.remove();
-        }, 650);
-      }, immediate ? 40 : 250);
-    }, delay);
+      try { splash.remove(); } catch (_) {}
+    }, 620);
   }
 
-  // Ejecución inmediata
-  injectSplash();
+  function onPageReady() {
+    isReadyToDismiss = true;
+    const elapsed = Date.now() - startTime;
+    if (elapsed >= MIN_PLAY_MS) {
+      dismissSplash(false);
+    } else {
+      setTimeout(() => {
+        dismissSplash(false);
+      }, MIN_PLAY_MS - elapsed);
+    }
+  }
 
-  // Si document.body se creó después, asegurar que esté en el body
+  // Iniciar automáticamente en document_start
+  createSplash(false);
+
+  // Asegurar que quede montado si el body se construye después
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       const splash = document.getElementById('auramusic-splash-screen');
@@ -144,16 +198,10 @@
     });
   }
 
-  // Respaldo de seguridad: nunca dejar la pantalla bloqueada más de 3.8s
-  setTimeout(() => {
-    dismissSplash(true);
-  }, MAX_SAFETY_TIMEOUT_MS);
-
   // Exponer API global
   window.AuraMusic = window.AuraMusic || {};
   window.AuraMusic.Splash = {
-    dismiss: dismissSplash,
-    updateStatus: updateStatus,
-    inject: injectSplash
+    dismiss: onPageReady,
+    preview: () => createSplash(true)
   };
 })();

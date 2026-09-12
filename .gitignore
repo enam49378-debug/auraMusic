@@ -1,4 +1,4 @@
-﻿# Archivos del sistema y temporales
+# Archivos del sistema y temporales
 .DS_Store
 Thumbs.db
 *.tmp
@@ -12,6 +12,7 @@ Thumbs.db
 cache/
 *.mp3
 *.mp4
+!assets/startup.mp4
 *.zip
 *.tar.gz
 *.crx

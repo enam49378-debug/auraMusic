@@ -175,13 +175,30 @@ window.AuraMusic = window.AuraMusic || {};
             <div class="auramusic-card" style="margin-top: 14px;">
               <div class="auramusic-row">
                 <div class="auramusic-label-box">
-                  <span class="auramusic-label">🎬 Pantalla de Carga (Intro de Inicio)</span>
-                  <span class="auramusic-sublabel">Tapa la pantalla al abrir YouTube Music para evitar parpadeos y aplicar temas limpiamente.</span>
+                  <span class="auramusic-label">🎬 Intro Cinemática (YouTube on TV)</span>
+                  <span class="auramusic-sublabel">Reproduce la animación de inicio oficial estilo Google / YouTube on TV al abrir la página.</span>
                 </div>
                 <label class="auramusic-switch">
                   <input type="checkbox" id="toggle-splash" ${state.splashScreen !== false ? 'checked' : ''}>
                   <span class="auramusic-slider"></span>
                 </label>
+              </div>
+
+              <div class="auramusic-row" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);">
+                <div class="auramusic-label-box">
+                  <span class="auramusic-label">🔊 Sonido de Inicio (Startup Sound)</span>
+                  <span class="auramusic-sublabel">Reproduce el icónico acorde sonoro de YouTube on TV al arrancar.</span>
+                </div>
+                <label class="auramusic-switch">
+                  <input type="checkbox" id="toggle-splash-sound" ${state.splashSound !== false ? 'checked' : ''}>
+                  <span class="auramusic-slider"></span>
+                </label>
+              </div>
+
+              <div style="margin-top: 14px; display: flex; justify-content: flex-end;">
+                <button type="button" id="btn-preview-splash" class="auramusic-footer-check-btn" style="width: auto; padding: 6px 14px;">
+                  ▶ Probar Intro
+                </button>
               </div>
             </div>
           </section>
@@ -391,6 +408,26 @@ window.AuraMusic = window.AuraMusic || {};
         const state = getState();
         state.splashScreen = e.target.checked;
         if (window.saveSettings) window.saveSettings();
+      });
+    }
+
+    const toggleSplashSound = document.getElementById('toggle-splash-sound');
+    if (toggleSplashSound) {
+      toggleSplashSound.addEventListener('change', (e) => {
+        const state = getState();
+        state.splashSound = e.target.checked;
+        if (window.saveSettings) window.saveSettings();
+      });
+    }
+
+    const btnPreviewSplash = document.getElementById('btn-preview-splash');
+    if (btnPreviewSplash) {
+      btnPreviewSplash.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeHub();
+        if (window.AuraMusic?.Splash?.preview) {
+          window.AuraMusic.Splash.preview();
+        }
       });
     }
 
@@ -654,6 +691,8 @@ window.AuraMusic = window.AuraMusic || {};
     if (toggleClean) toggleClean.checked = !!state.cleanMode;
     const toggleSplash = document.getElementById('toggle-splash');
     if (toggleSplash) toggleSplash.checked = state.splashScreen !== false;
+    const toggleSplashSound = document.getElementById('toggle-splash-sound');
+    if (toggleSplashSound) toggleSplashSound.checked = state.splashSound !== false;
     const volumeSlider = document.getElementById('volume-boost-slider');
     const volumeVal = document.getElementById('volume-boost-val');
     if (volumeSlider && state.volumeBoost) {
