@@ -1,8 +1,12 @@
 /* ==========================================================================
-   AURAMUSIC - INTRO ANIMADA ESTILO YOUTUBE TV + CAÍDA DE AURAMUSIC
-   Construido en CSS puro & DOM. Tapa la pantalla al 100% en document_start
-   para evitar parpadeos (FOUC) y recrear la intro cinemática de YouTube on TV
-   con la posterior caída y fijación del logo de AuraMusic.
+   AURAMUSIC - INTRO CINEMÁTICA: YOUTUBE MUSIC + FUSIÓN AURAMUSIC
+   Secuencia 100% en código puro:
+   1. Seeker line estilo YouTube TV
+   2. YouTube Music aparece
+   3. AuraMusic cae AL LADO con rebote elástico (sin badges ni textos de versión)
+   4. AuraMusic toma fuerza con brillo neón creciente
+   5. Fusión magnética con destello y onda de energía
+   6. Emerge triunfal el logo oficial de YouTube Music
    ========================================================================== */
 
 #auramusic-splash-screen {
@@ -15,7 +19,6 @@
   background: #0f0f0f !important;
   z-index: 2147483647 !important;
   display: flex !important;
-  flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
   overflow: hidden !important;
@@ -30,11 +33,11 @@
 #auramusic-splash-screen.splash-dismissed {
   opacity: 0 !important;
   transform: scale(1.035) !important;
-  filter: blur(8px) !important;
+  filter: blur(10px) !important;
   pointer-events: none !important;
 }
 
-/* FASE 1: Barra de Carga YouTube TV (Seeker Bar con Play Triangle) */
+/* FASE 1: Seeker Bar de Carga YouTube TV */
 .yt-loader-box {
   display: flex;
   align-items: center;
@@ -42,8 +45,9 @@
   width: 480px;
   max-width: 80vw;
   position: absolute;
-  transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   opacity: 1;
+  z-index: 5;
 }
 
 .yt-loader-play-triangle {
@@ -54,13 +58,12 @@
   border-left: 17px solid #ffffff;
   flex-shrink: 0;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
-  transition: transform 0.4s ease;
 }
 
 .yt-loader-track {
   flex: 1;
   height: 4.5px;
-  background: #2c2c2c;
+  background: #2a2a2a;
   border-radius: 4px;
   overflow: hidden;
   position: relative;
@@ -77,15 +80,25 @@
   box-shadow: 0 0 12px rgba(255, 0, 0, 0.7);
 }
 
-/* FASE 2: Logo Oficial YouTube Music */
-.yt-logo-box {
+/* FASE 2 & 3: Contenedor Doble (YouTube Music AL LADO DE AuraMusic) */
+.side-by-side-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  position: absolute;
+  z-index: 10;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Bloque YouTube Music */
+.yt-block {
   display: flex;
   align-items: center;
   gap: 14px;
   opacity: 0;
   transform: scale(0.85);
   transition: all 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  position: absolute;
 }
 
 .yt-red-pill {
@@ -101,8 +114,7 @@
   position: relative;
 }
 
-.yt-red-pill::after {
-  content: '';
+.yt-play-arrow {
   width: 0;
   height: 0;
   border-top: 8px solid transparent;
@@ -111,61 +123,56 @@
   margin-left: 3px;
 }
 
-.yt-text-group {
+.yt-text-wrap {
   display: flex;
   align-items: baseline;
   gap: 8px;
 }
 
-.yt-brand-youtube {
+.yt-txt-youtube {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 3.2rem;
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: -1.5px;
   color: #ffffff;
+  line-height: 1;
 }
 
-.yt-brand-music {
+.yt-txt-music {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 2.2rem;
   font-weight: 400;
   letter-spacing: -0.8px;
   color: #aaaaaa;
+  line-height: 1;
 }
 
-/* FASE 3: ¡CAÍDA DEL TEXTO AURAMUSIC! (The Drop) */
-.aura-drop-container {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  pointer-events: none;
-  z-index: 20;
-}
-
-.aura-falling-logo {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 3.6rem;
-  font-weight: 900;
-  letter-spacing: -1.5px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* Separador vertical sutil */
+.side-divider {
+  width: 2px;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 2px;
   opacity: 0;
-  transform: translateY(-260px) scale(1.15) rotate(-3deg);
-  will-change: transform, opacity;
+  transform: scaleY(0);
+  transition: all 0.35s ease;
 }
 
-.aura-text-gradient {
-  background: linear-gradient(135deg, #00f2fe 0%, #4facfe 35%, #a855f7 70%, #ff007f 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 25px rgba(0, 242, 254, 0.6));
+/* Bloque AuraMusic (Cae AL LADO a la derecha) */
+.aura-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transform: translateY(-280px) scale(1.15) rotate(-4deg);
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
 }
 
-.aura-sparkle-icon {
-  font-size: 2.8rem;
+.aura-sparkle {
+  font-size: 2.5rem;
   display: inline-block;
+  filter: drop-shadow(0 0 14px #00f2fe);
   animation: auraSparkleSpin 4s linear infinite;
 }
 
@@ -174,42 +181,115 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Onda expansiva de impacto */
-.aura-impact-shockwave {
+.aura-title {
+  font-size: 3.2rem;
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  background: linear-gradient(135deg, #00f2fe 0%, #4facfe 35%, #a855f7 70%, #ff007f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px rgba(0, 242, 254, 0.55));
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* FASE 4: AuraMusic "Toma Fuerza" (Charge Up Glow) */
+.aura-block.charging {
+  animation: auraPowerCharge 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes auraPowerCharge {
+  0% {
+    transform: translateY(0) scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 15px #00f2fe);
+  }
+  100% {
+    transform: translateY(-3px) scale(1.08) rotate(1deg);
+    filter: drop-shadow(0 0 45px #00f2fe) drop-shadow(0 0 25px #ff007f);
+  }
+}
+
+/* FASE 5: Fusión y Destello de Energía */
+.fusion-flash {
   position: absolute;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 3px solid #00f2fe;
-  box-shadow: 0 0 35px #00f2fe, inset 0 0 25px #ff007f;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.95) 0%, rgba(0, 242, 254, 0.6) 30%, transparent 70%);
   opacity: 0;
   pointer-events: none;
-  transform: scale(0.2);
+  z-index: 50;
+  transition: opacity 0.15s ease-out;
 }
 
-.aura-sub-badge {
-  margin-top: 10px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(0, 242, 254, 0.3);
-  padding: 5px 14px;
-  border-radius: 20px;
+.fusion-energy-ring {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 3px solid #00f2fe;
+  box-shadow: 0 0 40px #00f2fe, inset 0 0 30px #ff007f;
   opacity: 0;
-  transform: translateY(15px);
-  transition: all 0.4s ease;
+  pointer-events: none;
+  z-index: 45;
+  transform: scale(0.1);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* FASE 6: Logo Final de YouTube Emerge Glorioso */
+.final-yt-stage {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
+  opacity: 0;
+  transform: scale(0.7);
+  position: absolute;
+  z-index: 40;
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.aura-sub-badge span.pill {
-  background: rgba(0, 242, 254, 0.2);
-  color: #00f2fe;
-  padding: 2px 7px;
-  border-radius: 10px;
-  font-size: 0.75rem;
+.final-yt-stage.active {
+  opacity: 1;
+  transform: scale(1.06);
+}
+
+.final-red-pill {
+  width: 72px;
+  height: 50px;
+  background: #ff0000;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 30px rgba(255, 0, 0, 0.6), 0 0 25px rgba(0, 242, 254, 0.4);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.final-red-pill::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 16px solid #ffffff;
+  margin-left: 4px;
+}
+
+.final-brand-title {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 3.6rem;
+  font-weight: 900;
+  letter-spacing: -1.8px;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.final-music-tag {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 2.4rem;
+  font-weight: 400;
+  letter-spacing: -1px;
+  color: #aaaaaa;
+  line-height: 1;
 }
 
 /* Indicador inferior para omitir */
@@ -224,6 +304,7 @@
   gap: 6px;
   opacity: 0;
   transition: opacity 0.5s ease;
+  z-index: 100;
 }
 
 .tv-skip-hint kbd {

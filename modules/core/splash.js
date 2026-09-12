@@ -20,7 +20,7 @@
   let isReadyToDismiss = false;
   let activeTimers = [];
   const startTime = Date.now();
-  const MIN_PLAY_MS = 3400; // Tiempo para apreciar el logo y la caída
+  const MIN_PLAY_MS = 5200; // Tiempo para apreciar la caída, carga neón, fusión y logo final
 
   function getSoundUrl() {
     try {
@@ -77,26 +77,35 @@
         </div>
       </div>
 
-      <!-- 2. Logo YouTube Music -->
-      <div class="yt-logo-box" id="splash-yt-logo">
-        <div class="yt-red-pill"></div>
-        <div class="yt-text-group">
-          <span class="yt-brand-youtube">YouTube</span>
-          <span class="yt-brand-music">Music</span>
+      <!-- 2 & 3. Fila Doble Lado a Lado (YouTube Music + Divisor + AuraMusic) -->
+      <div class="side-by-side-wrapper" id="splash-side-wrapper">
+        <div class="yt-block" id="splash-yt-block">
+          <div class="yt-red-pill">
+            <div class="yt-play-arrow"></div>
+          </div>
+          <div class="yt-text-wrap">
+            <span class="yt-txt-youtube">YouTube</span>
+            <span class="yt-txt-music">Music</span>
+          </div>
+        </div>
+
+        <div class="side-divider" id="splash-divider"></div>
+
+        <div class="aura-block" id="splash-aura-block">
+          <span class="aura-sparkle">✨</span>
+          <span class="aura-title">AuraMusic</span>
         </div>
       </div>
 
-      <!-- 3. Caída e Impacto de AuraMusic -->
-      <div class="aura-drop-container" id="splash-aura-container">
-        <div class="aura-impact-shockwave" id="splash-shockwave"></div>
-        <div class="aura-falling-logo" id="splash-falling-logo">
-          <span class="aura-sparkle-icon">✨</span>
-          <span class="aura-text-gradient">AuraMusic</span>
-        </div>
-        <div class="aura-sub-badge" id="splash-sub-badge">
-          <span>Personalizador de YouTube Music</span>
-          <span class="pill">v1.3.3</span>
-        </div>
+      <!-- 4 & 5. Efectos de Fusión y Choque de Energía -->
+      <div class="fusion-flash" id="splash-fusion-flash"></div>
+      <div class="fusion-energy-ring" id="splash-energy-ring"></div>
+
+      <!-- 6. Logo Final Triunfal de YouTube -->
+      <div class="final-yt-stage" id="splash-final-stage">
+        <div class="final-red-pill"></div>
+        <span class="final-brand-title">YouTube</span>
+        <span class="final-music-tag">Music</span>
       </div>
 
       <!-- Indicador inferior para omitir -->
@@ -107,10 +116,13 @@
 
     const loaderBox = splash.querySelector('#splash-yt-loader');
     const loaderFill = splash.querySelector('#splash-loader-fill');
-    const logoBox = splash.querySelector('#splash-yt-logo');
-    const fallingLogo = splash.querySelector('#splash-falling-logo');
-    const shockwave = splash.querySelector('#splash-shockwave');
-    const subBadge = splash.querySelector('#splash-sub-badge');
+    const sideWrapper = splash.querySelector('#splash-side-wrapper');
+    const ytBlock = splash.querySelector('#splash-yt-block');
+    const divider = splash.querySelector('#splash-divider');
+    const auraBlock = splash.querySelector('#splash-aura-block');
+    const fusionFlash = splash.querySelector('#splash-fusion-flash');
+    const energyRing = splash.querySelector('#splash-energy-ring');
+    const finalStage = splash.querySelector('#splash-final-stage');
     const skipHint = splash.querySelector('#splash-skip-hint');
 
     // Inyectar en el documento
@@ -148,47 +160,69 @@
         loaderBox.style.opacity = '0';
         loaderBox.style.transform = 'scale(0.8)';
 
-        logoBox.style.transition = 'all 450ms cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-        logoBox.style.opacity = '1';
-        logoBox.style.transform = 'scale(1)';
+        ytBlock.style.transition = 'all 450ms cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        ytBlock.style.opacity = '1';
+        ytBlock.style.transform = 'scale(1)';
 
         skipHint.style.opacity = '1';
       }, 1500));
 
-      // 3. ¡CAÍDA DEL TEXTO AURAMUSIC!
+      // 3. ¡CAÍDA DE AURAMUSIC AL LADO (SIDE-BY-SIDE, NO ENCIMA)!
       activeTimers.push(setTimeout(() => {
-        // Cae con rebote físico
-        fallingLogo.style.transition = 'transform 550ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 250ms ease';
-        fallingLogo.style.opacity = '1';
-        fallingLogo.style.transform = 'translateY(0) scale(1) rotate(0deg)';
+        divider.style.opacity = '0.5';
+        divider.style.transform = 'scaleY(1)';
 
-        // El logo de YouTube Music se desliza ligeramente para acompañar
-        logoBox.style.transition = 'transform 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 500ms ease';
-        logoBox.style.transform = 'translateY(70px) scale(0.85)';
-        logoBox.style.opacity = '0.75';
+        auraBlock.style.transition = 'transform 550ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 250ms ease';
+        auraBlock.style.opacity = '1';
+        auraBlock.style.transform = 'translateY(0) scale(1) rotate(0deg)';
+      }, 2050));
 
-        // Onda expansiva de impacto
+      // 4. ¡AURAMUSIC TOMA FUERZA (CARGA DE ENERGÍA NEÓN)!
+      activeTimers.push(setTimeout(() => {
+        auraBlock.classList.add('charging');
+      }, 2750));
+
+      // 5. ¡FUSIÓN CON YOUTUBE MUSIC! (Atracción magnética hacia el centro)
+      activeTimers.push(setTimeout(() => {
+        auraBlock.classList.remove('charging');
+        auraBlock.style.filter = 'drop-shadow(0 0 35px #00f2fe) drop-shadow(0 0 25px #ff007f)';
+        ytBlock.style.filter = 'drop-shadow(0 0 30px rgba(255, 0, 0, 0.85))';
+
+        ytBlock.style.transition = 'all 420ms cubic-bezier(0.7, 0, 0.84, 0)';
+        auraBlock.style.transition = 'all 420ms cubic-bezier(0.7, 0, 0.84, 0)';
+        divider.style.transition = 'opacity 200ms ease';
+        divider.style.opacity = '0';
+
+        // Atracción al centro
+        ytBlock.style.transform = 'translateX(90px) scale(0.9)';
+        auraBlock.style.transform = 'translateX(-90px) scale(0.9)';
+
+        // 6. ¡COLISIÓN, DESTELLO RADIAL Y SURGIMIENTO DEL LOGO DE YOUTUBE!
         activeTimers.push(setTimeout(() => {
-          shockwave.style.transition = 'all 500ms cubic-bezier(0.16, 1, 0.3, 1)';
-          shockwave.style.opacity = '0.85';
-          shockwave.style.transform = 'scale(6)';
-          setTimeout(() => { shockwave.style.opacity = '0'; }, 350);
-        }, 300));
+          sideWrapper.style.opacity = '0';
 
-        // Subtítulo
-        activeTimers.push(setTimeout(() => {
-          subBadge.style.transition = 'all 400ms cubic-bezier(0.16, 1, 0.3, 1)';
-          subBadge.style.opacity = '1';
-          subBadge.style.transform = 'translateY(0)';
-        }, 380));
+          // Destello y onda de choque
+          fusionFlash.style.opacity = '1';
+          energyRing.style.opacity = '1';
+          energyRing.style.transform = 'scale(7.5)';
 
-      }, 2100));
+          // Revelar logo final
+          finalStage.classList.add('active');
+
+          setTimeout(() => {
+            fusionFlash.style.transition = 'opacity 350ms ease-out';
+            fusionFlash.style.opacity = '0';
+            energyRing.style.opacity = '0';
+          }, 120);
+        }, 420));
+
+      }, 3550));
     });
 
     // Temporizador de seguridad máximo (nunca trabar la página)
     activeTimers.push(setTimeout(() => {
       dismissSplash(false);
-    }, 6000));
+    }, 7000));
   }
 
   function dismissSplash(immediate = false) {
