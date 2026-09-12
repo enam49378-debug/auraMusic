@@ -30,10 +30,10 @@
   function getLocalVersion() {
     try {
       if (typeof chrome !== 'undefined' && chrome.runtime?.getManifest) {
-        return chrome.runtime.getManifest().version || '1.3.2';
+        return chrome.runtime.getManifest().version || '1.3.3';
       }
     } catch (_) {}
-    return '1.3.2';
+    return '1.3.3';
   }
 
   // Comprueba si hay actualizaciones en GitHub (por versión SemVer o nuevo Commit SHA)

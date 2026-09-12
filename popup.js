@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 1. Mostrar versión actual
   const versionBadge = document.getElementById('popup-version-badge');
-  const currentVer = (chrome.runtime?.getManifest) ? chrome.runtime.getManifest().version : '1.3.2';
+  const currentVer = (chrome.runtime?.getManifest) ? chrome.runtime.getManifest().version : '1.3.3';
   if (versionBadge) versionBadge.textContent = `v${currentVer}`;
 
   // 2. Comprobar estado de GitHub en el popup

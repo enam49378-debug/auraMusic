@@ -12,6 +12,7 @@ var defaultSettings = window.defaultSettings = AuraMusic.defaultSettings = {
   volumeBoost: 100,
   playbackSpeed: 1.0,
   cleanMode: true,
+  splashScreen: true,
   eq: {
     '60Hz': 0,
     '250Hz': 0,

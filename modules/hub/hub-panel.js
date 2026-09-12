@@ -13,10 +13,10 @@ window.AuraMusic = window.AuraMusic || {};
   function getExtVersion() {
     try {
       if (typeof chrome !== 'undefined' && chrome.runtime?.getManifest) {
-        return chrome.runtime.getManifest().version || '1.3.2';
+        return chrome.runtime.getManifest().version || '1.3.3';
       }
     } catch (_) {}
-    return '1.3.2';
+    return '1.3.3';
   }
 
   // --- CREACIÓN DEL PANEL DE CONTROL GLASSMORPHISM ---
@@ -167,6 +167,19 @@ window.AuraMusic = window.AuraMusic || {};
                 </div>
                 <label class="auramusic-switch">
                   <input type="checkbox" id="toggle-clean" ${state.cleanMode ? 'checked' : ''}>
+                  <span class="auramusic-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="auramusic-card" style="margin-top: 14px;">
+              <div class="auramusic-row">
+                <div class="auramusic-label-box">
+                  <span class="auramusic-label">🎬 Pantalla de Carga (Intro de Inicio)</span>
+                  <span class="auramusic-sublabel">Tapa la pantalla al abrir YouTube Music para evitar parpadeos y aplicar temas limpiamente.</span>
+                </div>
+                <label class="auramusic-switch">
+                  <input type="checkbox" id="toggle-splash" ${state.splashScreen !== false ? 'checked' : ''}>
                   <span class="auramusic-slider"></span>
                 </label>
               </div>
@@ -367,6 +380,16 @@ window.AuraMusic = window.AuraMusic || {};
         const state = getState();
         state.cleanMode = e.target.checked;
         if (window.applyCleanMode) window.applyCleanMode(state.cleanMode);
+        if (window.saveSettings) window.saveSettings();
+      });
+    }
+
+    // Toggle Pantalla de Carga (Intro Splash)
+    const toggleSplash = document.getElementById('toggle-splash');
+    if (toggleSplash) {
+      toggleSplash.addEventListener('change', (e) => {
+        const state = getState();
+        state.splashScreen = e.target.checked;
         if (window.saveSettings) window.saveSettings();
       });
     }
@@ -629,6 +652,8 @@ window.AuraMusic = window.AuraMusic || {};
     if (toggleAmbient) toggleAmbient.checked = !!state.ambientGlow;
     const toggleClean = document.getElementById('toggle-clean');
     if (toggleClean) toggleClean.checked = !!state.cleanMode;
+    const toggleSplash = document.getElementById('toggle-splash');
+    if (toggleSplash) toggleSplash.checked = state.splashScreen !== false;
     const volumeSlider = document.getElementById('volume-boost-slider');
     const volumeVal = document.getElementById('volume-boost-val');
     if (volumeSlider && state.volumeBoost) {

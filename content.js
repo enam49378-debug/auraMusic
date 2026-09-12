@@ -43,6 +43,9 @@
     isAuraMusicInitialized = true;
 
     console.log('%c🚀 AuraMusic: Conectando módulos...', 'color: #00e5ff; font-weight: bold;');
+    if (window.AuraMusic?.Splash?.updateStatus) {
+      window.AuraMusic.Splash.updateStatus('Cargando ajustes y temas...', 45);
+    }
 
     // 1. Cargar ajustes persistentes (activa automáticamente applyAllSettings)
     if (typeof window.loadSettings === 'function') {
@@ -57,6 +60,10 @@
       window.applyTheme(curTheme);
     } else if (window.AuraMusic?.Themes?.applyTheme) {
       window.AuraMusic.Themes.applyTheme(curTheme);
+    }
+
+    if (window.AuraMusic?.Splash?.updateStatus) {
+      window.AuraMusic.Splash.updateStatus('Iniciando interfaz y módulos...', 80);
     }
 
     // 3. Inyectar Hub Flotante y Lanzador
@@ -119,6 +126,11 @@
     }, 2500);
 
     console.log('✅ AuraMusic: Inicialización completa.');
+
+    // 7. Desvanecer la pantalla de carga suavemente
+    if (window.AuraMusic?.Splash?.dismiss) {
+      window.AuraMusic.Splash.dismiss();
+    }
   }
 
   if (document.readyState === 'loading') {
