@@ -1,7 +1,8 @@
 /* ==========================================================================
-   AURAMUSIC - INTRO CINEMÁTICA YOUTUBE ON TV STARTUP
-   Reproduce la animación y sonido oficial de inicio estilo Google / YouTube on TV
-   para una experiencia inmersiva y tapar la carga sin ningún parpadeo (FOUC).
+   AURAMUSIC - INTRO ANIMADA ESTILO YOUTUBE TV + CAÍDA DE AURAMUSIC
+   Construido en CSS puro & DOM. Tapa la pantalla al 100% en document_start
+   para evitar parpadeos (FOUC) y recrear la intro cinemática de YouTube on TV
+   con la posterior caída y fijación del logo de AuraMusic.
    ========================================================================== */
 
 #auramusic-splash-screen {
@@ -33,100 +34,203 @@
   pointer-events: none !important;
 }
 
-/* Video a pantalla completa ajustado perfectamente */
-#auramusic-startup-video {
-  width: 100vw !important;
-  height: 100vh !important;
-  max-width: 100vw !important;
-  max-height: 100vh !important;
-  object-fit: contain !important;
-  background: #0f0f0f !important;
-  display: block !important;
-  pointer-events: none !important;
-}
-
-/* Controles sutiles flotantes */
-.splash-tv-overlay {
+/* FASE 1: Barra de Carga YouTube TV (Seeker Bar con Play Triangle) */
+.yt-loader-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 480px;
+  max-width: 80vw;
   position: absolute;
-  inset: 0;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 24px 32px;
-  box-sizing: border-box;
-  z-index: 10;
+  transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 1;
 }
 
-.splash-top-bar {
+.yt-loader-play-triangle {
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 17px solid #ffffff;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  transition: transform 0.4s ease;
+}
+
+.yt-loader-track {
+  flex: 1;
+  height: 4.5px;
+  background: #2c2c2c;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.yt-loader-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: #ff0000;
+  border-radius: 4px;
+  box-shadow: 0 0 12px rgba(255, 0, 0, 0.7);
+}
+
+/* FASE 2: Logo Oficial YouTube Music */
+.yt-logo-box {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
+  gap: 14px;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: all 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: absolute;
 }
 
-.splash-brand-badge {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.4);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.splash-sound-btn {
-  pointer-events: auto;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: #ffffff;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-}
-
-.splash-sound-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.35);
-  transform: scale(1.05);
-}
-
-.splash-bottom-bar {
+.yt-red-pill {
+  width: 64px;
+  height: 45px;
+  background: #ff0000;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  box-shadow: 0 6px 20px rgba(255, 0, 0, 0.45);
+  flex-shrink: 0;
+  position: relative;
 }
 
-.splash-tv-hint {
+.yt-red-pill::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 14px solid #ffffff;
+  margin-left: 3px;
+}
+
+.yt-text-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.yt-brand-youtube {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 3.2rem;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  color: #ffffff;
+}
+
+.yt-brand-music {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  letter-spacing: -0.8px;
+  color: #aaaaaa;
+}
+
+/* FASE 3: ¡CAÍDA DEL TEXTO AURAMUSIC! (The Drop) */
+.aura-drop-container {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.aura-falling-logo {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 3.6rem;
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(-260px) scale(1.15) rotate(-3deg);
+  will-change: transform, opacity;
+}
+
+.aura-text-gradient {
+  background: linear-gradient(135deg, #00f2fe 0%, #4facfe 35%, #a855f7 70%, #ff007f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 25px rgba(0, 242, 254, 0.6));
+}
+
+.aura-sparkle-icon {
+  font-size: 2.8rem;
+  display: inline-block;
+  animation: auraSparkleSpin 4s linear infinite;
+}
+
+@keyframes auraSparkleSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Onda expansiva de impacto */
+.aura-impact-shockwave {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid #00f2fe;
+  box-shadow: 0 0 35px #00f2fe, inset 0 0 25px #ff007f;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.2);
+}
+
+.aura-sub-badge {
+  margin-top: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  padding: 5px 14px;
+  border-radius: 20px;
+  opacity: 0;
+  transform: translateY(15px);
+  transition: all 0.4s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aura-sub-badge span.pill {
+  background: rgba(0, 242, 254, 0.2);
+  color: #00f2fe;
+  padding: 2px 7px;
+  border-radius: 10px;
   font-size: 0.75rem;
+}
+
+/* Indicador inferior para omitir */
+.tv-skip-hint {
+  position: absolute;
+  bottom: 24px;
+  font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.35);
   letter-spacing: 0.3px;
   display: flex;
   align-items: center;
   gap: 6px;
   opacity: 0;
-  animation: splashHintFadeIn 1.2s 2.2s forwards ease;
+  transition: opacity 0.5s ease;
 }
 
-@keyframes splashHintFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.splash-tv-hint kbd {
+.tv-skip-hint kbd {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: rgba(255, 255, 255, 0.8);
   border-radius: 4px;
   padding: 2px 6px;
   font-size: 0.7rem;
-  font-family: inherit;
 }

@@ -1,7 +1,8 @@
 /**
- * AuraMusic - Intro Cinemática de Inicio (YouTube on TV Startup)
- * Ejecuta en document_start la animación y sonido oficial de inicio estilo Google / YouTube on TV.
- * Cubre 100% la pantalla para evitar FOUC y ofrecer una experiencia premium idéntica a YouTube en Smart TVs.
+ * AuraMusic - Intro Cinemática (YouTube on TV + Caída de AuraMusic)
+ * Animación programada en CSS/DOM puro que recrea la intro de YouTube on TV,
+ * seguida de la caída e impacto con rebote del logo de AuraMusic.
+ * Se ejecuta en document_start para evitar cualquier parpadeo de interfaz.
  */
 (function () {
   'use strict';
@@ -14,20 +15,36 @@
     return { splashScreen: true, splashSound: true };
   }
 
-  let activeVideo = null;
+  let audioInstance = null;
   let isDismissed = false;
   let isReadyToDismiss = false;
+  let activeTimers = [];
   const startTime = Date.now();
-  const MIN_PLAY_MS = 3600; // Garantiza que suene el icónico acorde de YouTube
-  const MAX_SAFETY_TIMEOUT_MS = 7400; // Duración total del video
+  const MIN_PLAY_MS = 3400; // Tiempo para apreciar el logo y la caída
 
-  function getStartupVideoUrl() {
+  function getSoundUrl() {
     try {
       if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
         return chrome.runtime.getURL('assets/startup.mp4');
       }
     } catch (_) {}
     return 'assets/startup.mp4';
+  }
+
+  function playSoundIfAllowed(soundEnabled) {
+    if (!soundEnabled) return;
+    try {
+      if (!audioInstance) {
+        audioInstance = new Audio(getSoundUrl());
+      }
+      audioInstance.volume = 0.85;
+      audioInstance.currentTime = 0;
+      audioInstance.play().catch(e => {
+        console.warn('AuraMusic: Autoplay con audio restringido por Chrome:', e);
+      });
+    } catch (e) {
+      console.warn('AuraMusic: Error de audio:', e);
+    }
   }
 
   function createSplash(isManualPreview = false) {
@@ -41,9 +58,10 @@
 
     isDismissed = false;
     isReadyToDismiss = false;
+    activeTimers.forEach(t => clearTimeout(t));
+    activeTimers = [];
 
     const soundEnabled = isManualPreview ? true : (settings.splashSound !== false);
-    const videoUrl = getStartupVideoUrl();
 
     const splash = document.createElement('div');
     splash.id = 'auramusic-splash-screen';
@@ -51,63 +69,61 @@
     splash.setAttribute('aria-label', 'AuraMusic Intro');
 
     splash.innerHTML = `
-      <video id="auramusic-startup-video" playsinline preload="auto">
-        <source src="${videoUrl}" type="video/mp4">
-      </video>
-
-      <div class="splash-tv-overlay">
-        <div class="splash-top-bar">
-          <span class="splash-brand-badge">AuraMusic • YouTube on TV</span>
-          <button type="button" class="splash-sound-btn" id="splash-sound-toggle">
-            ${soundEnabled ? '🔊 Sonido Activado' : '🔇 Silenciado'}
-          </button>
+      <!-- 1. Línea Seeker de Carga YouTube TV -->
+      <div class="yt-loader-box" id="splash-yt-loader">
+        <div class="yt-loader-play-triangle"></div>
+        <div class="yt-loader-track">
+          <div class="yt-loader-fill" id="splash-loader-fill"></div>
         </div>
+      </div>
 
-        <div class="splash-bottom-bar">
-          <div class="splash-tv-hint">
-            Haz clic o presiona <kbd>Esc</kbd> para omitir
-          </div>
+      <!-- 2. Logo YouTube Music -->
+      <div class="yt-logo-box" id="splash-yt-logo">
+        <div class="yt-red-pill"></div>
+        <div class="yt-text-group">
+          <span class="yt-brand-youtube">YouTube</span>
+          <span class="yt-brand-music">Music</span>
         </div>
+      </div>
+
+      <!-- 3. Caída e Impacto de AuraMusic -->
+      <div class="aura-drop-container" id="splash-aura-container">
+        <div class="aura-impact-shockwave" id="splash-shockwave"></div>
+        <div class="aura-falling-logo" id="splash-falling-logo">
+          <span class="aura-sparkle-icon">✨</span>
+          <span class="aura-text-gradient">AuraMusic</span>
+        </div>
+        <div class="aura-sub-badge" id="splash-sub-badge">
+          <span>Personalizador de YouTube Music</span>
+          <span class="pill">v1.3.3</span>
+        </div>
+      </div>
+
+      <!-- Indicador inferior para omitir -->
+      <div class="tv-skip-hint" id="splash-skip-hint">
+        Haz clic o presiona <kbd>Esc</kbd> para omitir
       </div>
     `;
 
-    const video = splash.querySelector('#auramusic-startup-video');
-    const soundBtn = splash.querySelector('#splash-sound-toggle');
-    activeVideo = video;
+    const loaderBox = splash.querySelector('#splash-yt-loader');
+    const loaderFill = splash.querySelector('#splash-loader-fill');
+    const logoBox = splash.querySelector('#splash-yt-logo');
+    const fallingLogo = splash.querySelector('#splash-falling-logo');
+    const shockwave = splash.querySelector('#splash-shockwave');
+    const subBadge = splash.querySelector('#splash-sub-badge');
+    const skipHint = splash.querySelector('#splash-skip-hint');
 
-    // Configurar audio
-    video.volume = 0.85;
-    video.muted = !soundEnabled;
-
-    // Intentar reproducir con sonido
-    const tryPlay = () => {
-      const p = video.play();
-      if (p !== undefined) {
-        p.catch((err) => {
-          // Si Chrome bloquea el audio automático previo a la interacción del usuario:
-          console.warn('AuraMusic: Autoplay con audio restringido por Chrome. Iniciando silenciado...', err);
-          video.muted = true;
-          if (soundBtn) soundBtn.textContent = '🔇 Silenciado (Clic para activar)';
-          video.play().catch(() => {});
-        });
-      }
-    };
-
-    // Botón de sonido
-    if (soundBtn) {
-      soundBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        video.muted = !video.muted;
-        if (!video.muted) {
-          video.volume = 0.85;
-          soundBtn.textContent = '🔊 Sonido Activado';
-        } else {
-          soundBtn.textContent = '🔇 Silenciado';
-        }
+    // Inyectar en el documento
+    const container = document.body || document.documentElement;
+    if (container) {
+      container.appendChild(splash);
+    } else {
+      document.addEventListener('DOMContentLoaded', () => {
+        (document.body || document.documentElement).appendChild(splash);
       });
     }
 
-    // Saltar con clic o tecla Escape / Espacio
+    // Saltar con clic o teclado
     splash.addEventListener('click', () => dismissSplash(true));
     const onKey = (e) => {
       if (e.key === 'Escape' || e.key === ' ') {
@@ -117,53 +133,85 @@
     };
     window.addEventListener('keydown', onKey);
 
-    // Al terminar el video
-    video.addEventListener('ended', () => {
-      dismissSplash(false);
+    // --- SECUENCIA DE ANIMACIÓN PROGRAMADA ---
+    requestAnimationFrame(() => {
+      // 1. Llenar la línea roja seeker
+      loaderFill.style.transition = 'width 1450ms cubic-bezier(0.25, 1, 0.5, 1)';
+      loaderFill.style.width = '100%';
+
+      // Iniciar sonido sincronizado
+      playSoundIfAllowed(soundEnabled);
+
+      // 2. Contraer línea y revelar YouTube Music
+      activeTimers.push(setTimeout(() => {
+        loaderBox.style.transition = 'all 350ms cubic-bezier(0.16, 1, 0.3, 1)';
+        loaderBox.style.opacity = '0';
+        loaderBox.style.transform = 'scale(0.8)';
+
+        logoBox.style.transition = 'all 450ms cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        logoBox.style.opacity = '1';
+        logoBox.style.transform = 'scale(1)';
+
+        skipHint.style.opacity = '1';
+      }, 1500));
+
+      // 3. ¡CAÍDA DEL TEXTO AURAMUSIC!
+      activeTimers.push(setTimeout(() => {
+        // Cae con rebote físico
+        fallingLogo.style.transition = 'transform 550ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 250ms ease';
+        fallingLogo.style.opacity = '1';
+        fallingLogo.style.transform = 'translateY(0) scale(1) rotate(0deg)';
+
+        // El logo de YouTube Music se desliza ligeramente para acompañar
+        logoBox.style.transition = 'transform 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 500ms ease';
+        logoBox.style.transform = 'translateY(70px) scale(0.85)';
+        logoBox.style.opacity = '0.75';
+
+        // Onda expansiva de impacto
+        activeTimers.push(setTimeout(() => {
+          shockwave.style.transition = 'all 500ms cubic-bezier(0.16, 1, 0.3, 1)';
+          shockwave.style.opacity = '0.85';
+          shockwave.style.transform = 'scale(6)';
+          setTimeout(() => { shockwave.style.opacity = '0'; }, 350);
+        }, 300));
+
+        // Subtítulo
+        activeTimers.push(setTimeout(() => {
+          subBadge.style.transition = 'all 400ms cubic-bezier(0.16, 1, 0.3, 1)';
+          subBadge.style.opacity = '1';
+          subBadge.style.transform = 'translateY(0)';
+        }, 380));
+
+      }, 2100));
     });
 
-    video.addEventListener('error', () => {
-      console.warn('AuraMusic: Error cargando video de inicio, continuando.');
-      dismissSplash(true);
-    });
-
-    // Inyectar en el documento
-    const container = document.body || document.documentElement;
-    if (container) {
-      container.appendChild(splash);
-      tryPlay();
-    } else {
-      document.addEventListener('DOMContentLoaded', () => {
-        (document.body || document.documentElement).appendChild(splash);
-        tryPlay();
-      });
-    }
-
-    // Temporizador máximo de seguridad
-    setTimeout(() => {
+    // Temporizador de seguridad máximo (nunca trabar la página)
+    activeTimers.push(setTimeout(() => {
       dismissSplash(false);
-    }, MAX_SAFETY_TIMEOUT_MS);
+    }, 6000));
   }
 
   function dismissSplash(immediate = false) {
     if (isDismissed) return;
     isDismissed = true;
 
+    activeTimers.forEach(t => clearTimeout(t));
+
     const splash = document.getElementById('auramusic-splash-screen');
     if (!splash) return;
 
-    // Desvanecer el volumen suavemente para un cierre profesional
+    // Desvanecer volumen suavemente si está sonando
     try {
-      if (activeVideo && !activeVideo.paused && !activeVideo.muted) {
-        let vol = activeVideo.volume;
-        const fadeTimer = setInterval(() => {
-          vol = Math.max(0, vol - 0.18);
-          activeVideo.volume = vol;
+      if (audioInstance && !audioInstance.paused) {
+        let vol = audioInstance.volume;
+        const fade = setInterval(() => {
+          vol = Math.max(0, vol - 0.2);
+          audioInstance.volume = vol;
           if (vol <= 0) {
-            clearInterval(fadeTimer);
-            try { activeVideo.pause(); } catch (_) {}
+            clearInterval(fade);
+            audioInstance.pause();
           }
-        }, 30);
+        }, 35);
       }
     } catch (_) {}
 
@@ -185,20 +233,10 @@
     }
   }
 
-  // Iniciar automáticamente en document_start
+  // Ejecución automática al arrancar la página
   createSplash(false);
 
-  // Asegurar que quede montado si el body se construye después
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      const splash = document.getElementById('auramusic-splash-screen');
-      if (splash && document.body && splash.parentElement !== document.body) {
-        document.body.appendChild(splash);
-      }
-    });
-  }
-
-  // Exponer API global
+  // Exponer API para pruebas o control desde el Hub
   window.AuraMusic = window.AuraMusic || {};
   window.AuraMusic.Splash = {
     dismiss: onPageReady,

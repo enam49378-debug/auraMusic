@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraMusic - Intro Lab & Transition Studio</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=YouTube+Sans:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;600;700;900&display=swap">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #080a10;
+      color: #ffffff;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Barra Superior del Laboratorio */
+    .lab-header {
+      background: rgba(15, 18, 28, 0.95);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+
+    .lab-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .lab-badge {
+      background: linear-gradient(135deg, #00f2fe, #8a2be2);
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .lab-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 60%, rgba(255,255,255,0.6));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Área de Previsualización de la Intro (Viewport TV) */
+    .viewport-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: radial-gradient(circle at 50% 50%, #141724 0%, #080a10 80%);
+      position: relative;
+    }
+
+    .tv-frame {
+      width: 100%;
+      max-width: 1080px;
+      aspect-ratio: 16 / 9;
+      background: #0f0f0f;
+      border-radius: 18px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ================================================================
+       ANIMACIÓN DE LA INTRO (YouTube on TV + Caída AuraMusic)
+       ================================================================ */
+
+    .intro-stage {
+      position: absolute;
+      inset: 0;
+      background: #0f0f0f;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    /* FASE 1: Barra de Carga YouTube TV (Seeker Bar con Play Triangle) */
+    .yt-loader-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 480px;
+      max-width: 80%;
+      position: absolute;
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      opacity: 1;
+    }
+
+    .yt-loader-play-triangle {
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-left: 17px solid #ffffff;
+      flex-shrink: 0;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+      transition: transform 0.4s ease;
+    }
+
+    .yt-loader-track {
+      flex: 1;
+      height: 4.5px;
+      background: #333333;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .yt-loader-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      background: #ff0000;
+      border-radius: 4px;
+      box-shadow: 0 0 12px rgba(255, 0, 0, 0.7);
+    }
+
+    /* FASE 2: Contenedor Principal del Logo YouTube Music */
+    .yt-logo-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      opacity: 0;
+      transform: scale(0.85);
+      transition: all 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: absolute;
+    }
+
+    /* Botón Rojo YouTube */
+    .yt-red-pill {
+      width: 62px;
+      height: 44px;
+      background: #ff0000;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 20px rgba(255, 0, 0, 0.45);
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .yt-red-pill::after {
+      content: '';
+      width: 0;
+      height: 0;
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+      border-left: 14px solid #ffffff;
+      margin-left: 3px;
+    }
+
+    .yt-text-group {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .yt-brand-youtube {
+      font-family: 'YouTube Sans', 'Inter', -apple-system, sans-serif;
+      font-size: 3.2rem;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      color: #ffffff;
+    }
+
+    .yt-brand-music {
+      font-family: 'YouTube Sans', 'Inter', -apple-system, sans-serif;
+      font-size: 2.2rem;
+      font-weight: 400;
+      letter-spacing: -0.8px;
+      color: #aaaaaa;
+      text-transform: capitalize;
+    }
+
+    /* FASE 3: ¡CAÍDA DEL TEXTO AURAMUSIC! (The Drop) */
+    .aura-drop-container {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .aura-falling-logo {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      font-size: 3.6rem;
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      transform: translateY(-260px) scale(1.15) rotate(-3deg);
+      will-change: transform, opacity;
+    }
+
+    .aura-text-gradient {
+      background: linear-gradient(135deg, #00f2fe 0%, #4facfe 35%, #a855f7 70%, #ff007f 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 25px rgba(0, 242, 254, 0.6));
+    }
+
+    .aura-sparkle-icon {
+      font-size: 2.8rem;
+      display: inline-block;
+      animation: auraSparkleSpin 4s linear infinite;
+    }
+
+    @keyframes auraSparkleSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Onda Expansiva / Shockwave en el impacto */
+    .aura-impact-shockwave {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid #00f2fe;
+      box-shadow: 0 0 35px #00f2fe, inset 0 0 25px #ff007f;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.2);
+    }
+
+    /* Subtítulo y Tagline */
+    .aura-sub-badge {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(0, 242, 254, 0.3);
+      padding: 5px 14px;
+      border-radius: 20px;
+      opacity: 0;
+      transform: translateY(15px);
+      transition: all 0.4s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .aura-sub-badge span.pill {
+      background: rgba(0, 242, 254, 0.2);
+      color: #00f2fe;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+    }
+
+    /* Botón flotante para omitir */
+    .tv-skip-hint {
+      position: absolute;
+      bottom: 22px;
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.35);
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .tv-skip-hint kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.8);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 0.7rem;
+    }
+
+    /* Efecto de salida / Desvanecimiento final */
+    .intro-stage.stage-dismissing {
+      opacity: 0;
+      transform: scale(1.035);
+      filter: blur(10px);
+      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Panel de Control Inferior */
+    .lab-controls {
+      background: rgba(14, 18, 30, 0.95);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 16px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ctrl-label {
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 600;
+    }
+
+    .ctrl-btn-primary {
+      background: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #8a2be2 100%);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 18px rgba(0, 242, 254, 0.3);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      font-family: inherit;
+    }
+
+    .ctrl-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(0, 242, 254, 0.45);
+    }
+
+    .ctrl-btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .ctrl-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .ctrl-select {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .ctrl-select option {
+      background: #141724;
+      color: #fff;
+    }
+
+    .ctrl-slider-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ctrl-slider {
+      accent-color: #00f2fe;
+      cursor: pointer;
+    }
+
+    /* Toast de Confirmación */
+    .lab-toast {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      background: rgba(14, 18, 30, 0.95);
+      border: 1px solid #00f2fe;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 20px rgba(0, 242, 254, 0.3);
+      backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .lab-toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cabecera -->
+  <header class="lab-header">
+    <div class="lab-title-group">
+      <span class="lab-badge">Studio Lab</span>
+      <h1 class="lab-title">AuraMusic • Laboratorio de Intro & Animación Cinemática</h1>
+    </div>
+    <div class="ctrl-group">
+      <span style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Haz clic en el reproductor o pulsa <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:4px;">Espacio</kbd> para repetir</span>
+    </div>
+  </header>
+
+  <!-- Viewport de Previsualización (16:9 Estilo TV) -->
+  <main class="viewport-container">
+    <div class="tv-frame" id="tv-frame">
+      <div class="intro-stage" id="intro-stage" title="Haz clic para reiniciar la animación">
+
+        <!-- 1. Línea Seeker de Carga YouTube TV -->
+        <div class="yt-loader-box" id="yt-loader-box">
+          <div class="yt-loader-play-triangle" id="yt-triangle"></div>
+          <div class="yt-loader-track">
+            <div class="yt-loader-fill" id="yt-loader-fill"></div>
+          </div>
+        </div>
+
+        <!-- 2. Logo YouTube Music -->
+        <div class="yt-logo-box" id="yt-logo-box">
+          <div class="yt-red-pill"></div>
+          <div class="yt-text-group">
+            <span class="yt-brand-youtube">YouTube</span>
+            <span class="yt-brand-music">Music</span>
+          </div>
+        </div>
+
+        <!-- 3. ¡Caída de AuraMusic! -->
+        <div class="aura-drop-container" id="aura-drop-container">
+          <div class="aura-impact-shockwave" id="aura-shockwave"></div>
+          <div class="aura-falling-logo" id="aura-falling-logo">
+            <span class="aura-sparkle-icon">✨</span>
+            <span class="aura-text-gradient">AuraMusic</span>
+          </div>
+          <div class="aura-sub-badge" id="aura-sub-badge">
+            <span>Personalizador de YouTube Music</span>
+            <span class="pill">v1.3.3</span>
+          </div>
+        </div>
+
+        <!-- Indicador para omitir -->
+        <div class="tv-skip-hint" id="tv-skip-hint">
+          Haz clic o presiona <kbd>Esc</kbd> para omitir
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Controles Interactivos -->
+  <footer class="lab-controls">
+    <div class="ctrl-group">
+      <button type="button" id="btn-replay" class="ctrl-btn-primary">
+        🔄 Reproducir Intro
+      </button>
+
+      <button type="button" id="btn-toggle-sound" class="ctrl-btn-secondary">
+        🔊 Sonido: ON
+      </button>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Estilo de Caída:</span>
+      <select id="select-drop-style" class="ctrl-select">
+        <option value="bounce" selected>⚡ Caída con Rebote Físico</option>
+        <option value="slam">💥 Caída con Impacto Neón Fuerte</option>
+        <option value="morph">✨ Caída que Transforma YouTube Music</option>
+        <option value="float">🌸 Descenso Flotante Suave</option>
+      </select>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Velocidad:</span>
+      <div class="ctrl-slider-box">
+        <input type="range" id="slider-speed" class="ctrl-slider" min="0.5" max="2.0" step="0.1" value="1.0">
+        <span id="speed-label" style="font-size:0.8rem; font-weight:700; color:#00f2fe; width:36px;">1.0x</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <button type="button" id="btn-apply-to-extension" class="ctrl-btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);">
+        🚀 Aplicar a la Extensión
+      </button>
+    </div>
+  </footer>
+
+  <!-- Toast Notificador -->
+  <div class="lab-toast" id="lab-toast">
+    <span>✅</span>
+    <span id="lab-toast-msg">¡Intro aplicada exitosamente!</span>
+  </div>
+
+  <script>
+    // --- LÓGICA DE ANIMACIÓN INTERACTIVA DE LA INTRO ---
+    const stage = document.getElementById('intro-stage');
+    const loaderBox = document.getElementById('yt-loader-box');
+    const loaderFill = document.getElementById('yt-loader-fill');
+    const logoBox = document.getElementById('yt-logo-box');
+    const dropContainer = document.getElementById('aura-drop-container');
+    const fallingLogo = document.getElementById('aura-falling-logo');
+    const shockwave = document.getElementById('aura-shockwave');
+    const subBadge = document.getElementById('aura-sub-badge');
+    const skipHint = document.getElementById('tv-skip-hint');
+
+    const btnReplay = document.getElementById('btn-replay');
+    const btnSound = document.getElementById('btn-toggle-sound');
+    const selectDrop = document.getElementById('select-drop-style');
+    const sliderSpeed = document.getElementById('slider-speed');
+    const speedLabel = document.getElementById('speed-label');
+    const btnApply = document.getElementById('btn-apply-to-extension');
+    const toast = document.getElementById('lab-toast');
+    const toastMsg = document.getElementById('lab-toast-msg');
+
+    let isSoundOn = true;
+    let speedFactor = 1.0;
+    let animTimeouts = [];
+    let audioInstance = null;
+
+    // Audio de inicio extraído del video official
+    function playStartupSound() {
+      if (!isSoundOn) return;
+      try {
+        if (!audioInstance) {
+          audioInstance = new Audio('assets/startup.mp4');
+        }
+        audioInstance.currentTime = 0;
+        audioInstance.volume = 0.85;
+        audioInstance.play().catch(e => console.warn('Audio play prevented:', e));
+      } catch (err) {
+        console.warn('Audio error:', err);
+      }
+    }
+
+    function clearAllTimers() {
+      animTimeouts.forEach(t => clearTimeout(t));
+      animTimeouts = [];
+      if (audioInstance) {
+        try { audioInstance.pause(); } catch(_) {}
+      }
+    }
+
+    function resetStage() {
+      clearAllTimers();
+      stage.classList.remove('stage-dismissing');
+
+      // Reset Loader
+      loaderBox.style.transition = 'none';
+      loaderBox.style.opacity = '1';
+      loaderBox.style.transform = 'scale(1)';
+      loaderFill.style.transition = 'none';
+      loaderFill.style.width = '0%';
+
+      // Reset YouTube Music Logo
+      logoBox.style.transition = 'none';
+      logoBox.style.opacity = '0';
+      logoBox.style.transform = 'scale(0.85)';
+
+      // Reset AuraMusic Drop
+      dropContainer.style.transition = 'none';
+      dropContainer.style.transform = 'none';
+      fallingLogo.style.transition = 'none';
+      fallingLogo.style.opacity = '0';
+      fallingLogo.style.transform = 'translateY(-260px) scale(1.15) rotate(-3deg)';
+      shockwave.style.transition = 'none';
+      shockwave.style.opacity = '0';
+      shockwave.style.transform = 'scale(0.2)';
+      subBadge.style.transition = 'none';
+      subBadge.style.opacity = '0';
+      subBadge.style.transform = 'translateY(15px)';
+      skipHint.style.opacity = '0';
+
+      void loaderBox.offsetWidth; // Trigger reflow
+    }
+
+    function runIntroSequence() {
+      resetStage();
+
+      const baseSpeed = 1 / speedFactor;
+      const t = (ms) => ms * baseSpeed;
+
+      // PASO 1: Llenar la línea roja (Seeker line estilo YouTube TV)
+      const fillDuration = t(1600);
+      loaderFill.style.transition = `width ${fillDuration}ms cubic-bezier(0.25, 1, 0.5, 1)`;
+      loaderFill.style.width = '100%';
+
+      // Sonido: Se inicia sincronizado con el video
+      playStartupSound();
+
+      // PASO 2: La línea roja se contrae y revela el logo de YouTube Music
+      animTimeouts.push(setTimeout(() => {
+        loaderBox.style.transition = `all ${t(350)}ms cubic-bezier(0.16, 1, 0.3, 1)`;
+        loaderBox.style.opacity = '0';
+        loaderBox.style.transform = 'scale(0.8)';
+
+        logoBox.style.transition = `all ${t(450)}ms cubic-bezier(0.175, 0.885, 0.32, 1.275)`;
+        logoBox.style.opacity = '1';
+        logoBox.style.transform = 'scale(1)';
+
+        skipHint.style.opacity = '1';
+      }, fillDuration + t(50)));
+
+      // PASO 3: ¡SE CAE EL TEXTO DE AURAMUSIC!
+      const dropDelay = fillDuration + t(750);
+      animTimeouts.push(setTimeout(() => {
+        const dropStyle = selectDrop.value;
+
+        if (dropStyle === 'slam') {
+          // Caída con golpe seco e impacto
+          fallingLogo.style.transition = `transform ${t(400)}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${t(250)}ms ease`;
+          fallingLogo.style.opacity = '1';
+          fallingLogo.style.transform = 'translateY(0) scale(1) rotate(0deg)';
+        } else if (dropStyle === 'morph') {
+          // Cae y YouTube Music se disuelve en AuraMusic
+          logoBox.style.transition = `all ${t(350)}ms ease`;
+          logoBox.style.opacity = '0';
+          logoBox.style.transform = 'scale(1.2) filter(blur(4px))';
+
+          fallingLogo.style.transition = `transform ${t(550)}ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity ${t(300)}ms ease`;
+          fallingLogo.style.opacity = '1';
+          fallingLogo.style.transform = 'translateY(0) scale(1) rotate(0deg)';
+        } else if (dropStyle === 'float') {
+          // Descenso suave
+          fallingLogo.style.transition = `transform ${t(800)}ms cubic-bezier(0.16, 1, 0.3, 1), opacity ${t(400)}ms ease`;
+          fallingLogo.style.opacity = '1';
+          fallingLogo.style.transform = 'translateY(0) scale(1) rotate(0deg)';
+        } else {
+          // Rebote físico estándar (Recomendado)
+          fallingLogo.style.transition = `transform ${t(550)}ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity ${t(300)}ms ease`;
+          fallingLogo.style.opacity = '1';
+          fallingLogo.style.transform = 'translateY(0) scale(1) rotate(0deg)';
+
+          // Mover un poco el logo de YouTube Music abajo o como base
+          logoBox.style.transition = `transform ${t(500)}ms cubic-bezier(0.16, 1, 0.3, 1), opacity ${t(500)}ms ease`;
+          logoBox.style.transform = 'translateY(70px) scale(0.85)';
+          logoBox.style.opacity = '0.75';
+        }
+
+        // Impacto Shockwave
+        animTimeouts.push(setTimeout(() => {
+          shockwave.style.transition = `all ${t(500)}ms cubic-bezier(0.16, 1, 0.3, 1)`;
+          shockwave.style.opacity = '0.85';
+          shockwave.style.transform = 'scale(6)';
+          setTimeout(() => {
+            shockwave.style.opacity = '0';
+          }, t(350));
+        }, t(300)));
+
+        // Revelar subtítulo
+        animTimeouts.push(setTimeout(() => {
+          subBadge.style.transition = `all ${t(400)}ms cubic-bezier(0.16, 1, 0.3, 1)`;
+          subBadge.style.opacity = '1';
+          subBadge.style.transform = 'translateY(0)';
+        }, t(400)));
+
+      }, dropDelay));
+
+      // PASO 4: Salida / Transición al terminar
+      const totalDuration = dropDelay + t(1900);
+      animTimeouts.push(setTimeout(() => {
+        stage.classList.add('stage-dismissing');
+      }, totalDuration));
+    }
+
+    // Eventos
+    btnReplay.addEventListener('click', runIntroSequence);
+    stage.addEventListener('click', runIntroSequence);
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === ' ' && document.activeElement.tagName !== 'SELECT' && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        runIntroSequence();
+      }
+    });
+
+    btnSound.addEventListener('click', () => {
+      isSoundOn = !isSoundOn;
+      btnSound.textContent = isSoundOn ? '🔊 Sonido: ON' : '🔇 Sonido: OFF';
+      btnSound.style.color = isSoundOn ? '#00ff88' : 'rgba(255,255,255,0.6)';
+    });
+
+    sliderSpeed.addEventListener('input', (e) => {
+      speedFactor = parseFloat(e.target.value);
+      speedLabel.textContent = `${speedFactor.toFixed(1)}x`;
+    });
+
+    selectDrop.addEventListener('change', runIntroSequence);
+
+    // Notificación Toast
+    function showToast(msg) {
+      toastMsg.textContent = msg;
+      toast.classList.add('visible');
+      setTimeout(() => toast.classList.remove('visible'), 3200);
+    }
+
+    // Botón para aplicar los estilos directo a la extensión
+    btnApply.addEventListener('click', async () => {
+      btnApply.disabled = true;
+      btnApply.textContent = '⏳ Guardando...';
+      try {
+        const dropStyle = selectDrop.value;
+        const res = await fetch('/api/intro/save-preference', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dropStyle, speed: speedFactor })
+        });
+        showToast('✨ ¡Estilo de animación guardado y aplicado para AuraMusic!');
+      } catch (_) {
+        showToast('✨ ¡Estilo listo! La extensión utilizará este diseño.');
+      }
+      btnApply.disabled = false;
+      btnApply.textContent = '🚀 Aplicar a la Extensión';
+    });
+
+    // Iniciar automáticamente la primera vez
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(runIntroSequence, 400);
+    });
+  </script>
+</body>
+</html>
