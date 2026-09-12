@@ -1,0 +1,844 @@
+body.auramusic-theme-spotify {
+  --sp-green: #1ed760;
+  --sp-green-dim: #1db954;
+  --sp-bg: #0a0a0a;
+  --sp-surface: #121212;
+  --sp-surface2: #1a1a1a;
+  --sp-surface3: #242424;
+  --sp-text: #ffffff;
+  --sp-text-muted: #a7a7a7;
+  --sp-border: rgba(255, 255, 255, 0.08);
+  --auramusic-primary: #1ed760;
+  --auramusic-secondary: #1db954;
+  --auramusic-glow: rgba(30, 215, 96, 0.4);
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif !important;
+}
+
+body.auramusic-theme-spotify * {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+}
+
+/* ── FONDO GLOBAL CON GRADIENTE DINÁMICO DE SPOTIFY ── */
+body.auramusic-theme-spotify ytmusic-app {
+  background:
+    linear-gradient(180deg,
+      rgba(28, 80, 40, 0.55) 0px,
+      rgba(15, 35, 20, 0.3) 200px,
+      #0a0a0a 380px) !important;
+  min-height: 100vh !important;
+}
+
+body.auramusic-theme-spotify ytmusic-browse-response {
+  background: transparent !important;
+}
+
+/* ── HEADER / TOP BAR: NEGRO TRANSLÚCIDO CON BLUR ── */
+body.auramusic-theme-spotify ytmusic-nav-bar,
+body.auramusic-theme-spotify #header {
+  background: rgba(10, 10, 10, 0.85) !important;
+  backdrop-filter: blur(24px) !important;
+  border-bottom: 1px solid var(--sp-border) !important;
+  height: 64px !important;
+  padding: 0 20px !important;
+}
+
+/* Logo → verde Spotify */
+body.auramusic-theme-spotify #logo-icon-container svg path,
+body.auramusic-theme-spotify ytmusic-logo svg path {
+  fill: var(--sp-green) !important;
+}
+
+/* ── BUSCADOR PÍLDORA CENTRADO ── */
+body.auramusic-theme-spotify ytmusic-search-box {
+  background: #1f1f1f !important;
+  border: 1px solid transparent !important;
+  border-radius: 500px !important;
+  max-width: 440px !important;
+  height: 44px !important;
+  margin: 0 auto !important;
+  transition: all 0.2s ease !important;
+  color: #ffffff !important;
+}
+
+body.auramusic-theme-spotify ytmusic-search-box:hover {
+  background: #282828 !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-search-box:focus-within {
+  background: #242424 !important;
+  border-color: #ffffff !important;
+}
+
+/* ── CHIPS CÁPSULA SPOTIFY ── */
+body.auramusic-theme-spotify ytmusic-chip-cloud-chip-renderer {
+  border-radius: 500px !important;
+  background: #2a2a2a !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 0.88rem !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 14px !important;
+  margin: 0 6px 0 0 !important;
+  transition: all 0.18s ease !important;
+}
+
+body.auramusic-theme-spotify ytmusic-chip-cloud-chip-renderer:hover {
+  background: #3a3a3a !important;
+  transform: scale(1.04) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-chip-cloud-chip-renderer[is-selected] {
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+/* ── SIDEBAR: DOS PANELES FLOTANTES OSCUROS ── */
+body.auramusic-theme-spotify #guide-wrapper {
+  background: transparent !important;
+  padding: 8px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-section-renderer:first-child {
+  background: var(--sp-surface) !important;
+  border-radius: 10px !important;
+  padding: 10px 8px !important;
+  margin-bottom: 8px !important;
+  border: 1px solid var(--sp-border) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-section-renderer:nth-child(2) {
+  background: var(--sp-surface) !important;
+  border-radius: 10px !important;
+  padding: 10px 8px !important;
+  border: 1px solid var(--sp-border) !important;
+  flex: 1 !important;
+  overflow-y: auto !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-section-renderer:nth-child(2)::-webkit-scrollbar {
+  width: 4px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-section-renderer:nth-child(2)::-webkit-scrollbar-thumb {
+  background: var(--sp-green-dim) !important;
+  border-radius: 2px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-entry-renderer {
+  border-radius: 6px !important;
+  margin: 2px 0 !important;
+  padding: 4px 8px !important;
+  transition: background 0.15s ease !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-entry-renderer:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-entry-renderer[is-selected] {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-entry-renderer yt-formatted-string {
+  color: var(--sp-text-muted) !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-entry-renderer:hover yt-formatted-string,
+body.auramusic-theme-spotify ytmusic-guide-entry-renderer[is-selected] yt-formatted-string {
+  color: var(--sp-text) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-entry-renderer svg,
+body.auramusic-theme-spotify ytmusic-guide-entry-renderer iron-icon {
+  color: var(--sp-text-muted) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-entry-renderer:hover svg,
+body.auramusic-theme-spotify ytmusic-guide-entry-renderer[is-selected] svg {
+  color: var(--sp-text) !important;
+}
+
+/* ── MAIN CONTENT: FONDO CARBÓN ── */
+body.auramusic-theme-spotify ytmusic-app,
+body.auramusic-theme-spotify ytmusic-browse-response {
+  background: transparent !important;
+}
+
+/* ── TÍTULOS DE SECCIÓN ── */
+body.auramusic-theme-spotify ytmusic-carousel-shelf-renderer .title,
+body.auramusic-theme-spotify ytmusic-header-renderer .title,
+body.auramusic-theme-spotify h1,
+body.auramusic-theme-spotify h2 {
+  color: #ffffff !important;
+  font-size: 1.5rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em !important;
+}
+
+body.auramusic-theme-spotify ytmusic-carousel-shelf-renderer .strapline {
+  color: var(--sp-text-muted) !important;
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+}
+
+/* ── TARJETAS DE ÁLBUM/PLAYLIST: CARBÓN ELEVADO ── */
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer {
+  background: var(--sp-surface2) !important;
+  border-radius: 8px !important;
+  padding: 14px !important;
+  box-sizing: border-box !important;
+  width: 180px !important;
+  min-width: 180px !important;
+  max-width: 200px !important;
+  margin-right: 14px !important;
+  position: relative !important;
+  border: 1px solid transparent !important;
+  transition: background 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer:hover {
+  background: var(--sp-surface3) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer .image-wrapper,
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer img {
+  border-radius: 6px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer .title,
+body.auramusic-theme-spotify .title.ytmusic-two-row-item-renderer {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  margin-top: 12px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer .subtitle,
+body.auramusic-theme-spotify .subtitle.ytmusic-two-row-item-renderer {
+  color: var(--sp-text-muted) !important;
+  font-size: 0.82rem !important;
+  margin-top: 4px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Artistas: imagen circular */
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer[aspect-ratio="MUSIC_TWO_ROW_ITEM_THUMBNAIL_TYPE_CIRCULAR"] .image-wrapper,
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer[aspect-ratio="MUSIC_TWO_ROW_ITEM_THUMBNAIL_TYPE_CIRCULAR"] img {
+  border-radius: 50% !important;
+}
+
+/* ── BOTÓN PLAY VERDE SPOTIFY: OCULTO → EMERGE ABAJO DERECHA ── */
+body.auramusic-theme-spotify ytmusic-item-thumbnail-overlay-renderer {
+  background: transparent !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: flex-end !important;
+  padding: 8px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer ytmusic-play-button-renderer {
+  opacity: 0 !important;
+  transform: translateY(10px) !important;
+  transition: all 0.25s cubic-bezier(0.3, 0, 0, 1) !important;
+  position: absolute !important;
+  bottom: 10px !important;
+  right: 10px !important;
+  z-index: 10 !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer:hover ytmusic-play-button-renderer {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-play-button-renderer #button {
+  background: var(--sp-green) !important;
+  border-radius: 50% !important;
+  color: #000000 !important;
+  width: 48px !important;
+  height: 48px !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), 0 0 25px rgba(30, 215, 96, 0.4) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: transform 0.15s ease, background 0.15s ease !important;
+}
+
+body.auramusic-theme-spotify ytmusic-play-button-renderer #button:hover {
+  transform: scale(1.1) !important;
+  background: #1fdf64 !important;
+  box-shadow: 0 0 30px rgba(30, 215, 96, 0.6) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-play-button-renderer #button yt-icon,
+body.auramusic-theme-spotify ytmusic-play-button-renderer #button svg {
+  fill: #000000 !important;
+  color: #000000 !important;
+}
+
+/* ── FILAS DE CANCIONES ── */
+body.auramusic-theme-spotify ytmusic-responsive-list-item-renderer {
+  border-radius: 6px !important;
+  transition: background 0.15s ease !important;
+}
+
+body.auramusic-theme-spotify ytmusic-responsive-list-item-renderer:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ── PLAYER BAR: NEGRO CON BORDE TOP Y 3 COLUMNAS ── */
+body.auramusic-theme-spotify ytmusic-player-bar {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  height: 88px !important;
+  background: #0a0a0a !important;
+  border-top: 1px solid #282828 !important;
+  padding: 0 20px !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Info canción (izquierda) */
+body.auramusic-theme-spotify ytmusic-player-bar .middle-controls {
+  order: 1 !important;
+  width: 30% !important;
+  max-width: 340px !important;
+  justify-content: flex-start !important;
+  margin: 0 !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .image.ytmusic-player-bar {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 4px !important;
+  margin-right: 14px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .title.ytmusic-player-bar {
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .byline.ytmusic-player-bar,
+body.auramusic-theme-spotify ytmusic-player-bar .byline a {
+  font-size: 0.78rem !important;
+  color: var(--sp-text-muted) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .byline a:hover {
+  color: #ffffff !important;
+  text-decoration: underline !important;
+}
+
+/* Controles centrales */
+body.auramusic-theme-spotify ytmusic-player-bar .left-controls {
+  order: 2 !important;
+  width: 42% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+}
+
+/* Botón play central blanco puro */
+body.auramusic-theme-spotify ytmusic-player-bar .play-pause-button {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-radius: 50% !important;
+  width: 36px !important;
+  height: 36px !important;
+  margin: 0 12px !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .play-pause-button:hover {
+  transform: scale(1.08) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .previous-button,
+body.auramusic-theme-spotify ytmusic-player-bar .next-button {
+  color: var(--sp-text-muted) !important;
+  background: transparent !important;
+  transition: color 0.15s ease !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .previous-button:hover,
+body.auramusic-theme-spotify ytmusic-player-bar .next-button:hover {
+  color: #ffffff !important;
+}
+
+/* Controles derecha */
+body.auramusic-theme-spotify ytmusic-player-bar .right-controls {
+  order: 3 !important;
+  width: 28% !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  margin: 0 !important;
+}
+
+/* Barra de progreso verde con knob blanco y radar glow */
+body.auramusic-theme-spotify tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
+  background: var(--sp-green, #1ed760) !important;
+  box-shadow: 0 0 10px rgba(30, 215, 96, 0.5) !important;
+}
+
+body.auramusic-theme-spotify tp-yt-paper-progress {
+  background: #535353 !important;
+}
+
+body.auramusic-theme-spotify tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+body.auramusic-theme-spotify tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
+  background: #ffffff !important;
+  border: none !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 2px 6px rgba(0, 0, 0, 0.6) !important;
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  transform: scale(1) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  cursor: grab !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background 0.2s ease !important;
+}
+
+body.auramusic-theme-spotify tp-yt-paper-slider:hover #sliderKnobInner.tp-yt-paper-slider,
+body.auramusic-theme-spotify tp-yt-paper-slider[dragging] #sliderKnobInner.tp-yt-paper-slider {
+  transform: scale(1.45) !important;
+  background: #1ed760 !important;
+  box-shadow: 0 0 20px #1ed760, 0 0 32px rgba(30, 215, 96, 0.8) !important;
+  cursor: grabbing !important;
+}
+
+/* Scrollbar verde Spotify */
+body.auramusic-theme-spotify ::-webkit-scrollbar {
+  width: 6px !important;
+  background: transparent !important;
+}
+
+body.auramusic-theme-spotify ::-webkit-scrollbar-thumb {
+  background: #535353 !important;
+  border-radius: 3px !important;
+}
+
+body.auramusic-theme-spotify ::-webkit-scrollbar-thumb:hover {
+  background: #757575 !important;
+}
+
+/* Botón de Home inyectado */
+#auramusic-spotify-home-btn {
+  background: #1f1f1f;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  border: none;
+  color: #ffffff;
+  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 12px;
+  transition: all 0.2s ease;
+}
+
+#auramusic-spotify-home-btn:hover {
+  transform: scale(1.06);
+  background: #282828;
+}
+
+/* Logo de marca inyectado */
+.auramusic-spotify-brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.04em;
+  margin-left: 8px;
+}
+
+
+/* 1. BARRA SUPERIOR NEGRA PURA CON BUSCADOR PÍLDORA CENTRADO */
+body.auramusic-theme-spotify ytmusic-nav-bar {
+  background: #000000 !important;
+  border-bottom: none !important;
+  height: 64px !important;
+  padding: 0 20px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-search-box {
+  background: #1f1f1f !important;
+  border: 1px solid transparent !important;
+  border-radius: 500px !important;
+  max-width: 480px !important;
+  height: 48px !important;
+  margin: 0 auto !important;
+  transition: all 0.2s ease !important;
+}
+
+body.auramusic-theme-spotify ytmusic-search-box:hover {
+  background: #282828 !important;
+  border-color: #333333 !important;
+}
+
+body.auramusic-theme-spotify ytmusic-search-box:focus-within {
+  background: #242424 !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.15) !important;
+}
+
+/* 2. CHIPS DE CATEGORÍA OFICIALES SPOTIFY ("TODO", "MÚSICA", "PÓDCASTS") */
+body.auramusic-theme-spotify ytmusic-chip-cloud-chip-renderer {
+  border-radius: 500px !important;
+  background: #2a2a2a !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 0.88rem !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 14px !important;
+  margin: 0 8px 16px 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+body.auramusic-theme-spotify ytmusic-chip-cloud-chip-renderer:hover {
+  background: #333333 !important;
+}
+
+body.auramusic-theme-spotify ytmusic-chip-cloud-chip-renderer[is-selected] {
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+/* 3. CONTENEDOR PRINCIPAL: TARJETA OSCURA CARBÓN SPOTIFY (#121212) */
+body.auramusic-theme-spotify ytmusic-app,
+body.auramusic-theme-spotify ytmusic-browse-response {
+  background: #121212 !important;
+}
+
+/* Títulos de sección grandes en negrita ("Álbumes y sencillos populares", etc.) */
+body.auramusic-theme-spotify ytmusic-carousel-shelf-renderer .title,
+body.auramusic-theme-spotify ytmusic-header-renderer .title {
+  font-size: 1.55rem !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.04em !important;
+  color: #ffffff !important;
+}
+
+body.auramusic-theme-spotify ytmusic-carousel-shelf-renderer .strapline {
+  color: #b3b3b3 !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+}
+
+/* 4. TARJETAS COMPACTAS SPOTIFY (7-9 TARJETAS POR FILA CON ELEVACIÓN EN HOVER) */
+body.auramusic-theme-spotify ytmusic-carousel-shelf-renderer {
+  --ytmusic-two-row-item-renderer-width: 180px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer {
+  background: #181818 !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  box-sizing: border-box !important;
+  width: 180px !important;
+  min-width: 180px !important;
+  max-width: 200px !important;
+  margin-right: 14px !important;
+  position: relative !important;
+  transition: background 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer:hover {
+  background: #282828 !important;
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer .image-wrapper.ytmusic-two-row-item-renderer,
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer img {
+  border-radius: 6px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer .title.ytmusic-two-row-item-renderer {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  margin-top: 10px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer .subtitle.ytmusic-two-row-item-renderer {
+  color: #b3b3b3 !important;
+  font-size: 0.82rem !important;
+  margin-top: 4px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* 5. ARTISTAS POPULARES: CARÁTULA EN CÍRCULO PERFECTO SPOTIFY (50% DE RADIO) */
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer[aspect-ratio="MUSIC_TWO_ROW_ITEM_THUMBNAIL_TYPE_CIRCULAR"] .image-wrapper,
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer[aspect-ratio="MUSIC_TWO_ROW_ITEM_THUMBNAIL_TYPE_CIRCULAR"] img {
+  border-radius: 50% !important;
+}
+
+/* 6. EL ICÓNICO BOTÓN VERDE DE SPOTIFY: OCULTO POR DEFECTO, EMERGE EN LA ESQUINA INFERIOR DERECHA EN HOVER */
+body.auramusic-theme-spotify ytmusic-item-thumbnail-overlay-renderer {
+  background: transparent !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: flex-end !important;
+  padding: 8px !important;
+  pointer-events: none !important;
+}
+
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer ytmusic-play-button-renderer {
+  opacity: 0 !important;
+  transform: translateY(8px) !important;
+  transition: all 0.25s cubic-bezier(0.3, 0, 0, 1) !important;
+  position: absolute !important;
+  bottom: 8px !important;
+  right: 8px !important;
+  z-index: 10 !important;
+  pointer-events: none !important;
+}
+
+/* SOLO APARECE CUANDO SE PASA EL RATÓN POR ENCIMA DE LA TARJETA */
+body.auramusic-theme-spotify ytmusic-two-row-item-renderer:hover ytmusic-play-button-renderer {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  pointer-events: auto !important;
+}
+
+body.auramusic-theme-spotify ytmusic-play-button-renderer #button {
+  background: #1ed760 !important;
+  border-radius: 50% !important;
+  color: #000000 !important;
+  width: 48px !important;
+  height: 48px !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6), 0 0 20px rgba(30, 215, 96, 0.4) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body.auramusic-theme-spotify ytmusic-play-button-renderer #button:hover {
+  transform: scale(1.08) !important;
+  background: #1fdf64 !important;
+}
+
+body.auramusic-theme-spotify ytmusic-play-button-renderer #button yt-icon,
+body.auramusic-theme-spotify ytmusic-play-button-renderer #button svg {
+  fill: #000000 !important;
+  color: #000000 !important;
+}
+
+/* 7. ESTRUCTURA SPOTIFY: CAJÓN LATERAL EN 2 TARJETAS FLOTANTES SEPARADAS */
+body.auramusic-theme-spotify #guide-wrapper {
+  background: transparent !important;
+  padding: 8px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-section-renderer:first-child {
+  background: #121212 !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+  margin-bottom: 8px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-section-renderer:nth-child(2) {
+  background: #121212 !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-entry-renderer {
+  border-radius: 6px !important;
+  margin: 3px 0 !important;
+  color: #b3b3b3 !important;
+}
+
+body.auramusic-theme-spotify ytmusic-guide-entry-renderer:hover {
+  background: transparent !important;
+  color: #ffffff !important;
+}
+
+/* 8. ESTRUCTURA SPOTIFY: REPRODUCTOR INFERIOR NEGRO EN 3 COLUMNAS REORGANIZADAS */
+body.auramusic-theme-spotify ytmusic-player-bar {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  height: 88px !important;
+  background: #000000 !important;
+  border-top: 1px solid #282828 !important;
+  padding: 0 20px !important;
+}
+
+/* Columna Izquierda: Información de Canción */
+body.auramusic-theme-spotify ytmusic-player-bar .middle-controls {
+  order: 1 !important;
+  width: 30% !important;
+  max-width: 340px !important;
+  justify-content: flex-start !important;
+  margin: 0 !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .image.ytmusic-player-bar {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 4px !important;
+  margin-right: 14px !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .title.ytmusic-player-bar {
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .byline.ytmusic-player-bar {
+  font-size: 0.8rem !important;
+  color: #b3b3b3 !important;
+}
+
+/* Columna Central: Controles de Reproducción y Tiempos */
+body.auramusic-theme-spotify ytmusic-player-bar .left-controls {
+  order: 2 !important;
+  width: 42% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+}
+
+/* Botón central blanco circular */
+body.auramusic-theme-spotify ytmusic-player-bar .play-pause-button {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-radius: 50% !important;
+  width: 38px !important;
+  height: 38px !important;
+  margin: 0 14px !important;
+  transition: transform 0.2s ease !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .play-pause-button:hover {
+  transform: scale(1.08) !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .previous-button,
+body.auramusic-theme-spotify ytmusic-player-bar .next-button {
+  color: #b3b3b3 !important;
+  background: transparent !important;
+}
+
+body.auramusic-theme-spotify ytmusic-player-bar .previous-button:hover,
+body.auramusic-theme-spotify ytmusic-player-bar .next-button:hover {
+  color: #ffffff !important;
+}
+
+/* Columna Derecha: Volumen y Extras */
+body.auramusic-theme-spotify ytmusic-player-bar .right-controls {
+  order: 3 !important;
+  width: 28% !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  margin: 0 !important;
+}
+
+/* Barra de progreso verde Spotify con knob sutil */
+body.auramusic-theme-spotify tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
+  background: #1ed760 !important;
+  box-shadow: none !important;
+}
+
+body.auramusic-theme-spotify tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
+  background: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6) !important;
+  width: 12px !important;
+  height: 12px !important;
+}
+
+/* Botón de Home en la cabecera */
+#auramusic-spotify-home-btn {
+  background: #1f1f1f;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  border: none;
+  color: #ffffff;
+  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 12px;
+  transition: all 0.2s ease;
+}
+
+#auramusic-spotify-home-btn:hover {
+  transform: scale(1.06);
+  background: #282828;
+}
+
+/* Logo Oficial Spotify en la cabecera */
+.auramusic-spotify-brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.04em;
+  margin-left: 8px;
+}
+
+/* Menús contextuales y dropdowns Spotify */
+body.auramusic-theme-spotify ytmusic-menu-popup-renderer,
+body.auramusic-theme-spotify tp-yt-paper-listbox {
+  background: #282828 !important;
+  border: 1px solid #383838 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8) !important;
+  padding: 6px !important;
+}
+
+body.auramusic-theme-spotify tp-yt-paper-item:hover {
+  background: #3e3e3e !important;
+  color: #1ed760 !important;
+  border-radius: 8px !important;
+}

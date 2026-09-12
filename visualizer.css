@@ -38,23 +38,32 @@ ytmusic-player-bar .byline {
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  display: none;
   opacity: 0;
-  transition: opacity 1.2s ease, filter 1.2s ease;
+  transition: opacity 1.2s ease;
 }
 
 body.auramusic-ambient-active #auramusic-ambient-glow {
+  display: block;
   opacity: 0.65;
+}
+
+body.auramusic-cinema-active #auramusic-ambient-glow,
+body.auramusic-cinema-active #auramusic-visualizer-container {
+  display: none !important;
 }
 
 .auramusic-glow-layer {
   position: absolute;
-  width: 60vw;
-  height: 60vw;
+  width: 50vw;
+  height: 50vw;
   border-radius: 50%;
-  filter: blur(120px);
   opacity: 0.5;
   transition: background 1.5s ease, transform 0.5s ease-out;
   pointer-events: none;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  contain: strict;
 }
 
 #auramusic-glow-1 {

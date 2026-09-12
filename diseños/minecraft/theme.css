@@ -1,0 +1,196 @@
+body.auramusic-theme-minecraft {
+  --auramusic-primary: #55ff55;
+  --auramusic-secondary: #00aa00;
+  --auramusic-glow: rgba(85, 255, 85, 0.4);
+  font-family: 'Silkscreen', monospace !important;
+}
+
+body.auramusic-theme-minecraft * {
+  font-family: 'Silkscreen', monospace !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-app,
+body.auramusic-theme-minecraft ytmusic-browse-response,
+body.auramusic-theme-minecraft ytmusic-player-page {
+  background-color: #1a1a1a !important;
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.35) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(0,0,0,0.35) 2px, transparent 2px) !important;
+  background-size: 28px 28px !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-guide-entry-renderer {
+  background: #3b3b3b !important;
+  border: 3px solid #1a1a1a !important;
+  border-top-color: #6a6a6a !important;
+  border-left-color: #6a6a6a !important;
+  border-bottom-color: #141414 !important;
+  border-right-color: #141414 !important;
+  border-radius: 0px !important;
+  margin: 6px 10px !important;
+  box-shadow: inset 1px 1px 0px #888888 !important;
+  transition: none !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-guide-entry-renderer:hover {
+  background: #4d4d4d !important;
+  border-top-color: #888888 !important;
+  border-left-color: #888888 !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-guide-entry-renderer:active,
+body.auramusic-theme-minecraft ytmusic-chip-cloud-chip-renderer:active,
+body.auramusic-theme-minecraft .play-pause-button:active,
+body.auramusic-theme-minecraft .previous-button:active,
+body.auramusic-theme-minecraft .next-button:active,
+body.auramusic-theme-minecraft ytmusic-responsive-list-item-renderer:active {
+  transform: translate(2px, 2px) !important;
+  border-top-color: #141414 !important;
+  border-left-color: #141414 !important;
+  border-bottom-color: #6a6a6a !important;
+  border-right-color: #6a6a6a !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-guide-entry-renderer[is-primary] tp-yt-paper-item,
+body.auramusic-theme-minecraft ytmusic-guide-entry-renderer[aria-selected="true"] tp-yt-paper-item {
+  background: #254d25 !important;
+  border-left: 4px solid #55ff55 !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-guide-entry-renderer[is-primary] yt-icon,
+body.auramusic-theme-minecraft ytmusic-guide-entry-renderer[aria-selected="true"] yt-icon {
+  color: #55ff55 !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-chip-cloud-chip-renderer {
+  border-radius: 0px !important;
+  background: #3a3a3a !important;
+  border: 3px solid #1a1a1a !important;
+  border-top-color: #606060 !important;
+  border-left-color: #606060 !important;
+  border-bottom-color: #181818 !important;
+  border-right-color: #181818 !important;
+  color: #ffffff !important;
+  font-size: 0.8rem !important;
+  box-shadow: inset 1px 1px 0 #777 !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-chip-cloud-chip-renderer:hover {
+  background: #4c4c4c !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-chip-cloud-chip-renderer[is-selected] {
+  background: #1e4d1e !important;
+  border-color: #55ff55 !important;
+  color: #55ff55 !important;
+  text-shadow: 1px 1px 0px #000 !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-responsive-list-item-renderer {
+  border: 2px solid transparent !important;
+  border-radius: 0px !important;
+  margin: 2px 0 !important;
+  transition: none !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-responsive-list-item-renderer:hover {
+  background: #2c2c2c !important;
+  border-color: #55ff55 !important;
+  border-left-width: 6px !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-two-row-item-renderer .image-wrapper.ytmusic-two-row-item-renderer,
+body.auramusic-theme-minecraft ytmusic-two-row-item-renderer img {
+  border-radius: 0px !important;
+  border: 3px solid #3c3c3c !important;
+  border-top-color: #5a5a5a !important;
+  border-left-color: #5a5a5a !important;
+  border-bottom-color: #111111 !important;
+  border-right-color: #111111 !important;
+  image-rendering: pixelated !important;
+  transition: transform 0.1s steps(2) !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-two-row-item-renderer:hover {
+  transform: scale(1.04) !important;
+  filter: drop-shadow(3px 3px 0px #000000) !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-player-bar {
+  background: #2b2b2b !important;
+  border-top: 4px solid #4a4a4a !important;
+  box-shadow: inset 0 2px 0 #777777, 0 -6px 0 #151515 !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-player-bar .play-pause-button,
+body.auramusic-theme-minecraft ytmusic-player-bar .previous-button,
+body.auramusic-theme-minecraft ytmusic-player-bar .next-button {
+  background: #363636 !important;
+  border: 3px solid #161616 !important;
+  border-top-color: #161616 !important;
+  border-left-color: #161616 !important;
+  border-bottom-color: #606060 !important;
+  border-right-color: #606060 !important;
+  border-radius: 0px !important;
+  width: 44px !important;
+  height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 4px !important;
+  color: #55ff55 !important;
+}
+
+body.auramusic-theme-minecraft ytmusic-player-bar .play-pause-button:hover,
+body.auramusic-theme-minecraft ytmusic-player-bar .previous-button:hover,
+body.auramusic-theme-minecraft ytmusic-player-bar .next-button:hover {
+  background: #464646 !important;
+}
+
+body.auramusic-theme-minecraft tp-yt-paper-progress#primaryProgress.tp-yt-paper-progress,
+body.auramusic-theme-minecraft #progressContainer.tp-yt-paper-progress {
+  height: 8px !important;
+  border-radius: 0px !important;
+  border: 1px solid #000000 !important;
+}
+
+body.auramusic-theme-minecraft tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
+  background: #55ff55 !important;
+  box-shadow: inset 0 2px 0 #aaffaa, inset 0 -2px 0 #00aa00 !important;
+  animation: minecraftXpPulse 1.8s steps(4) infinite alternate !important;
+}
+
+@keyframes minecraftXpPulse {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.3) drop-shadow(0 0 6px #55ff55); }
+}
+
+body.auramusic-theme-minecraft tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+body.auramusic-theme-minecraft tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider {
+  background: #ffff55 !important;
+  border-radius: 0px !important;
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  transform: scale(1) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  border: 2px solid #000000 !important;
+  box-shadow: inset 2px 2px 0 #ffffff, inset -2px -2px 0 #aa5500, 0 0 12px rgba(255, 255, 85, 0.8) !important;
+  image-rendering: pixelated !important;
+  cursor: grab !important;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+body.auramusic-theme-minecraft tp-yt-paper-slider:hover #sliderKnobInner.tp-yt-paper-slider,
+body.auramusic-theme-minecraft tp-yt-paper-slider[dragging] #sliderKnobInner.tp-yt-paper-slider {
+  transform: scale(1.4) !important;
+  background: #55ff55 !important;
+  box-shadow: inset 2px 2px 0 #ffffff, inset -2px -2px 0 #00aa00, 0 0 20px rgba(85, 255, 85, 1) !important;
+  cursor: grabbing !important;
+}

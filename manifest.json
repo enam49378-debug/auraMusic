@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "AuraMusic - Personalizador Avanzado de YouTube Music",
-  "version": "1.2.0",
-  "description": "Temas visuales avanzados, modo letras animadas estilo Apple Music, visualizador en tiempo real, ecualizador y sin anuncios.",
+  "version": "1.3.1",
+  "description": "Temas visuales avanzados, letras animadas sincronizadas estilo Apple Music, visualizadores de audio en tiempo real y ecualizador.",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -31,9 +31,21 @@
     "*://*.googlevideo.com/*",
     "https://lrclib.net/*",
     "https://clients5.google.com/*",
-    "https://api.mymemory.translated.net/*"
+    "https://api.mymemory.translated.net/*",
+    "http://localhost:3000/*",
+    "http://127.0.0.1:3000/*"
   ],
   "content_scripts": [
+    {
+      "matches": [
+        "*://music.youtube.com/*"
+      ],
+      "js": [
+        "modules/core/player-bridge.js"
+      ],
+      "world": "MAIN",
+      "run_at": "document_start"
+    },
     {
       "matches": [
         "*://music.youtube.com/*"
@@ -45,8 +57,13 @@
         "cinema-lyrics.css"
       ],
       "js": [
-        "three.min.js",
-        "crossfade.js",
+        "modules/core/state.js",
+        "modules/audio/audio-engine.js",
+        "modules/visualizer/visualizer.js",
+        "modules/ambient/ambient-glow.js",
+        "modules/lyrics/cinema-lyrics.js",
+        "modules/themes/theme-manager.js",
+        "modules/hub/hub-panel.js",
         "content.js"
       ],
       "run_at": "document_idle"
@@ -56,7 +73,10 @@
     {
       "resources": [
         "icons/*",
-        "assets/*"
+        "assets/*",
+        "diseños/*",
+        "three.min.js",
+        "modules/core/player-bridge.js"
       ],
       "matches": [
         "*://music.youtube.com/*"

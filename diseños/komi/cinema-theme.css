@@ -1,0 +1,353 @@
+/* ==========================================================================
+   📝 CINEMA OVERLAY KOMI: CUADERNO ESCOLAR ABIERTO
+   Extraído de cinema-lyrics.css general — versión modular para carpeta diseños/komi/
+   ========================================================================== */
+
+body.auramusic-theme-komi #auramusic-cinema-overlay.active {
+  background-color: #1e1528 !important;
+  background-image:
+    radial-gradient(#3a2c55 1.5px, transparent 1.5px),
+    linear-gradient(to bottom, #2a1e3e 0%, #170f22 100%) !important;
+  background-size: 24px 24px, 100% 100% !important;
+  color: #1a1e24 !important;
+  padding: 20px 30px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body.auramusic-theme-komi .cinema-mesh-bg {
+  display: none !important;
+}
+
+/* NUNCA MOSTRAR EL MODELO 3D DE JESULUTO EN EL TEMA DE KOMI-SAN */
+body.auramusic-theme-komi #jesuluto-3d-stage,
+body.auramusic-theme-komi .jesuluto-3d-stage,
+body.auramusic-theme-komi .jesuluto-skin-controls {
+  display: none !important;
+}
+
+/* EL CUADERNO ABIERTO EN 2 PÁGINAS (ESTILO B5 JAPONÉS) */
+body.auramusic-theme-komi .cinema-content-grid {
+  background: #faf7ee !important;
+  border-radius: 16px !important;
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.75),
+    0 4px 15px rgba(0, 0, 0, 0.4),
+    inset 0 0 80px rgba(225, 215, 195, 0.45) !important;
+  border: 1px solid #ded5c2 !important;
+  position: relative !important;
+  overflow: hidden !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+  max-width: 1280px !important;
+  height: calc(100vh - 60px) !important;
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+/* Pliegue / Sombra central del lomo del cuaderno */
+body.auramusic-theme-komi .cinema-content-grid::after {
+  content: '';
+  position: absolute !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  left: 410px !important;
+  width: 28px !important;
+  background: linear-gradient(90deg,
+    rgba(0,0,0,0.18) 0%,
+    rgba(0,0,0,0.04) 35%,
+    rgba(255,255,255,0.4) 50%,
+    rgba(0,0,0,0.04) 65%,
+    rgba(0,0,0,0.18) 100%) !important;
+  z-index: 30 !important;
+  pointer-events: none !important;
+}
+
+/* 1. PÁGINA IZQUIERDA: PORTADA / POLAROID ESCOLAR */
+body.auramusic-theme-komi .cinema-left {
+  width: 410px !important;
+  min-width: 410px !important;
+  max-width: 410px !important;
+  height: 100% !important;
+  background: #f4efe2 !important;
+  border-right: 1px solid #dfd4bf !important;
+  padding: 30px 24px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: relative !important;
+}
+
+body.auramusic-theme-komi .cinema-artwork-box {
+  display: block !important;
+  width: 230px !important;
+  height: 230px !important;
+  background: #ffffff !important;
+  padding: 8px 8px 26px 8px !important;
+  border-radius: 4px !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16) !important;
+  border: 1px solid #dcd3c1 !important;
+  transform: rotate(-1.5deg) !important;
+  position: relative !important;
+  margin: 10px auto !important;
+}
+
+body.auramusic-theme-komi .cinema-artwork-box::before {
+  content: '';
+  position: absolute !important;
+  top: -8px !important;
+  left: 32% !important;
+  width: 36% !important;
+  height: 16px !important;
+  background: rgba(203, 180, 228, 0.9) !important;
+  border-radius: 2px !important;
+  transform: rotate(2deg) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  z-index: 10 !important;
+}
+
+body.auramusic-theme-komi .cinema-artwork-box img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 2px !important;
+}
+
+body.auramusic-theme-komi .cinema-track-title {
+  color: #1e242d !important;
+  font-size: 1.35rem !important;
+  font-weight: 800 !important;
+}
+
+body.auramusic-theme-komi .cinema-track-artist {
+  color: #7f5bc4 !important;
+  font-size: 0.98rem !important;
+  font-weight: 700 !important;
+}
+
+body.auramusic-theme-komi .cinema-progress-bg {
+  background: #ded5c2 !important;
+  height: 6px !important;
+  border-radius: 4px !important;
+}
+
+body.auramusic-theme-komi .cinema-progress-fill {
+  background: linear-gradient(90deg, #7f5bc4, #cbb4e4) !important;
+  border-radius: 4px !important;
+}
+
+body.auramusic-theme-komi .cinema-play-btn {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  background: #9d7ed0 !important;
+  color: #ffffff !important;
+  border: 2px solid #cbb4e4 !important;
+  box-shadow: 0 4px 14px rgba(127, 91, 196, 0.45) !important;
+  font-size: 1.2rem !important;
+}
+
+/* 2. PÁGINA DERECHA: HOJA DE RAYAS ESCOLARES */
+body.auramusic-theme-komi .cinema-right {
+  flex: 1 !important;
+  height: 100% !important;
+  background-color: #faf7ee !important;
+  padding: 24px 30px 60px 40px !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  overflow-y: auto !important;
+}
+
+body.auramusic-theme-komi .cinema-right::before {
+  content: 'No. 01      DATE:  /  / 2026       名前: 古見 硝子 🌸 (Komi Shouko)';
+  display: block !important;
+  font-family: 'Patrick Hand', monospace, cursive !important;
+  font-size: 0.95rem !important;
+  color: #728494 !important;
+  font-weight: 700 !important;
+  border-bottom: 2px solid #9db5c7 !important;
+  padding-bottom: 8px !important;
+  margin-bottom: 12px !important;
+  letter-spacing: 0.5px !important;
+}
+
+body.auramusic-theme-komi .cinema-lyrics-wrapper {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  width: 100% !important;
+  border-left: 2px solid #9d7ed0 !important;
+  padding-left: 14px !important;
+  box-sizing: border-box !important;
+}
+
+/* RENGLONES ESCOLARES DE 52px */
+body.auramusic-theme-komi .cinema-lyric-line {
+  height: 52px !important;
+  min-height: 52px !important;
+  line-height: 48px !important;
+  border-bottom: 2px solid #c7d8e8 !important;
+  margin: 0 !important;
+  padding: 0 10px 4px 10px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  font-family: 'Patrick Hand', 'Caveat', 'Comic Sans MS', cursive, sans-serif !important;
+  font-size: 1.75rem !important;
+  color: #2b3336 !important;
+  position: relative !important;
+  letter-spacing: 0.5px !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   VARIACIÓN ORGÁNICA: SANGRÍAS Y DESPLAZAMIENTOS REALISTAS DE ESCRITURA
+   ========================================================================== */
+body.auramusic-theme-komi .cinema-lyric-line:nth-child(5n+1) {
+  padding-left: 10px !important;
+}
+body.auramusic-theme-komi .cinema-lyric-line:nth-child(5n+2) {
+  padding-left: 28px !important;
+}
+body.auramusic-theme-komi .cinema-lyric-line:nth-child(5n+3) {
+  padding-left: 16px !important;
+}
+body.auramusic-theme-komi .cinema-lyric-line:nth-child(5n+4) {
+  padding-left: 36px !important;
+}
+body.auramusic-theme-komi .cinema-lyric-line:nth-child(5n+5) {
+  padding-left: 20px !important;
+}
+
+/* ==========================================================================
+   SOLO MOSTRAR LO CANTADO Y LO QUE SE ESTÁ CANTANDO:
+   LOS VERSOS FUTUROS QUEDAN COMO RENGLONES EN BLANCO ESPERANDO A SER ESCRITOS
+   ========================================================================== */
+body.auramusic-theme-komi .cinema-lyric-line:not(.active-line):not(.sung-line) .line-primary,
+body.auramusic-theme-komi .cinema-lyric-line:not(.active-line):not(.sung-line) .line-original-sub,
+body.auramusic-theme-komi .cinema-lyric-line:not(.active-line):not(.sung-line) .komi-inline-sticker {
+  display: none !important;
+  opacity: 0 !important;
+}
+
+/* PALABRAS EN GRAFITO OSCURO */
+body.auramusic-theme-komi .k-word {
+  color: #2b3336 !important;
+  filter: none !important;
+  text-shadow: none !important;
+  display: inline-block !important;
+}
+
+/* VERSO CANTÁNDOSE AHORA */
+body.auramusic-theme-komi .cinema-lyric-line.active-line {
+  opacity: 1 !important;
+  color: #111b21 !important;
+  border-bottom: 2px solid #7c98b0 !important;
+}
+
+/* PALABRAS DEL VERSO ACTIVO: SE DIBUJAN CON LÁPIZ DE IZQUIERDA A DERECHA */
+body.auramusic-theme-komi .cinema-lyric-line.active-line .k-word {
+  opacity: 0 !important;
+  clip-path: inset(0 100% 0 0);
+  transition: none !important;
+}
+
+/* PALABRA CANTÁNDOSE: TRAZO CONTINUO DE LÁPIZ EN TIEMPO REAL */
+body.auramusic-theme-komi .cinema-lyric-line.active-line .k-word.active {
+  opacity: 1 !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  animation: pencilDrawWrite 0.28s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
+
+@keyframes pencilDrawWrite {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0.2;
+    transform: translateY(1px);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* PALABRAS YA DIBUJADAS DEL VERSO ACTUAL */
+body.auramusic-theme-komi .cinema-lyric-line.active-line .k-word.sung {
+  opacity: 1 !important;
+  clip-path: none !important;
+  color: #1b232a !important;
+  font-weight: 700 !important;
+}
+
+/* ==========================================================================
+   VERSO COMPLETADO: TACHADO CON LÁPIZ DE IZQUIERDA A DERECHA
+   ========================================================================== */
+body.auramusic-theme-komi .cinema-lyric-line.sung-line {
+  opacity: 0.45 !important;
+  color: #6a7782 !important;
+  position: relative !important;
+}
+
+body.auramusic-theme-komi .cinema-lyric-line.sung-line .k-word {
+  opacity: 1 !important;
+  clip-path: none !important;
+  color: inherit !important;
+}
+
+body.auramusic-theme-komi .cinema-lyric-line.sung-line::after {
+  content: '' !important;
+  position: absolute !important;
+  left: 6px !important;
+  top: 55% !important;
+  height: 2.5px !important;
+  background: #2b3336 !important;
+  border-radius: 2px !important;
+  transform: rotate(-0.5deg) !important;
+  opacity: 0.75 !important;
+  animation: komiPencilStrike 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
+
+@keyframes komiPencilStrike {
+  0% { width: 0%; opacity: 0; }
+  100% { width: calc(100% - 12px); opacity: 0.75; }
+}
+
+/* ==========================================================================
+   STICKERS DE EXPRESIONES DE KOMI-SAN EN EL CUADERNO 🌸💖
+   ========================================================================== */
+.komi-inline-sticker {
+  position: absolute !important;
+  right: 15px !important;
+  top: -30px !important;
+  width: 85px !important;
+  height: 85px !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  transform: scale(0.4) rotate(-8deg) !important;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  z-index: 25 !important;
+}
+
+.komi-inline-sticker img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.18)) !important;
+}
+
+/* El sticker aparece animado cuando el verso se canta o ya fue cantado */
+body.auramusic-theme-komi .cinema-lyric-line.active-line .komi-inline-sticker,
+body.auramusic-theme-komi .cinema-lyric-line.sung-line .komi-inline-sticker {
+  opacity: 1 !important;
+  transform: scale(1) rotate(-3deg) !important;
+}

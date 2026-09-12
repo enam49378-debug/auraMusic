@@ -399,3 +399,628 @@
   background: #18181b;
   color: #fff;
 }
+
+/* ========================================================================== */
+/* MENÚ CONTEXTUAL PERSONALIZADO (CLIC DERECHO EN CANCIÓN)                    */
+/* ========================================================================== */
+#auramusic-context-menu {
+  position: fixed;
+  z-index: 10000000;
+  background: rgba(14, 14, 22, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 229, 255, 0.2);
+  border-radius: 14px;
+  padding: 6px;
+  min-width: 240px;
+  display: none;
+  flex-direction: column;
+  gap: 3px;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  animation: auraMenuPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top left;
+}
+
+@keyframes auraMenuPop {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.auramusic-ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: #f1f5f9;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  text-align: left;
+  width: 100%;
+  transition: all 0.18s ease;
+}
+
+.auramusic-ctx-item:hover {
+  background: linear-gradient(90deg, rgba(0, 229, 255, 0.18), rgba(168, 85, 247, 0.18));
+  color: #00e5ff;
+  transform: translateX(3px);
+}
+
+.auramusic-ctx-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.auramusic-ctx-desc {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+  margin-top: 1px;
+}
+
+/* ========================================================================== */
+/* MODAL EDITOR DJ DE CROSSFADE (STUDIO MIX LAB)                             */
+/* ========================================================================== */
+#auramusic-crossfade-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483647 !important;
+  background: rgba(4, 4, 8, 0.82) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  display: none;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  pointer-events: auto !important;
+  animation: auraFadeOverlay 0.25s ease-out;
+}
+
+@keyframes auraFadeOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+#auramusic-crossfade-modal {
+  width: 100%;
+  max-width: 680px;
+  background: linear-gradient(145deg, rgba(18, 18, 28, 0.98), rgba(10, 10, 16, 0.98));
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(0, 229, 255, 0.25);
+  border-radius: 24px;
+  padding: 26px 30px;
+  color: #fff;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  animation: auraModalSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative !important;
+  z-index: 2147483647 !important;
+  pointer-events: auto !important;
+}
+
+@keyframes auraModalSlide {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Header */
+.aura-dj-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 14px;
+}
+
+.aura-dj-title-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aura-dj-logo {
+  font-size: 26px;
+  filter: drop-shadow(0 0 8px #00e5ff);
+}
+
+.aura-dj-title {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(90deg, #00e5ff, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.aura-dj-subtitle {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 2px;
+}
+
+.aura-dj-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s;
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 100 !important;
+}
+
+.aura-dj-close-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+}
+
+/* Tarjetas de Pistas A y B */
+.aura-dj-tracks-preview {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 14px;
+  align-items: center;
+}
+
+.aura-dj-track-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.aura-dj-track-card.deck-a {
+  border-left: 3px solid #00e5ff;
+}
+
+.aura-dj-track-card.deck-b {
+  border-left: 3px solid #c084fc;
+}
+
+.aura-dj-cover {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.aura-dj-track-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.aura-dj-badge {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 2px;
+}
+
+.aura-dj-badge.a { color: #00e5ff; }
+.aura-dj-badge.b { color: #c084fc; }
+
+.aura-dj-name {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fff;
+}
+
+.aura-dj-artist {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aura-dj-arrow {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* Visualizador de Línea de Tiempo de Unión (Waveform Timeline) */
+.aura-dj-timeline-box {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative !important;
+}
+
+.aura-dj-timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  position: relative;
+  z-index: 5;
+}
+
+.aura-dj-timeline-visual {
+  position: relative !important;
+  height: 54px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 6px;
+  z-index: 5;
+}
+
+/* Barras de onda simuladas */
+.aura-dj-wave-bar {
+  flex: 1;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  transition: all 0.2s;
+  pointer-events: none;
+}
+
+.aura-dj-wave-bar.fadeout {
+  background: linear-gradient(180deg, #00e5ff, rgba(0, 229, 255, 0.2));
+}
+
+.aura-dj-wave-bar.fadein {
+  background: linear-gradient(180deg, #c084fc, rgba(192, 132, 252, 0.2));
+}
+
+.aura-dj-scrubber-zone {
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 4px !important;
+  z-index: 15 !important;
+  pointer-events: auto !important;
+}
+
+.aura-dj-cue-slider {
+  width: 100% !important;
+  accent-color: #00e5ff !important;
+  cursor: ew-resize !important;
+  opacity: 0.9 !important;
+  height: 28px !important;
+  background: transparent !important;
+  position: relative !important;
+  z-index: 20 !important;
+  pointer-events: auto !important;
+}
+
+.aura-dj-cue-slider:hover {
+  opacity: 1 !important;
+}
+
+/* Controles de Configuración de la Mezcla */
+.aura-dj-controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  position: relative;
+  z-index: 10;
+}
+
+.aura-dj-control-group {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  z-index: 10;
+}
+
+.aura-dj-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.aura-dj-val-highlight {
+  color: #00e5ff;
+  font-weight: 800;
+}
+
+/* Botones de Curva */
+.aura-dj-curve-options {
+  display: flex;
+  gap: 8px;
+}
+
+.aura-dj-curve-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  padding: 7px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.aura-dj-curve-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.aura-dj-curve-btn.active {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.25), rgba(168, 85, 247, 0.25));
+  border-color: #00e5ff;
+  color: #00e5ff;
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.25);
+}
+
+/* Acciones Inferiores */
+.aura-dj-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.aura-dj-btn-preview {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  color: #00e5ff;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.22s;
+}
+
+.aura-dj-btn-preview:hover {
+  background: rgba(0, 229, 255, 0.15);
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.aura-dj-btn-save {
+  flex: 1.2;
+  background: linear-gradient(135deg, #00e5ff, #a855f7);
+  border: none;
+  color: #050508;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.22s;
+  box-shadow: 0 6px 20px rgba(0, 229, 255, 0.3);
+}
+
+.aura-dj-btn-save:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(0, 229, 255, 0.45);
+  filter: brightness(1.08);
+}
+
+/* Insignia visual y diseño de canciones unidas en la cola */
+ytmusic-player-queue-item[data-merged-hidden="true"] {
+  display: none !important;
+}
+
+.auramusic-merged-title {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.auramusic-merged-title-a {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.auramusic-merged-x {
+  display: inline-block;
+  color: #00e5ff;
+  font-weight: 900;
+  font-size: 13px;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.9);
+  margin: 0 2px;
+  transform: translateY(-0.5px);
+}
+
+.auramusic-merged-title-b {
+  color: #c084fc;
+  font-weight: 600;
+}
+
+.auramusic-merged-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.25), rgba(168, 85, 247, 0.25));
+  border: 1px solid rgba(0, 229, 255, 0.6);
+  color: #00f0ff;
+  font-size: 9.5px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: 800;
+  padding: 1.5px 7px;
+  border-radius: 999px;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.35);
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+.auramusic-merged-track-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.18), rgba(168, 85, 247, 0.18));
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  color: #00e5ff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  margin-left: 8px;
+  vertical-align: middle;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.2);
+}
+
+.auramusic-merged-connector {
+  position: relative;
+}
+
+.auramusic-merged-connector::before {
+  content: '';
+  position: absolute;
+  left: 24px;
+  top: -12px;
+  bottom: 50%;
+  width: 2px;
+  background: linear-gradient(180deg, #00e5ff, #c084fc);
+  z-index: 2;
+  border-radius: 2px;
+  box-shadow: 0 0 6px #00e5ff;
+}
+
+.auramusic-merged-track-b-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(192, 132, 252, 0.15);
+  border: 1px dashed rgba(192, 132, 252, 0.45);
+  color: #c084fc;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* ========================================================================== */
+/* ITEM INYECTADO DIRECTAMENTE EN EL MENÚ DE 3 PUNTOS DE YOUTUBE MUSIC       */
+/* ========================================================================== */
+.auramusic-ytm-popup-item {
+  display: flex !important;
+  align-items: center !important;
+  padding: 10px 16px !important;
+  cursor: pointer !important;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+  background: rgba(0, 229, 255, 0.05) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  transition: all 0.2s ease !important;
+  user-select: none !important;
+  gap: 12px !important;
+  position: relative !important;
+  min-height: 48px !important;
+  box-sizing: border-box !important;
+}
+
+.auramusic-ytm-popup-item:hover {
+  background: rgba(0, 229, 255, 0.15) !important;
+}
+
+.auramusic-ytm-item-icon {
+  font-size: 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 8px !important;
+  background: rgba(0, 229, 255, 0.12) !important;
+  border: 1px solid rgba(0, 229, 255, 0.3) !important;
+  flex-shrink: 0 !important;
+  filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.4));
+}
+
+.auramusic-ytm-item-text {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.auramusic-ytm-item-title {
+  color: #fff !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  white-space: normal !important;
+}
+
+.auramusic-ytm-item-sub {
+  color: rgba(255, 255, 255, 0.55) !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  margin-top: 1px !important;
+}
+
+.auramusic-ytm-item-pill {
+  background: linear-gradient(135deg, #00e5ff, #c084fc) !important;
+  color: #050508 !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  padding: 2px 7px !important;
+  border-radius: 6px !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.35) !important;
+  flex-shrink: 0 !important;
+}
+
+.auramusic-ytm-popup-unmix {
+  background: rgba(239, 68, 68, 0.06) !important;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.2) !important;
+}
+
+.auramusic-ytm-popup-unmix:hover {
+  background: rgba(239, 68, 68, 0.18) !important;
+}
+
+

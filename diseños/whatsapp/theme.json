@@ -1,0 +1,18 @@
+{
+  "id": "whatsapp",
+  "name": "WhatsApp Chat",
+  "version": "1.0.0",
+  "dateAdded": "2026-09-03",
+  "styleHints": {
+    "primary": "#00a884",
+    "background": "#111b21",
+    "accent": "#25d366",
+    "text": "#e9edef"
+  },
+  "description": "Verde WhatsApp estilo chat bubbles",
+  "files": ["./theme.css"],
+  "features": {
+    "three3d": false,
+    "cinema": true
+  }
+}

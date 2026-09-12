@@ -31,6 +31,13 @@ async function ensureOffscreenDocument() {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'OPEN_DJ_STUDIO') {
+    const url = chrome.runtime.getURL('dj-studio.html');
+    chrome.tabs.create({ url });
+    sendResponse({ status: 'opened' });
+    return true;
+  }
+
   if (message.target === 'background') {
     if (message.action === 'ENSURE_OFFSCREEN') {
       ensureOffscreenDocument().then((ok) => sendResponse({ status: ok ? 'ready' : 'error' }));

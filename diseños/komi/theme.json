@@ -1,0 +1,35 @@
+{
+  "id": "komi",
+  "name": "Komi-san Can't Communicate (古見硝子)",
+  "version": "2.0.0",
+  "author": "AuraMusic (Trae AI + Jesuluto)",
+  "description": "Tema morado/lila nocturno kawaii basado en Komi-san. Header lila claro, cards con esquina doblada, play button con orejas de gato. Versión modular en carpeta diseños.",
+  "styleHints": {
+    "primaryColor": "#9d7ed0",
+    "ink": "#ffffff",
+    "paper": "#372a52",
+    "cardBg": "#433662",
+    "headerBg": "#d7c8ea",
+    "sidebarBg": "#e5cfe8",
+    "accent": "#7f5bc4",
+    "cinemaBg": "#faf7ee"
+  },
+  "files": {
+    "homeCss": "theme.css",
+    "cinemaOverlayCss": "cinema-theme.css",
+    "assets": {
+      "avatar": "assets/komi_avatar.jpg",
+      "stickerLove": "assets/komi_sticker_love.png"
+    }
+  },
+  "features": {
+    "cinematicLyrics": true,
+    "ambientGlow": true,
+    "visualizer": true,
+    "eq": true,
+    "cornerCards": true,
+    "catEarsPlayButton": true
+  },
+  "dateAdded": "2026-09-03",
+  "lastUpdated": "2026-09-03"
+}

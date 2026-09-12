@@ -1,0 +1,18 @@
+﻿# Archivos del sistema y temporales
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+
+# Entornos de desarrollo
+.vscode/
+.idea/
+
+# Caches y multimedia pesada
+cache/
+*.mp3
+*.mp4
+*.zip
+*.tar.gz
+*.crx
+*.pem

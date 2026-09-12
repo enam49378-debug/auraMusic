@@ -1,0 +1,23 @@
+{
+  "id": "jesuluto",
+  "name": "Jesuluto MECHA-01",
+  "version": "1.0.0",
+  "dateAdded": "2026-09-03",
+  "author": "Jesuluto + AuraMusic",
+  "styleHints": {
+    "primary": "#00ff77",
+    "background": "#090d12",
+    "accent": "#00ff77",
+    "text": "#e6fdf2"
+  },
+  "description": "Cyber mecha verde Matrix estilo Jesuluto",
+  "files": [
+    "./theme.css",
+    "./assets/jesuluto_skin.png",
+    "./assets/jesuluto_dance.json"
+  ],
+  "features": {
+    "three3d": true,
+    "cinema": false
+  }
+}

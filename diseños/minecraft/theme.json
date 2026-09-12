@@ -1,0 +1,20 @@
+{
+  "id": "minecraft",
+  "name": "Minecraft Block Edition",
+  "version": "1.0.0",
+  "dateAdded": "2026-09-03",
+  "styleHints": {
+    "primary": "#3aa84d",
+    "background": "#1a1a1a",
+    "accent": "#f5d76e",
+    "text": "#ffffff"
+  },
+  "description": "Estilo píxel blocks Minecraft grass/dirt",
+  "files": [
+    "./theme.css"
+  ],
+  "features": {
+    "three3d": false,
+    "cinema": false
+  }
+}
