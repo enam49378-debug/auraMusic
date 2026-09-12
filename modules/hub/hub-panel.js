@@ -10,11 +10,21 @@ window.AuraMusic = window.AuraMusic || {};
     return window.AuraMusic?.state || window.state || window.defaultSettings || {};
   }
 
+  function getExtVersion() {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.runtime?.getManifest) {
+        return chrome.runtime.getManifest().version || '1.3.2';
+      }
+    } catch (_) {}
+    return '1.3.2';
+  }
+
   // --- CREACIÓN DEL PANEL DE CONTROL GLASSMORPHISM ---
   function injectLauncherAndHub() {
     if (document.getElementById('auramusic-launcher-btn')) return;
 
     const state = getState();
+    const extVer = getExtVersion();
 
     // Botón Lanzador Flotante
     const launcher = document.createElement('button');
@@ -32,7 +42,7 @@ window.AuraMusic = window.AuraMusic || {};
           <div class="auramusic-title-group">
             <span class="auramusic-logo-badge">✨</span>
             <span class="auramusic-title">AuraMusic Hub</span>
-            <span class="auramusic-version">v1.0</span>
+            <span class="auramusic-version" id="hub-version-badge">v${extVer}</span>
           </div>
           <button type="button" class="auramusic-close-btn" id="auramusic-close-btn">✕</button>
         </header>
@@ -43,6 +53,9 @@ window.AuraMusic = window.AuraMusic || {};
           <button type="button" class="auramusic-tab" data-tab="audio">🎚️ Audio & EQ</button>
           <button type="button" class="auramusic-tab" data-tab="clean">🚫 Limpieza</button>
           <button type="button" class="auramusic-tab" id="hub-cinema-lyrics-tab" style="color: #ff8fa3; font-weight: 700;">✨ Modo Letras</button>
+          <button type="button" class="auramusic-tab" data-tab="updates" id="hub-tab-updates" style="position:relative;">
+            🚀 Actualizaciones <span id="hub-update-dot" class="hub-tab-update-dot" style="display:none;"></span>
+          </button>
         </nav>
 
         <main class="auramusic-body">
@@ -159,6 +172,61 @@ window.AuraMusic = window.AuraMusic || {};
               </div>
             </div>
           </section>
+
+          <!-- PESTAÑA 5: ACTUALIZACIONES GITHUB -->
+          <section class="auramusic-panel" id="panel-updates">
+            <div class="auramusic-card">
+              <div class="auramusic-row" style="align-items: center; justify-content: space-between;">
+                <div class="auramusic-label-box">
+                  <span class="auramusic-label">🚀 Actualizador GitHub (1 Clic)</span>
+                  <span class="auramusic-sublabel">Sincroniza directamente con el repositorio oficial sin tocar chrome://extensions.</span>
+                </div>
+                <span id="hub-update-pill" class="hub-git-pill pill-checking">Comprobando...</span>
+              </div>
+
+              <div class="hub-update-status-card">
+                <div class="hub-update-status-row">
+                  <span class="hub-status-label">Versión Instalada:</span>
+                  <span class="hub-status-value" id="hub-local-ver-text">v${extVer}</span>
+                </div>
+                <div class="hub-update-status-row">
+                  <span class="hub-status-label">Versión en GitHub:</span>
+                  <span class="hub-status-value" id="hub-remote-ver-text">Consultando...</span>
+                </div>
+                <div class="hub-update-status-row">
+                  <span class="hub-status-label">Último Commit:</span>
+                  <span class="hub-status-value monospace" id="hub-remote-commit-text">...</span>
+                </div>
+                <div class="hub-update-status-row" id="hub-remote-msg-row" style="display: none;">
+                  <span class="hub-status-label">Novedades:</span>
+                  <span class="hub-status-value hub-commit-msg-text" id="hub-remote-msg-text">...</span>
+                </div>
+              </div>
+
+              <div id="hub-update-progress-area" class="hub-update-progress-area" style="display: none;">
+                <div class="hub-update-progress-bar-bg">
+                  <div class="hub-update-progress-bar-fill" id="hub-update-progress-bar"></div>
+                </div>
+                <div class="hub-update-progress-text" id="hub-update-progress-text">Iniciando actualización...</div>
+              </div>
+
+              <div class="hub-update-btn-row">
+                <button type="button" id="hub-btn-apply-update" class="hub-btn-gradient-primary">
+                  🚀 Actualizar desde GitHub
+                </button>
+                <button type="button" id="hub-btn-reload-now" class="hub-btn-ghost" title="Recargar la extensión en Chrome">
+                  ⚡ Recargar
+                </button>
+                <button type="button" id="hub-btn-check-update" class="hub-btn-ghost" title="Comprobar si hay nueva versión">
+                  🔄 Buscar
+                </button>
+              </div>
+
+              <div class="hub-update-footer-note">
+                💡 <strong>100% Automático:</strong> AuraMusic descarga las novedades directamente desde GitHub y recarga la extensión en segundo plano. No necesitas ir a chrome://extensions ni reiniciar Chrome.
+              </div>
+            </div>
+          </section>
         </main>
 
         <footer class="auramusic-footer">
@@ -179,6 +247,7 @@ window.AuraMusic = window.AuraMusic || {};
     function openHub() {
       overlay.classList.add('active');
       updateUIControls();
+      refreshHubUpdateStatus(false);
     }
 
     function closeHub() {
@@ -357,6 +426,190 @@ window.AuraMusic = window.AuraMusic || {};
         updateUIControls();
       });
     }
+
+    // --- LÓGICA DE ACTUALIZACIÓN DESDE GITHUB (AuraMusic Hub) ---
+    const btnApply = document.getElementById('hub-btn-apply-update');
+    const btnReload = document.getElementById('hub-btn-reload-now');
+    const btnCheck = document.getElementById('hub-btn-check-update');
+    const progressArea = document.getElementById('hub-update-progress-area');
+    const progressBar = document.getElementById('hub-update-progress-bar');
+    const progressText = document.getElementById('hub-update-progress-text');
+
+    async function refreshHubUpdateStatus(isManual = false) {
+      const localVer = getExtVersion();
+      const localVerEl = document.getElementById('hub-local-ver-text');
+      const remoteVerEl = document.getElementById('hub-remote-ver-text');
+      const remoteCommitEl = document.getElementById('hub-remote-commit-text');
+      const remoteMsgEl = document.getElementById('hub-remote-msg-text');
+      const remoteMsgRow = document.getElementById('hub-remote-msg-row');
+      const pill = document.getElementById('hub-update-pill');
+      const dot = document.getElementById('hub-update-dot');
+      const headerBadge = document.getElementById('hub-version-badge');
+
+      if (localVerEl) localVerEl.textContent = `v${localVer}`;
+      if (headerBadge) headerBadge.textContent = `v${localVer}`;
+
+      if (isManual && pill) {
+        pill.className = 'hub-git-pill pill-checking';
+        pill.textContent = 'Buscando...';
+      }
+
+      let info = null;
+      try {
+        if (window.AuraMusic?.Updater?.checkGithubUpdate) {
+          info = await window.AuraMusic.Updater.checkGithubUpdate(false, false, false);
+        }
+        if (!info) {
+          const res = await fetch('http://localhost:3000/api/update/check', { signal: AbortSignal.timeout(3500) });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.ok) {
+              info = {
+                hasUpdate: data.updateAvailable,
+                remoteVersion: data.remoteVersion,
+                remoteCommit: data.remoteCommit,
+                remoteCommitMsg: data.remoteCommitMsg
+              };
+            }
+          }
+        }
+      } catch (_) {}
+
+      if (info) {
+        if (remoteVerEl) remoteVerEl.textContent = info.remoteVersion ? `v${info.remoteVersion}` : `v${localVer}`;
+        if (remoteCommitEl) remoteCommitEl.textContent = info.remoteCommit || 'latest';
+        if (info.remoteCommitMsg && remoteMsgEl && remoteMsgRow) {
+          remoteMsgEl.textContent = info.remoteCommitMsg;
+          remoteMsgRow.style.display = 'flex';
+        }
+
+        if (info.hasUpdate) {
+          if (pill) {
+            pill.className = 'hub-git-pill pill-update';
+            pill.textContent = '¡Nueva versión!';
+          }
+          if (dot) dot.style.display = 'block';
+          if (btnApply) {
+            btnApply.textContent = `🚀 Actualizar a v${info.remoteVersion || 'nueva'} (${info.remoteCommit || 'GitHub'})`;
+          }
+        } else {
+          if (pill) {
+            pill.className = 'hub-git-pill pill-synced';
+            pill.textContent = 'Al día';
+          }
+          if (dot) dot.style.display = 'none';
+          if (btnApply) {
+            btnApply.textContent = '🚀 Sincronizar desde GitHub';
+          }
+        }
+      } else {
+        if (pill) {
+          pill.className = 'hub-git-pill pill-synced';
+          pill.textContent = 'Al día';
+        }
+        if (remoteVerEl) remoteVerEl.textContent = `v${localVer}`;
+      }
+    }
+
+    if (btnApply) {
+      btnApply.addEventListener('click', async () => {
+        btnApply.disabled = true;
+        btnApply.style.opacity = '0.7';
+        if (progressArea) progressArea.style.display = 'block';
+        if (progressBar) progressBar.style.width = '25%';
+        if (progressText) progressText.textContent = '⏳ Conectando con GitHub y descargando última versión...';
+
+        let success = false;
+        let updateVersion = getExtVersion();
+
+        if (window.AuraMusic?.Updater?.applyGithubUpdateAndReload) {
+          const res = await window.AuraMusic.Updater.applyGithubUpdateAndReload({
+            onProgress: (msg) => {
+              if (progressText) progressText.textContent = `⏳ ${msg}`;
+              if (progressBar) progressBar.style.width = '65%';
+            },
+            onSuccess: (msg) => {
+              success = true;
+              if (progressText) progressText.textContent = `✅ ${msg}`;
+              if (progressBar) progressBar.style.width = '100%';
+            },
+            onError: (err) => {
+              if (progressText) progressText.textContent = `⚠️ ${err}`;
+              btnApply.disabled = false;
+              btnApply.style.opacity = '1';
+            }
+          });
+          if (res && res.ok) {
+            success = true;
+            if (res.version) updateVersion = res.version;
+          }
+        } else {
+          try {
+            const res = await fetch('http://localhost:3000/api/update/apply', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              signal: AbortSignal.timeout(30000)
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data && data.ok) {
+                success = true;
+                if (data.version) updateVersion = data.version;
+              }
+            }
+          } catch (_) {}
+        }
+
+        if (success) {
+          if (progressText) progressText.textContent = `✅ ¡Actualizado a v${updateVersion}! Recargando extensión...`;
+          if (progressBar) progressBar.style.width = '100%';
+          if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+            try {
+              await chrome.storage.local.set({
+                auramusic_just_updated: true,
+                auramusic_updated_version: updateVersion
+              });
+            } catch (_) {}
+          }
+          setTimeout(() => {
+            if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+              chrome.runtime.sendMessage({ action: 'RELOAD_EXTENSION' });
+            }
+            setTimeout(() => window.location.reload(), 600);
+          }, 800);
+        } else {
+          if (progressText) progressText.textContent = '⚡ Recargando extensión en Chrome...';
+          if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+            chrome.runtime.sendMessage({ action: 'RELOAD_EXTENSION' });
+          }
+          setTimeout(() => window.location.reload(), 1000);
+        }
+      });
+    }
+
+    if (btnReload) {
+      btnReload.addEventListener('click', () => {
+        btnReload.disabled = true;
+        if (progressArea) progressArea.style.display = 'block';
+        if (progressBar) progressBar.style.width = '100%';
+        if (progressText) progressText.textContent = '⚡ Recargando extensión y YouTube Music...';
+        if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+          chrome.runtime.sendMessage({ action: 'RELOAD_EXTENSION' });
+        }
+        setTimeout(() => window.location.reload(), 500);
+      });
+    }
+
+    if (btnCheck) {
+      btnCheck.addEventListener('click', () => {
+        refreshHubUpdateStatus(true);
+      });
+    }
+
+    // Inicializar comprobación de GitHub para el Hub
+    setTimeout(() => {
+      refreshHubUpdateStatus(false);
+    }, 1500);
   }
 
   function updateUIControls() {

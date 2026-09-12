@@ -37,7 +37,7 @@
   }
 
   // Comprueba si hay actualizaciones en GitHub (por versión SemVer o nuevo Commit SHA)
-  async function checkGithubUpdate(manualTrigger = false, forceShowModal = false) {
+  async function checkGithubUpdate(manualTrigger = false, forceShowModal = false, showModalIfAvailable = true) {
     const localVer = getLocalVersion();
     let remoteVer = null;
     let localCommit = '';
@@ -130,7 +130,7 @@
       serverAvailable
     };
 
-    if (hasUpdate || forceShowModal) {
+    if (forceShowModal || (hasUpdate && showModalIfAvailable)) {
       showUpdateModal(result);
     } else if (manualTrigger) {
       showToast(`✨ AuraMusic v${localVer} ya está al día con GitHub`);
