@@ -38,6 +38,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.action === 'RELOAD_EXTENSION') {
+    sendResponse({ status: 'reloading' });
+    setTimeout(() => {
+      chrome.runtime.reload();
+    }, 150);
+    return true;
+  }
+
   if (message.target === 'background') {
     if (message.action === 'ENSURE_OFFSCREEN') {
       ensureOffscreenDocument().then((ok) => sendResponse({ status: ok ? 'ready' : 'error' }));

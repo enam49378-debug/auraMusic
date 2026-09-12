@@ -106,12 +106,17 @@ window.AuraMusic = window.AuraMusic || {};
     const cmdId = `${cmd.action}-${Date.now()}-${++cinemaCmdCounter}`;
     const payload = { ...cmd, _id: cmdId, _ts: Date.now() };
 
-    // 1. Canal document CustomEvent (inmediato y nativo entre mundos)
+    // 1. Canal window.postMessage (Garantizado entre Isolated y Main World en Chromium)
+    try {
+      window.postMessage({ type: 'auramusic-player-cmd', ...payload }, '*');
+    } catch (_) {}
+
+    // 2. Canal document CustomEvent
     try {
       document.dispatchEvent(new CustomEvent('auramusic-player-cmd', { detail: payload }));
     } catch (_) {}
 
-    // 2. Canal DOM (MutationObserver en MAIN WORLD como respaldo infalible)
+    // 3. Canal DOM (MutationObserver en MAIN WORLD como respaldo infalible)
     const bridgeEl = document.getElementById('auramusic-bridge-data');
     if (bridgeEl) {
       bridgeEl.setAttribute('data-cmd', JSON.stringify(payload));
@@ -194,20 +199,21 @@ window.AuraMusic = window.AuraMusic || {};
     }
 
     cinemaSeekTargetTime = clampedTime;
-    cinemaSeekLockUntil = Date.now() + 800;
+    cinemaSeekLockUntil = Date.now() + 1500;
     lastRenderedPlaybackTime = clampedTime;
+    lastRenderedDisplayTime = clampedTime;
 
     // 1. Enviar comando nativo autoritativo al MAIN WORLD (#movie_player.seekTo)
     sendPlayerCommand({ action: 'seek', time: clampedTime, autoPlay: autoPlay !== false });
 
-    // 2. Control directo e instantáneo sobre el elemento <video>
-    const video = getActiveVideo();
-    if (video) {
-      try { video.currentTime = clampedTime; } catch (_) {}
-      if (autoPlay !== false) {
-        try { video.play().catch(() => {}); } catch (_) {}
+    // 2. Control directo e instantáneo sobre todos los elementos <video>
+    const videos = Array.from(document.querySelectorAll('video'));
+    videos.forEach(v => {
+      try { v.currentTime = clampedTime; } catch (_) {}
+      if (autoPlay !== false && v.paused) {
+        try { v.play().catch(() => {}); } catch (_) {}
       }
-    }
+    });
 
     // 3. Actualizar inmediatamente la barra y tiempos de la interfaz
     const fill = document.getElementById('cinema-progress-fill');
@@ -1008,26 +1014,13 @@ window.AuraMusic = window.AuraMusic || {};
         e.stopPropagation();
         const duration = getYtMusicTrackDuration();
 
+        // 1. Salto autoritativo por verso completo (inicio exacto de la línea)
         let seekTime = item.time;
-        let targetWordIdx = 0;
-        const clickedWord = e.target.closest('.k-word');
         if (item.isOutro && duration > 10) {
           seekTime = Math.max(0, duration - 6);
-        } else {
-          if (clickedWord && clickedWord.dataset.start) {
-            const wTime = parseFloat(clickedWord.dataset.start);
-            if (!isNaN(wTime) && isFinite(wTime)) {
-              seekTime = wTime;
-              targetWordIdx = parseInt(clickedWord.dataset.widx, 10) || 0;
-            }
-          }
-          const effectiveOffset = getEffectiveLyricsOffset();
-          if (effectiveOffset !== 0) {
-            seekTime = Math.max(0, seekTime + effectiveOffset);
-          }
         }
 
-        // 1. Resaltar visualmente de inmediato la línea seleccionada con animación viva
+        // 2. Resaltar visualmente de inmediato la línea seleccionada con animación viva
         const allLines = document.querySelectorAll('#cinema-lyrics-wrapper .cinema-lyric-line');
         allLines.forEach((l, lIdx) => {
           if (lIdx === index) {
@@ -1035,16 +1028,10 @@ window.AuraMusic = window.AuraMusic || {};
             void l.offsetWidth; // Forzar reinicio de animación CSS de entrada (cinemaPhraseEntrance)
             l.classList.add('active-line');
 
-            // Actualizar palabras de la línea seleccionada inmediatamente
+            // Comenzar el verso desde la primera palabra de inmediato
             const wordsInLine = l.querySelectorAll('.k-word');
             wordsInLine.forEach((w, wIdx) => {
-              if (wIdx < targetWordIdx) {
-                w.className = 'k-word sung';
-              } else if (wIdx === targetWordIdx) {
-                w.className = 'k-word active';
-              } else {
-                w.className = 'k-word';
-              }
+              w.className = (wIdx === 0) ? 'k-word active' : 'k-word';
             });
           } else if (lIdx < index) {
             l.classList.remove('active-line');
@@ -1068,7 +1055,7 @@ window.AuraMusic = window.AuraMusic || {};
         // 3. Sincronizar de inmediato referencias y estado del bucle de animación para fluidez sin pausas
         cachedActiveLineEl = lineDiv;
         cachedWordEls = Array.from(lineDiv.querySelectorAll('.k-word'));
-        lastSingingWordIdx = targetWordIdx;
+        lastSingingWordIdx = 0;
         lastCinemaActiveIdx = index;
 
         // 4. Saltar y reproducir inmediatamente desde ese verso vía API oficial y control directo
@@ -1239,12 +1226,61 @@ window.AuraMusic = window.AuraMusic || {};
 
             <!-- Panel de Contenido de Secciones -->
             <div class="cinema-settings-content">
-              <!-- Sección 1: General (Vacía como solicitó el usuario) -->
+              <!-- Sección 1: General (Actualizaciones de GitHub) -->
               <div class="cinema-settings-panel" id="cinema-panel-general" style="display: none;">
-                <div class="settings-empty-placeholder">
-                  <div class="empty-placeholder-icon">📁</div>
-                  <div class="empty-placeholder-title">Sección General</div>
-                  <div class="empty-placeholder-sub">No hay opciones configurables en esta sección por el momento.</div>
+                <div class="settings-panel-header">
+                  <h3 class="settings-panel-title">Actualizaciones de AuraMusic</h3>
+                  <p class="settings-panel-subtitle">Mantén AuraMusic actualizado con las últimas mejoras de GitHub automáticamente.</p>
+                </div>
+
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1.5px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 20px; margin-top: 15px; display: flex; flex-direction: column; gap: 14px;">
+                  <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                      <div style="font-size: 1.05rem; font-weight: 700; color: #fff;">Repositorio Oficial GitHub</div>
+                      <div style="font-size: 0.82rem; color: rgba(255, 255, 255, 0.6); margin-top: 2px;">enam49378-debug / auraMusic</div>
+                    </div>
+                    <span style="background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); color: #c084fc; font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 20px;">v1.3.1</span>
+                  </div>
+
+                  <p style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); line-height: 1.5; margin: 0;">
+                    Al abrir YouTube Music, AuraMusic comprueba en segundo plano si hay nuevas versiones en GitHub. Si hay una actualización disponible, aparecerá una ventana preguntándote si deseas actualizarla y se reiniciará automáticamente.
+                  </p>
+
+                  <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
+                    <button type="button" id="panel-check-update-btn" style="
+                      background: linear-gradient(135deg, #8a2be2, #00f2fe);
+                      border: none;
+                      color: #fff;
+                      padding: 10px 18px;
+                      border-radius: 10px;
+                      font-weight: 600;
+                      font-size: 0.88rem;
+                      cursor: pointer;
+                      transition: all 0.2s;
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 8px;
+                      box-shadow: 0 4px 15px rgba(138, 43, 226, 0.35);
+                    ">
+                      🔍 Buscar actualizaciones ahora
+                    </button>
+                    <a href="https://github.com/enam49378-debug/auraMusic" target="_blank" rel="noopener" style="
+                      background: rgba(255, 255, 255, 0.06);
+                      border: 1px solid rgba(255, 255, 255, 0.12);
+                      color: rgba(255, 255, 255, 0.8);
+                      padding: 10px 16px;
+                      border-radius: 10px;
+                      font-size: 0.85rem;
+                      text-decoration: none;
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 6px;
+                      transition: all 0.2s;
+                    ">
+                      🌐 Ver en GitHub
+                    </a>
+                  </div>
+                  <div id="panel-update-status" style="font-size: 0.82rem; color: #00f2fe; min-height: 16px;"></div>
                 </div>
               </div>
 
@@ -1598,6 +1634,21 @@ window.AuraMusic = window.AuraMusic || {};
 
     if (optLrclib) {
       optLrclib.addEventListener('change', () => handleServerModeChange('lrclib'));
+    }
+
+    const panelCheckUpdateBtn = document.getElementById('panel-check-update-btn');
+    const panelUpdateStatus = document.getElementById('panel-update-status');
+    if (panelCheckUpdateBtn) {
+      panelCheckUpdateBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (panelUpdateStatus) panelUpdateStatus.textContent = '⏳ Comprobando versión con GitHub...';
+        if (typeof window.__AuraMusicCheckUpdate === 'function') {
+          window.__AuraMusicCheckUpdate(true);
+          setTimeout(() => {
+            if (panelUpdateStatus) panelUpdateStatus.textContent = '';
+          }, 3500);
+        }
+      });
     }
 
     window.addEventListener('keydown', (e) => {

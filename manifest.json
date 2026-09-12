@@ -64,6 +64,7 @@
         "modules/lyrics/cinema-lyrics.js",
         "modules/themes/theme-manager.js",
         "modules/hub/hub-panel.js",
+        "modules/core/updater.js",
         "content.js"
       ],
       "run_at": "document_idle"

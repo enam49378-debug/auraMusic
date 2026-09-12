@@ -305,29 +305,45 @@
         let sought = false;
         const targetSeekTime = Math.max(0, time);
 
-        // Salto directo y preciso al segundo exacto en movie_player
-        if (player && typeof player.seekTo === 'function') {
-          try {
-            player.seekTo(targetSeekTime, true);
-            sought = true;
-          } catch (e) {
-            console.warn('player.seekTo error:', e);
+        // Salto directo y preciso al segundo exacto en movie_player y sus instancias
+        const players = [
+          document.getElementById('movie_player'),
+          document.querySelector('ytmusic-player-bar')?.playerApi_,
+          document.querySelector('ytmusic-app')?.playerApi_,
+          document.querySelector('ytmusic-player')?.playerApi_,
+          window.movie_player
+        ];
+
+        for (const p of players) {
+          if (p && typeof p.seekTo === 'function') {
+            try {
+              p.seekTo(targetSeekTime, true);
+              sought = true;
+              break;
+            } catch (e) {
+              console.warn('player.seekTo error:', e);
+            }
           }
         }
-        if (!sought) {
-          const vid = document.querySelector('#movie_player video, video.html5-main-video');
-          if (vid) {
-            try { vid.currentTime = targetSeekTime; } catch (_) {}
-          }
-        }
+
+        const vids = document.querySelectorAll('video');
+        vids.forEach(vid => {
+          try { vid.currentTime = targetSeekTime; } catch (_) {}
+        });
+
         if (autoPlay !== false) {
-          if (player && typeof player.playVideo === 'function') {
-            try { player.playVideo(); } catch (_) {}
-          } else {
-            const vid = document.querySelector('#movie_player video, video.html5-main-video');
-            if (vid && vid.paused) vid.play().catch(() => {});
+          for (const p of players) {
+            if (p && typeof p.playVideo === 'function') {
+              try { p.playVideo(); break; } catch (_) {}
+            }
           }
+          vids.forEach(vid => {
+            if (vid.paused) {
+              try { vid.play().catch(() => {}); } catch (_) {}
+            }
+          });
         }
+        if (bridgeEl) bridgeEl.dataset.currentTime = String(targetSeekTime);
         syncFromAPI();
       } else if (action === 'play') {
         if (player && typeof player.playVideo === 'function') {
@@ -380,12 +396,18 @@
     }
   }
 
-  // Canal 1: Document CustomEvent (rápido y directo entre contextos)
+  // Canal 1: window.postMessage (Canal 100% fiable y nativo entre mundos en Chromium)
+  window.addEventListener('message', (e) => {
+    if (!e.data || e.data.type !== 'auramusic-player-cmd') return;
+    handleCommand(e.data);
+  });
+
+  // Canal 2: Document CustomEvent (rápido y directo entre contextos)
   document.addEventListener('auramusic-player-cmd', (e) => {
     handleCommand(e.detail);
   });
 
-  // Canal 2: MutationObserver en bridgeEl atributo data-cmd (respaldo infalible en el DOM)
+  // Canal 3: MutationObserver en bridgeEl atributo data-cmd (respaldo infalible en el DOM)
   const cmdObserver = new MutationObserver(() => {
     const raw = bridgeEl.getAttribute('data-cmd');
     if (raw) {
@@ -398,7 +420,7 @@
   });
   cmdObserver.observe(bridgeEl, { attributes: true, attributeFilter: ['data-cmd'] });
 
-  // Anunciar que el bridge está listo por ambos canales
+  // Anunciar que el bridge está listo por todos los canales
   dispatchBridgeEvent('auramusic-player-bridge-ready');
   console.log('✅ AuraMusic: Motor API nativo de YouTube Music conectado exitosamente a 60 FPS.');
 })();
