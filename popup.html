@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AuraMusic</title>
+  <title>AuraMusic Hub</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -13,13 +13,34 @@
         <span class="logo">✨</span>
         <h1 class="title">AuraMusic</h1>
       </div>
-      <span class="badge">v1.3</span>
+      <span class="badge" id="popup-version-badge">v1.3.2</span>
     </header>
 
     <div class="quick-status">
       <span class="status-indicator active"></span>
       <span class="status-text">YouTube Music Activo</span>
     </div>
+
+    <!-- Sección de Actualización GitHub -->
+    <section class="section updater-section">
+      <div class="updater-header">
+        <label class="section-title">Actualizador GitHub</label>
+        <span id="popup-git-indicator" class="git-status-pill">Sincronizado</span>
+      </div>
+      <div class="updater-card">
+        <div id="popup-update-msg" class="updater-msg">
+          Presiona para buscar o aplicar la última versión de GitHub sin ir a chrome://extensions.
+        </div>
+        <div class="updater-btn-group">
+          <button type="button" id="popup-update-btn" class="popup-btn-primary">
+            🚀 Actualizar (1 Clic)
+          </button>
+          <button type="button" id="popup-reload-btn" class="popup-btn-secondary" title="Recargar extensión sin abrir chrome://extensions">
+            ⚡ Recargar
+          </button>
+        </div>
+      </div>
+    </section>
 
     <section class="section">
       <label class="section-title">Elige tu Diseño</label>

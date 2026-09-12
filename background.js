@@ -1,5 +1,5 @@
 // AuraMusic Background Service Worker
-// Administra el documento de audio Offscreen para reproducción simultánea sin bloqueos de Autoplay
+// Administra el documento de audio Offscreen y la recarga en caliente sin tocar chrome://extensions
 
 let creatingOffscreenPromise = null;
 
@@ -30,6 +30,27 @@ async function ensureOffscreenDocument() {
   }
 }
 
+// Al instalarse, actualizarse o recargarse la extensión
+chrome.runtime.onInstalled.addListener(async (details) => {
+  console.log('✨ AuraMusic Service Worker iniciado:', details.reason);
+  try {
+    const data = await chrome.storage.local.get(['auramusic_reload_tabs', 'auramusic_just_updated']);
+    if (data && (data.auramusic_reload_tabs || data.auramusic_just_updated)) {
+      await chrome.storage.local.set({ auramusic_reload_tabs: false });
+      // Recargar limpiamente las pestañas de YouTube Music con la nueva versión cargada
+      setTimeout(() => {
+        chrome.tabs.query({ url: "*://music.youtube.com/*" }, (tabs) => {
+          if (tabs && tabs.length > 0) {
+            tabs.forEach(t => {
+              try { chrome.tabs.reload(t.id); } catch (_) {}
+            });
+          }
+        });
+      }, 400);
+    }
+  } catch (_) {}
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'OPEN_DJ_STUDIO') {
     const url = chrome.runtime.getURL('dj-studio.html');
@@ -38,11 +59,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  // Recarga en caliente la extensión sin necesidad de ir a chrome://extensions
   if (message.action === 'RELOAD_EXTENSION') {
     sendResponse({ status: 'reloading' });
-    setTimeout(() => {
-      chrome.runtime.reload();
-    }, 150);
+    chrome.storage.local.set({ auramusic_reload_tabs: true }, () => {
+      setTimeout(() => {
+        chrome.runtime.reload();
+      }, 150);
+    });
     return true;
   }
 

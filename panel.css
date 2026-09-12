@@ -1023,4 +1023,92 @@ ytmusic-player-queue-item[data-merged-hidden="true"] {
   background: rgba(239, 68, 68, 0.18) !important;
 }
 
+/* ============================================================ */
+/* AuraMusic Updater Styles                                      */
+/* ============================================================ */
+.auramusic-card-glow {
+  background: linear-gradient(145deg, rgba(22, 27, 44, 0.9), rgba(14, 18, 28, 0.95)) !important;
+  border: 1px solid rgba(0, 242, 254, 0.25) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+.auramusic-spin {
+  display: inline-block;
+  animation: auraSpinAnim 1s linear infinite;
+}
+
+@keyframes auraSpinAnim {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.auramusic-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auramusic-header-check-btn {
+  background: rgba(0, 242, 254, 0.08);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  color: #00f2fe;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+}
+
+.auramusic-header-check-btn:hover {
+  background: rgba(0, 242, 254, 0.18);
+  border-color: #00f2fe;
+  box-shadow: 0 0 14px rgba(0, 242, 254, 0.35);
+  transform: translateY(-1px);
+  color: #fff;
+}
+
+.auramusic-header-check-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.auramusic-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auramusic-footer-check-btn {
+  background: rgba(0, 242, 254, 0.09);
+  border: 1px solid rgba(0, 242, 254, 0.35);
+  color: #00f2fe;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+}
+
+.auramusic-footer-check-btn:hover {
+  background: rgba(0, 242, 254, 0.2);
+  border-color: #00f2fe;
+  box-shadow: 0 0 16px rgba(0, 242, 254, 0.35);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.auramusic-footer-check-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+
 

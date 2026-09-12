@@ -6,8 +6,8 @@
 }
 
 body {
-  width: 280px;
-  background: #0d101a;
+  width: 300px;
+  background: #0b0e17;
   color: #ffffff;
 }
 
@@ -35,19 +35,21 @@ body {
 }
 
 .title {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #00f2fe, #4facfe, #ff007f);
+  background: linear-gradient(135deg, #00f2fe, #4facfe, #8a2be2);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .badge {
-  font-size: 0.7rem;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2px 6px;
-  border-radius: 10px;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(0, 242, 254, 0.15);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  padding: 2px 8px;
+  border-radius: 12px;
+  color: #00f2fe;
 }
 
 .quick-status {
@@ -86,6 +88,81 @@ body {
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.5);
   letter-spacing: 0.5px;
+}
+
+/* Updater section */
+.updater-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.git-status-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba(0, 255, 136, 0.12);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.25);
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.updater-card {
+  background: linear-gradient(145deg, rgba(22, 28, 44, 0.9), rgba(12, 16, 26, 0.95));
+  border: 1px solid rgba(0, 242, 254, 0.22);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.updater-msg {
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.updater-btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+.popup-btn-primary {
+  flex: 1;
+  background: linear-gradient(135deg, #00f2fe, #8a2be2);
+  border: none;
+  color: #ffffff;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 10px rgba(0, 242, 254, 0.3);
+}
+
+.popup-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 242, 254, 0.45);
+}
+
+.popup-btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #00f2fe;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.popup-btn-secondary:hover {
+  background: rgba(0, 242, 254, 0.15);
+  border-color: #00f2fe;
 }
 
 .theme-buttons {
