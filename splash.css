@@ -71,12 +71,9 @@ body.auramusic-splash-active::-webkit-scrollbar {
 /* Fondo continuo SVG durante toda la intro con perforación de portal */
 .splash-stage-backdrop {
   position: absolute;
-  top: -20px;
-  left: -20px;
-  right: -20px;
-  bottom: -20px;
-  width: calc(100% + 40px);
-  height: calc(100% + 40px);
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   z-index: 1;
 }
@@ -481,17 +478,8 @@ body.auramusic-splash-active::-webkit-scrollbar {
 }
 
 /* ── ESTADO DURANTE EL VUELO DEL PORTAL HACIA YOUTUBE MUSIC ───── */
-.splash-infinite-plate {
-  opacity: 0;
-  pointer-events: none;
-}
-
 .final-fused-stage.portal-flight {
   animation: none;
-  opacity: 1;
-}
-
-.final-fused-stage.portal-flight .splash-infinite-plate {
   opacity: 1;
 }
 
