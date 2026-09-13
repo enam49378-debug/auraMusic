@@ -545,10 +545,11 @@
     }
 
     // ── INICIALIZACIÓN Y FLUJO PRINCIPAL DE TIEMPOS ───────────────────
-    // La barra inicia al 100% fija y luminosa mientras YouTube Music se estabiliza
-    loaderFill.style.width = '100%';
+    // La barra inicia vacía (0%) en reposo silencioso mientras YouTube Music procesa scripts
+    loaderFill.style.width = '0%';
+    loaderFlare.style.opacity = '0';
 
-    function waitForAppReady(minMs = 800, maxMs = 2500) {
+    function waitForAppReady(minMs = 600, maxMs = 2200) {
       return new Promise(resolve => {
         const start = Date.now();
         let finished = false;
@@ -572,7 +573,7 @@
       });
     }
 
-    waitForAppReady(800, 2500).then(() => {
+    waitForAppReady(600, 2200).then(() => {
       if (isDismissed) return;
 
       const frameW = stage.offsetWidth || window.innerWidth;
@@ -583,12 +584,18 @@
       ytBlock.style.transform = `translateX(${ytOff}px) scale(0.85)`;
       auraBlock.style.transform = `translateX(${auOff}px) translateY(-280px) scale(1.1)`;
 
-      // PASO 1: Inicio cinemático directo desde el punto (morphing a YouTube Music)
+      // PASO 1: Ahora que YouTube Music ya cargó, arranca el sonido y la barra se llena fluida al 100% sin trabarse
+      const fillDuration = 1050;
       playSoundIfAllowed(soundEnabled);
-      revealYouTubeFromPoint(ytOff);
+      loaderFlare.style.opacity = '1';
+      loaderFill.style.transition = `width ${fillDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
+      loaderFill.style.width = '100%';
 
-      // PASO 2: Caída elástica de AuraMusic al lado derecho (0.48s)
-      const dropAt = 480;
+      // PASO 2: Revelar YouTube Music desde el punto exactamente al completarse la barra (1.05s)
+      later(() => revealYouTubeFromPoint(ytOff), fillDuration);
+
+      // PASO 3: Caída elástica de AuraMusic al lado derecho (1.53s)
+      const dropAt = fillDuration + 480;
       later(() => {
         if (isDismissed) return;
         divider.style.transition = 'all 320ms ease';
@@ -604,7 +611,7 @@
         ], 650);
       }, dropAt);
 
-      // PASO 3: Carga de poder neón (1.13s)
+      // PASO 4: Carga de poder neón (2.18s)
       const chargeAt = dropAt + 650;
       later(() => {
         if (isDismissed) return;
@@ -614,7 +621,7 @@
         backdrop.classList.add('energized');
       }, chargeAt);
 
-      // PASO 4: Fusión y colisión magnética hacia el centro (1.93s)
+      // PASO 5: Fusión y colisión magnética hacia el centro (2.98s)
       const fusionAt = chargeAt + 800;
       later(() => {
         if (isDismissed) return;
@@ -634,7 +641,7 @@
         divider.style.transform = 'scaleY(2)';
       }, fusionAt);
 
-      // PASO 5: Impacto (flash, anillos, chispas) y nacimiento del logo 50/50 (2.43s)
+      // PASO 6: Impacto (flash, anillos, chispas) y nacimiento del logo 50/50 (3.48s)
       later(() => {
         if (isDismissed) return;
         spawnSparks(22);
@@ -675,7 +682,7 @@
 
       }, fusionAt + 500);
 
-      // PASO 6: Vuelo hacia el interior del triángulo ▶ (portal transparente a YouTube Music, 3.63s)
+      // PASO 7: Vuelo hacia el interior del triángulo ▶ (portal transparente a YouTube Music, 4.68s)
       later(flyThroughEmblem, fusionAt + 500 + 1200);
     });
 

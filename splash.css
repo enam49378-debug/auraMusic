@@ -154,10 +154,11 @@ body.auramusic-splash-active::-webkit-scrollbar {
   top: 0;
   left: 0;
   height: 100%;
-  width: 100%;
+  width: 0%;
   background: linear-gradient(90deg, #cc0000, #ff4444);
   border-radius: 6px;
   box-shadow: 0 0 16px rgba(255,0,0,0.9);
+  will-change: width;
 }
 
 .yt-loader-flare {
@@ -170,7 +171,8 @@ body.auramusic-splash-active::-webkit-scrollbar {
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 0 12px #fff, 0 0 22px #ff0000, 0 0 40px rgba(255,0,0,0.5);
-  animation: flareStandbyPulse 1.6s ease-in-out infinite;
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
 }
 
 @keyframes flareStandbyPulse {

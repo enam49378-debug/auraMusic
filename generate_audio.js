@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const sampleRate = 44100;
-const totalDuration = 6.40; // seconds
+const totalDuration = 7.6; // seconds
 const totalSamples = Math.floor(sampleRate * totalDuration);
 
 const leftBuf = new Float32Array(totalSamples);
@@ -36,27 +36,45 @@ const delayR1 = new DelayLine(Math.floor(sampleRate * 0.113), 0.36, 0.3);
 const delayL2 = new DelayLine(Math.floor(sampleRate * 0.178), 0.28, 0.4);
 const delayR2 = new DelayLine(Math.floor(sampleRate * 0.211), 0.28, 0.4);
 
-// ── LAYER 1: 0.00s - 0.70s YOUTUBE MUSIC REVEAL CHIME & OPENING SWELL ──
-// Instant opening swell right when the dot expands into YouTube Music
-for (let i = 0; i < Math.floor(sampleRate * 0.90); i++) {
+// ── LAYER 1: 0.0s - 1.05s SEEKER LINE SWELL & SUB-BASS DRONE ──
+// Reference signature: D2 (73.4 Hz) warm sub drone with fluid forward glide
+for (let i = 0; i < Math.floor(sampleRate * 1.6); i++) {
   const t = i / sampleRate;
-  const env = Math.exp(-t * 3.5);
-  const sub = Math.sin(2 * Math.PI * 73.4 * t) * 0.32;
-  const flare = Math.sin(2 * Math.PI * 440 * t) * Math.exp(-t * 8.0) * 0.15;
-  const val = (sub + flare) * env;
-  leftBuf[i] += val;
-  rightBuf[i] += val;
+  
+  let env = 0;
+  if (t < 0.08) env = smooth(t / 0.08);
+  else if (t < 1.05) env = 1.0;
+  else env = Math.exp(-(t - 1.05) * 4.0);
+
+  // Sub bass 73.4 Hz + 2nd harmonic (146.8 Hz)
+  const sub = Math.sin(2 * Math.PI * 73.4 * t) * 0.38
+            + Math.sin(2 * Math.PI * 146.8 * t) * 0.12;
+
+  // Seeker light ribbon glide (340 Hz -> 920 Hz)
+  let ribbon = 0;
+  if (t < 1.05) {
+    const sweepU = smooth(t / 1.05);
+    const freq = lerp(340, 920, sweepU);
+    const ribEnv = Math.sin(Math.PI * sweepU) * 0.09;
+    ribbon = Math.sin(2 * Math.PI * freq * t) * ribEnv;
+  }
+
+  const val = Math.tanh((sub + ribbon) * env);
+  leftBuf[i] += val * 0.95;
+  rightBuf[i] += val * 0.95;
 }
 
+// ── LAYER 2: 1.05s - 1.65s YOUTUBE MUSIC REVEAL CHIME (D Major Triad) ──
+// Immediate crystalline chime right when the dot morphs into YouTube Music
 const chimeNotes = [
-  { f: 587.33, pan: -0.25, gain: 0.26, delay: 0.00 }, // D5
-  { f: 739.99, pan: 0.25, gain: 0.24, delay: 0.015 }, // F#5
-  { f: 880.00, pan: -0.15, gain: 0.22, delay: 0.030 }, // A5
-  { f: 1174.66, pan: 0.15, gain: 0.18, delay: 0.045 }  // D6
+  { f: 587.33, pan: -0.25, gain: 0.24, delay: 0.00 }, // D5
+  { f: 739.99, pan: 0.25, gain: 0.22, delay: 0.015 }, // F#5
+  { f: 880.00, pan: -0.15, gain: 0.20, delay: 0.030 }, // A5
+  { f: 1174.66, pan: 0.15, gain: 0.16, delay: 0.045 }  // D6
 ];
 
 chimeNotes.forEach(note => {
-  const startSample = Math.floor(sampleRate * note.delay);
+  const startSample = Math.floor(sampleRate * (1.05 + note.delay));
   const noteSamples = Math.floor(sampleRate * 2.0);
   for (let j = 0; j < noteSamples && (startSample + j) < totalSamples; j++) {
     const t = j / sampleRate;
@@ -70,15 +88,15 @@ chimeNotes.forEach(note => {
   }
 });
 
-// ── LAYER 2: 0.48s - 1.13s AURAMUSIC DROP & ELASTIC BOUNCE ──
-// Falling cosmic swoop (0.48s -> 0.90s)
-const dropStart = Math.floor(sampleRate * 0.48);
+// ── LAYER 3: 1.53s - 2.18s AURAMUSIC DROP & ELASTIC BOUNCE ──
+// Falling cosmic swoop (1.53s -> 1.95s)
+const dropStart = Math.floor(sampleRate * 1.53);
 const dropDuration = Math.floor(sampleRate * 0.42);
 for (let j = 0; j < dropDuration; j++) {
   const t = j / sampleRate;
   const u = t / 0.42;
   const freq = lerp(950, 190, smooth(u));
-  const env = Math.sin(Math.PI * u) * 0.14;
+  const env = Math.sin(Math.PI * u) * 0.13;
   const sig = Math.sin(2 * Math.PI * freq * t) * env;
   const idx = dropStart + j;
   if (idx < totalSamples) {
@@ -87,8 +105,8 @@ for (let j = 0; j < dropDuration; j++) {
   }
 }
 
-// Elastic bounce at t = 0.90s
-const bounce1Start = Math.floor(sampleRate * 0.90);
+// Elastic bounce at t = 1.95s
+const bounce1Start = Math.floor(sampleRate * 1.95);
 for (let j = 0; j < Math.floor(sampleRate * 0.35); j++) {
   const t = j / sampleRate;
   const env = Math.exp(-t * 18);
@@ -101,12 +119,12 @@ for (let j = 0; j < Math.floor(sampleRate * 0.35); j++) {
   }
 }
 
-// Sparkle stardust for AuraMusic (0.93s - 1.15s)
+// Sparkle stardust for AuraMusic (1.98s - 2.22s)
 const sparkles = [
-  { f: 1760, t: 0.93, pan: 0.6 },
-  { f: 2349, t: 0.99, pan: 0.8 },
-  { f: 2959, t: 1.05, pan: 0.7 },
-  { f: 3520, t: 1.11, pan: 0.5 }
+  { f: 1760, t: 1.98, pan: 0.6 },
+  { f: 2349, t: 2.04, pan: 0.8 },
+  { f: 2959, t: 2.10, pan: 0.7 },
+  { f: 3520, t: 2.16, pan: 0.5 }
 ];
 sparkles.forEach(s => {
   const start = Math.floor(sampleRate * s.t);
@@ -122,13 +140,13 @@ sparkles.forEach(s => {
   }
 });
 
-// ── LAYER 3: 1.13s - 1.93s NEON ENERGY CHARGE ──
-const chargeStart = Math.floor(sampleRate * 1.13);
+// ── LAYER 4: 2.18s - 2.98s NEON ENERGY CHARGE ──
+const chargeStart = Math.floor(sampleRate * 2.18);
 const chargeDuration = Math.floor(sampleRate * 0.80);
 for (let j = 0; j < chargeDuration; j++) {
   const t = j / sampleRate;
   const u = t / 0.80;
-  const env = smooth(u) * 0.18;
+  const env = smooth(u) * 0.17;
 
   // Red channel (Left): 160 Hz -> 380 Hz with 12 Hz pulse
   const freqL = lerp(160, 380, smooth(u));
@@ -147,8 +165,8 @@ for (let j = 0; j < chargeDuration; j++) {
   }
 }
 
-// ── LAYER 4: 1.93s - 2.43s MAGNETIC COLLISION (Doppler Inward Pull) ──
-const pullStart = Math.floor(sampleRate * 1.93);
+// ── LAYER 5: 2.98s - 3.48s MAGNETIC COLLISION (Doppler Inward Pull) ──
+const pullStart = Math.floor(sampleRate * 2.98);
 const pullDuration = Math.floor(sampleRate * 0.50);
 for (let j = 0; j < pullDuration; j++) {
   const t = j / sampleRate;
@@ -166,15 +184,15 @@ for (let j = 0; j < pullDuration; j++) {
   }
 }
 
-// ── LAYER 5: 2.43s - 3.63s FUSION IMPACT & 50/50 EMBLEM BIRTH ──
-const impactStart = Math.floor(sampleRate * 2.43);
+// ── LAYER 6: 3.48s - 4.68s FUSION IMPACT & 50/50 EMBLEM BIRTH ──
+const impactStart = Math.floor(sampleRate * 3.48);
 
 // Sub-boom (55 Hz punch)
 for (let j = 0; j < Math.floor(sampleRate * 1.5); j++) {
   const t = j / sampleRate;
   const env = Math.exp(-t * 3.2);
   const pitchDrop = 110 * Math.exp(-t * 22) + 52;
-  const subSig = Math.sin(2 * Math.PI * pitchDrop * t) * env * 0.70;
+  const subSig = Math.sin(2 * Math.PI * pitchDrop * t) * env * 0.68;
   const idx = impactStart + j;
   if (idx < totalSamples) {
     leftBuf[idx] += subSig;
@@ -223,12 +241,12 @@ majestyChord.forEach(note => {
   }
 });
 
-// ── LAYER 6: 3.63s - 6.40s PORTAL FLIGHT INTO YOUTUBE MUSIC ──
-const portalStart = Math.floor(sampleRate * 3.63);
-const portalDuration = Math.floor(sampleRate * 2.77);
+// ── LAYER 7: 4.68s - 7.50s PORTAL FLIGHT INTO YOUTUBE MUSIC ──
+const portalStart = Math.floor(sampleRate * 4.68);
+const portalDuration = Math.floor(sampleRate * 2.8);
 for (let j = 0; j < portalDuration; j++) {
   const t = j / sampleRate;
-  const u = t / 2.77;
+  const u = t / 2.8;
   
   let env = 0;
   if (u < 0.7) env = smooth(u / 0.7);
