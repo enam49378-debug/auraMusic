@@ -14,6 +14,20 @@
       mientras la cámara hace zoom atravesando el portal hasta entrar a la app.
    ========================================================================== */
 
+/* Bloquear scroll y barras laterales feas mientras el splash está activo */
+html.auramusic-splash-active,
+body.auramusic-splash-active {
+  overflow: hidden !important;
+  scrollbar-width: none !important;
+}
+
+html.auramusic-splash-active::-webkit-scrollbar,
+body.auramusic-splash-active::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 #auramusic-splash-screen {
   position: fixed !important;
   inset: 0 !important;
@@ -21,7 +35,8 @@
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: transparent !important; /* Permite ver YouTube Music a través del orificio del portal */
+  /* Sólido al inicio para tapar completamente YouTube Music y que no haya parpadeos al cargar */
+  background: #08090f !important;
   z-index: 2147483647 !important;
   display: flex !important;
   align-items: center !important;
@@ -31,21 +46,25 @@
   -webkit-user-select: none !important;
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   opacity: 1 !important;
-  cursor: pointer !important;
+  cursor: default !important; /* No pointer: no se omite con clic */
   pointer-events: auto !important;
   box-sizing: border-box !important;
+  transition: background 0.25s ease;
 }
 
 #auramusic-splash-screen * {
   box-sizing: border-box;
 }
 
+/* Solo cuando arranca el vuelo del portal se activa la transparencia en el contenedor */
+#auramusic-splash-screen.portal-active {
+  background: transparent !important;
+}
+
 #auramusic-splash-screen.splash-dismissed {
   opacity: 0 !important;
-  transform: scale(1.03) !important;
-  filter: blur(10px) !important;
   pointer-events: none !important;
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease !important;
+  transition: opacity 0.25s ease-out !important;
 }
 
 /* Fondo principal durante la intro previa al portal */
@@ -58,7 +77,7 @@
     #08090f;
   pointer-events: none;
   z-index: 1;
-  transition: background 0.8s ease, opacity 0.35s ease;
+  transition: background 0.8s ease, opacity 0.3s ease;
 }
 
 .splash-stage-backdrop.energized {
@@ -82,9 +101,7 @@
 
 .splash-intro-stage.stage-out {
   opacity: 0;
-  transform: scale(1.04);
-  filter: blur(14px);
-  transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.3s ease-out;
   pointer-events: none;
 }
 
@@ -134,6 +151,7 @@
   background: linear-gradient(90deg, #cc0000, #ff4444);
   border-radius: 6px;
   box-shadow: 0 0 16px rgba(255,0,0,0.9);
+  will-change: width;
 }
 
 .yt-loader-flare {
@@ -460,30 +478,7 @@
 }
 
 .final-fused-stage.portal-complete {
-  visibility: hidden;
-  pointer-events: none;
-}
-
-/* Indicador inferior para omitir */
-.tv-skip-hint {
-  position: absolute;
-  bottom: 24px;
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.35);
-  letter-spacing: 0.3px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
   opacity: 0;
-  transition: opacity 0.5s ease;
-  z-index: 100;
-}
-
-.tv-skip-hint kbd {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.8);
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 0.7rem;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
 }
