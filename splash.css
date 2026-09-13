@@ -1,12 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=YouTube+Sans:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Inter:wght@400;600;700;900&display=swap');
+
 /* ==========================================================================
-   AURAMUSIC - INTRO CINEMÁTICA: YOUTUBE MUSIC + FUSIÓN AURAMUSIC
-   Secuencia 100% en código puro:
-   1. Seeker line estilo YouTube TV
-   2. YouTube Music aparece
-   3. AuraMusic cae AL LADO con rebote elástico (sin badges ni textos de versión)
-   4. AuraMusic toma fuerza con brillo neón creciente
-   5. Fusión magnética con destello y onda de energía
-   6. Emerge triunfal el logo oficial de YouTube Music
+   AURAMUSIC - INTRO CINEMÁTICA CON PORTAL TRIANGULAR TRANSPARENTE
+   Secuencia de animación de vanguardia:
+   1. Seeker line estilo YouTube TV cargando en rojo puro
+   2. El punto final se transforma en el botón rojo de YouTube Music
+   3. AuraMusic cae con física elástica al lado derecho
+   4. Carga de energía neón vibrante en ambos bloques
+   5. Fusión magnética al centro con destello, anillos de choque y chispas
+   6. Emerge el emblema 50/50 flotante (mitad YouTube, mitad Aura)
+   7. PORTAL TRANSPARENTE: El triángulo ▶ se vuelve 100% transparente
+      permitiendo ver la interfaz real cargada de YouTube Music al fondo,
+      mientras la cámara hace zoom atravesando el portal hasta entrar a la app.
    ========================================================================== */
 
 #auramusic-splash-screen {
@@ -16,7 +21,7 @@
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: #0f0f0f !important;
+  background: transparent !important; /* Permite ver YouTube Music a través del orificio del portal */
   z-index: 2147483647 !important;
   display: flex !important;
   align-items: center !important;
@@ -24,30 +29,75 @@
   overflow: hidden !important;
   user-select: none !important;
   -webkit-user-select: none !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   opacity: 1 !important;
   cursor: pointer !important;
-  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), filter 0.65s ease !important;
+  pointer-events: auto !important;
+  box-sizing: border-box !important;
+}
+
+#auramusic-splash-screen * {
+  box-sizing: border-box;
 }
 
 #auramusic-splash-screen.splash-dismissed {
   opacity: 0 !important;
-  transform: scale(1.035) !important;
+  transform: scale(1.03) !important;
   filter: blur(10px) !important;
   pointer-events: none !important;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease !important;
 }
 
-/* FASE 1: Seeker Bar de Carga YouTube TV */
+/* Fondo principal durante la intro previa al portal */
+.splash-stage-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 30% 55%, rgba(255,0,0,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 70% 55%, rgba(168,85,247,0.08) 0%, transparent 70%),
+    #08090f;
+  pointer-events: none;
+  z-index: 1;
+  transition: background 0.8s ease, opacity 0.35s ease;
+}
+
+.splash-stage-backdrop.energized {
+  background:
+    radial-gradient(ellipse 65% 45% at 28% 55%, rgba(255,0,0,0.22) 0%, transparent 70%),
+    radial-gradient(ellipse 65% 45% at 72% 55%, rgba(168,85,247,0.24) 0%, transparent 70%),
+    #08090f;
+}
+
+/* Escenario principal de la intro */
+.splash-intro-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.splash-intro-stage.stage-out {
+  opacity: 0;
+  transform: scale(1.04);
+  filter: blur(14px);
+  transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+/* ── 1. SEEKER LINE ESTILO YOUTUBE TV ──────────────────────────── */
 .yt-loader-box {
+  position: absolute;
   display: flex;
   align-items: center;
   gap: 14px;
-  width: 480px;
-  max-width: 80vw;
-  position: absolute;
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  opacity: 1;
-  z-index: 5;
+  width: 500px;
+  max-width: 80%;
+  z-index: 10;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .yt-loader-play-triangle {
@@ -55,18 +105,24 @@
   height: 0;
   border-top: 10px solid transparent;
   border-bottom: 10px solid transparent;
-  border-left: 17px solid #ffffff;
+  border-left: 18px solid #fff;
   flex-shrink: 0;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.7));
+  animation: seekerTrianglePulse 1.8s ease-in-out infinite;
+}
+
+@keyframes seekerTrianglePulse {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(255,255,255,0.5)); }
+  50%      { filter: drop-shadow(0 0 16px rgba(255,255,255,1)); }
 }
 
 .yt-loader-track {
   flex: 1;
   height: 4.5px;
-  background: #2a2a2a;
-  border-radius: 4px;
-  overflow: hidden;
+  background: rgba(255,255,255,0.1);
+  border-radius: 6px;
   position: relative;
+  overflow: visible;
 }
 
 .yt-loader-fill {
@@ -75,43 +131,46 @@
   left: 0;
   height: 100%;
   width: 0%;
-  background: #ff0000;
-  border-radius: 4px;
-  box-shadow: 0 0 12px rgba(255, 0, 0, 0.7);
+  background: linear-gradient(90deg, #cc0000, #ff4444);
+  border-radius: 6px;
+  box-shadow: 0 0 16px rgba(255,0,0,0.9);
 }
 
-/* FASE 2 & 3: Contenedor Doble (YouTube Music AL LADO DE AuraMusic) */
-.side-by-side-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
+.yt-loader-flare {
   position: absolute;
-  z-index: 10;
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 12px #fff, 0 0 22px #ff0000, 0 0 40px rgba(255,0,0,0.5);
 }
 
-/* Bloque YouTube Music */
+/* ── 2. BLOQUE YOUTUBE MUSIC ──────────────────────────────────── */
 .yt-block {
+  position: absolute;
   display: flex;
   align-items: center;
   gap: 14px;
   opacity: 0;
-  transform: scale(0.85);
-  transition: all 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  will-change: transform, opacity, filter;
+  z-index: 10;
 }
 
 .yt-red-pill {
-  width: 64px;
-  height: 45px;
-  background: #ff0000;
+  width: 66px;
+  height: 46px;
+  background: linear-gradient(145deg, #ff1a1a, #cc0000);
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 20px rgba(255, 0, 0, 0.45);
+  box-shadow: 0 6px 24px rgba(255,0,0,0.55);
   flex-shrink: 0;
   position: relative;
+  transform-origin: 50% 50%;
 }
 
 .yt-play-arrow {
@@ -119,8 +178,17 @@
   height: 0;
   border-top: 8px solid transparent;
   border-bottom: 8px solid transparent;
-  border-left: 14px solid #ffffff;
+  border-left: 15px solid #fff;
   margin-left: 3px;
+}
+
+.yt-point-skin {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .yt-text-wrap {
@@ -130,166 +198,270 @@
 }
 
 .yt-txt-youtube {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 3.2rem;
+  font-family: 'YouTube Sans', 'Inter', sans-serif;
+  font-size: 3rem;
   font-weight: 900;
   letter-spacing: -1.5px;
-  color: #ffffff;
+  color: #fff;
   line-height: 1;
+  display: inline-block;
+  white-space: pre;
 }
 
 .yt-txt-music {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 2.2rem;
+  font-family: 'YouTube Sans', 'Inter', sans-serif;
+  font-size: 2.1rem;
   font-weight: 400;
   letter-spacing: -0.8px;
-  color: #aaaaaa;
+  color: #aaa;
   line-height: 1;
+  display: inline-block;
+  white-space: pre;
 }
 
-/* Separador vertical sutil */
-.side-divider {
-  width: 2px;
-  height: 42px;
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 2px;
-  opacity: 0;
-  transform: scaleY(0);
-  transition: all 0.35s ease;
-}
-
-/* Bloque AuraMusic (Cae AL LADO a la derecha) */
+/* ── 3. BLOQUE AURAMUSIC ─────────────────────────────────────── */
 .aura-block {
+  position: absolute;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   opacity: 0;
-  transform: translateY(-280px) scale(1.15) rotate(-4deg);
-  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-  position: relative;
+  will-change: transform, opacity, filter;
+  z-index: 10;
 }
 
 .aura-sparkle {
-  font-size: 2.5rem;
+  font-size: 2.3rem;
   display: inline-block;
-  filter: drop-shadow(0 0 14px #00f2fe);
-  animation: auraSparkleSpin 4s linear infinite;
+  filter: drop-shadow(0 0 12px #ff7e5f);
+  animation: auraSpin 5s linear infinite;
 }
 
-@keyframes auraSparkleSpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+@keyframes auraSpin {
+  to { transform: rotate(360deg); }
 }
 
 .aura-title {
-  font-size: 3.2rem;
+  font-size: 3rem;
   font-weight: 900;
   letter-spacing: -1.5px;
-  background: linear-gradient(135deg, #00f2fe 0%, #4facfe 35%, #a855f7 70%, #ff007f 100%);
+  background: linear-gradient(135deg, #ff5252, #ff7e5f 40%, #c084fc 75%, #a855f7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 20px rgba(0, 242, 254, 0.55));
+  filter: drop-shadow(0 0 18px rgba(255,126,95,0.6));
   white-space: nowrap;
   line-height: 1;
 }
 
-/* FASE 4: AuraMusic "Toma Fuerza" (Charge Up Glow) */
-.aura-block.charging {
-  animation: auraPowerCharge 0.8s ease-in-out infinite alternate;
+/* Divisor sutil entre ambos */
+.side-divider {
+  position: absolute;
+  width: 2px;
+  height: 44px;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.45), transparent);
+  border-radius: 2px;
+  opacity: 0;
+  transform: scaleY(0);
+  transition: all 0.35s ease;
+  will-change: opacity, transform;
+  z-index: 10;
 }
 
-@keyframes auraPowerCharge {
-  0% {
-    transform: translateY(0) scale(1) rotate(0deg);
-    filter: drop-shadow(0 0 15px #00f2fe);
-  }
-  100% {
-    transform: translateY(-3px) scale(1.08) rotate(1deg);
-    filter: drop-shadow(0 0 45px #00f2fe) drop-shadow(0 0 25px #ff007f);
-  }
+.side-divider.lit {
+  background: linear-gradient(to bottom, transparent, #fff 50%, transparent);
+  box-shadow: 0 0 18px #fff, 0 0 30px #ff7e5f;
+  transform: scaleY(1.4) !important;
+  opacity: 1 !important;
 }
 
-/* FASE 5: Fusión y Destello de Energía */
+/* ── 4. CARGA DE PODER NEÓN ──────────────────────────────────── */
+@keyframes ytCharge {
+  0%   { filter: drop-shadow(0 0 8px rgba(255,0,0,0.4)); }
+  100% { filter: drop-shadow(0 0 40px rgba(255,0,0,1)) drop-shadow(0 0 60px rgba(255,100,100,0.8)); }
+}
+
+@keyframes auraCharge {
+  0%   { filter: drop-shadow(0 0 10px rgba(255,126,95,0.5)); }
+  100% { filter: drop-shadow(0 0 42px rgba(255,126,95,1)) drop-shadow(0 0 55px rgba(168,85,247,0.9)); }
+}
+
+.yt-block.charging   { animation: ytCharge   0.7s ease-in-out infinite alternate; }
+.aura-block.charging { animation: auraCharge 0.7s ease-in-out infinite alternate; }
+
+/* ── 5. EFECTOS DE FUSIÓN Y CHOQUE ───────────────────────────── */
+.spark-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 30;
+}
+
 .fusion-flash {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.95) 0%, rgba(0, 242, 254, 0.6) 30%, transparent 70%);
+  background: radial-gradient(circle at 50% 50%,
+    rgba(255,255,255,1) 0%,
+    rgba(255,126,95,0.8) 28%,
+    rgba(168,85,247,0.5) 55%,
+    transparent 80%);
   opacity: 0;
   pointer-events: none;
   z-index: 50;
-  transition: opacity 0.15s ease-out;
 }
 
-.fusion-energy-ring {
+.fusion-ring {
   position: absolute;
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  border: 3px solid #00f2fe;
-  box-shadow: 0 0 40px #00f2fe, inset 0 0 30px #ff007f;
+  border: 4px solid #fff;
+  box-shadow: 0 0 50px #ff7e5f, 0 0 80px #a855f7, inset 0 0 40px rgba(255,126,95,0.5);
   opacity: 0;
   pointer-events: none;
   z-index: 45;
-  transform: scale(0.1);
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: scale(0.15);
 }
 
-/* FASE 6: Logo Final de YouTube Emerge Glorioso */
-.final-yt-stage {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  opacity: 0;
-  transform: scale(0.7);
+.fusion-ring-2 {
   position: absolute;
-  z-index: 40;
-  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid rgba(168,85,247,0.7);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 44;
+  transform: scale(0.1);
 }
 
-.final-yt-stage.active {
-  opacity: 1;
-  transform: scale(1.06);
-}
-
-.final-red-pill {
-  width: 72px;
-  height: 50px;
-  background: #ff0000;
-  border-radius: 16px;
+/* ── 6. LOGO 50/50 FINAL Y PORTAL ZOOM ─────────────────────── */
+.final-fused-stage {
+  position: absolute;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 30px rgba(255, 0, 0, 0.6), 0 0 25px rgba(0, 242, 254, 0.4);
-  flex-shrink: 0;
+  gap: 0;
+  z-index: 40;
+  opacity: 0;
+  transform: scale(0.35) rotate(-6deg);
+  pointer-events: none;
+}
+
+.final-fused-stage.active {
+  pointer-events: auto;
+  animation: logoBirth 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
+             logoFloat 3.5s ease-in-out infinite 0.8s alternate;
+}
+
+@keyframes logoBirth {
+  0%   { opacity: 0; transform: scale(0.35) rotate(-6deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes logoFloat {
+  0%   { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-5px) scale(1.015); }
+}
+
+.fused-emblem-box {
   position: relative;
+  width: 190px;
+  height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transform-origin: 50% 50%;
+  will-change: transform;
 }
 
-.final-red-pill::after {
-  content: '';
-  width: 0;
-  height: 0;
-  border-top: 10px solid transparent;
-  border-bottom: 10px solid transparent;
-  border-left: 16px solid #ffffff;
-  margin-left: 4px;
+.fused-ambient-glow {
+  position: absolute;
+  inset: -28px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 26% 50%, rgba(255,0,0,0.85) 0%, transparent 62%),
+    radial-gradient(circle at 74% 50%, rgba(168,85,247,0.85) 0%, transparent 62%);
+  filter: blur(28px);
+  animation: ambientPulse 3s ease-in-out infinite alternate;
+  z-index: 1;
 }
 
-.final-brand-title {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 3.6rem;
-  font-weight: 900;
-  letter-spacing: -1.8px;
-  color: #ffffff;
-  line-height: 1;
+@keyframes ambientPulse {
+  0%   { transform: scale(0.94); opacity: 0.78; }
+  100% { transform: scale(1.16); opacity: 1; }
 }
 
-.final-music-tag {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 2.4rem;
-  font-weight: 400;
-  letter-spacing: -1px;
-  color: #aaaaaa;
-  line-height: 1;
+.fused-emblem-circle {
+  position: relative;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow:
+    0 18px 50px rgba(0,0,0,0.88),
+    -8px 0 30px rgba(255,0,0,0.45),
+    8px 0 30px rgba(168,85,247,0.45);
+  z-index: 2;
+  transition: box-shadow 0.5s ease;
+}
+
+.fused-emblem-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.fused-shimmer {
+  position: absolute;
+  top: -50%;
+  left: -80%;
+  width: 48%;
+  height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  transform: rotate(25deg);
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0;
+}
+
+.final-fused-stage.active .fused-shimmer {
+  animation: shimmerPass 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+}
+
+@keyframes shimmerPass {
+  0%   { left: -80%; opacity: 0; }
+  25%  { opacity: 1; }
+  100% { left: 150%; opacity: 0; }
+}
+
+/* ── ESTADO DURANTE EL VUELO DEL PORTAL HACIA YOUTUBE MUSIC ───── */
+.final-fused-stage.portal-flight {
+  animation: none;
+  opacity: 1;
+}
+
+.final-fused-stage.portal-flight .fused-ambient-glow {
+  animation: none;
+  opacity: 0;
+}
+
+.final-fused-stage.portal-flight .fused-shimmer {
+  display: none;
+}
+
+.final-fused-stage.portal-flight .fused-emblem-circle {
+  box-shadow: none;
+  overflow: visible !important;
+  border-radius: 0 !important;
+}
+
+.final-fused-stage.portal-complete {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* Indicador inferior para omitir */

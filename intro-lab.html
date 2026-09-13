@@ -5,545 +5,1247 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AuraMusic - Intro Lab & Transition Studio</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=YouTube+Sans:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Inter:wght@400;600;700;900&display=swap">
-  <link rel="stylesheet" href="splash.css">
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: #080a10;
-      color: #ffffff;
+      background: #07090e;
+      color: #fff;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
+      user-select: none;
     }
 
-    /* Barra Superior del Laboratorio */
+    /* ── HEADER ─────────────────────────────────────────────────── */
     .lab-header {
-      background: rgba(15, 18, 28, 0.95);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 12px 24px;
+      background: rgba(12, 15, 25, 0.97);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      padding: 11px 22px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(14px);
       z-index: 100;
     }
-
-    .lab-title-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
+    .lab-title-group { display: flex; align-items: center; gap: 10px; }
     .lab-badge {
-      background: linear-gradient(135deg, #00f2fe, #8a2be2);
+      background: linear-gradient(135deg, #ff2a2a, #ff7e5f 50%, #a855f7);
       color: #fff;
       font-weight: 800;
-      font-size: 0.72rem;
-      padding: 3px 8px;
+      font-size: 0.68rem;
+      padding: 3px 9px;
       border-radius: 6px;
       letter-spacing: 0.5px;
       text-transform: uppercase;
     }
-
     .lab-title {
-      font-size: 1.05rem;
+      font-size: 1rem;
       font-weight: 700;
-      background: linear-gradient(135deg, #fff 60%, rgba(255,255,255,0.6));
+      background: linear-gradient(135deg, #fff 60%, rgba(255,255,255,0.55));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    /* Área de Previsualización de la Intro (Viewport TV 16:9) */
+    /* ── TV VIEWPORT ─────────────────────────────────────────────── */
     .viewport-container {
       flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
-      background: radial-gradient(circle at 50% 50%, #141724 0%, #080a10 80%);
-      position: relative;
+      padding: 20px;
+      background: radial-gradient(circle at 50% 50%, #111524 0%, #07090e 80%);
     }
-
     .tv-frame {
       width: 100%;
       max-width: 1080px;
       aspect-ratio: 16 / 9;
-      background: #0f0f0f;
-      border-radius: 18px;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      background: #030303;
+      border-radius: 20px;
+      box-shadow: 0 35px 90px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.07);
       position: relative;
       overflow: hidden;
+    }
+
+    /* ── SIMULATED YOUTUBE MUSIC INTERFACE (DETRÁS DEL SPLASH) ───── */
+    .mock-ytm-app {
+      position: absolute;
+      inset: 0;
+      background: #030303;
+      display: flex;
+      flex-direction: column;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .mock-top-bar {
+      height: 64px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: #030303;
+    }
+    .mock-ytm-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .mock-nav-links {
+      display: flex;
+      gap: 28px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.6);
+    }
+    .mock-nav-links .active {
+      color: #fff;
+      border-bottom: 2px solid #fff;
+      padding-bottom: 4px;
+    }
+    .mock-search-box {
+      background: rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.4);
+      width: 240px;
+    }
+    .mock-body-content {
+      flex: 1;
+      padding: 24px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: linear-gradient(180deg, #120308 0%, #030303 60%);
+    }
+    .mock-section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .mock-heading {
+      font-size: 1.6rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+    .mock-albums-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+    .mock-album-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .mock-album-cover {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cov-1 { background: linear-gradient(135deg, #ff0033, #8a001a); }
+    .cov-2 { background: linear-gradient(135deg, #a855f7, #3b0764); }
+    .cov-3 { background: linear-gradient(135deg, #ff7e5f, #feb47b); }
+    .cov-4 { background: linear-gradient(135deg, #00c6ff, #0072ff); }
+    .mock-album-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+    }
+    .mock-album-artist {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.5);
+    }
+    .mock-player-bar {
+      height: 72px;
+      background: #111;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+    .mock-playing-track {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .mock-playing-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #ff0033, #a855f7);
+    }
+    .mock-controls-center {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 1.3rem;
+    }
+
+    /* ── SPLASH STAGE ─────────────────────────────────────────────── */
+    .stage-backdrop {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 30% 55%, rgba(255,0,0,0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 70% 55%, rgba(168,85,247,0.08) 0%, transparent 70%),
+        #08090f;
+      pointer-events: none;
+      z-index: 1;
+      transition: all 0.8s ease;
+    }
+    .stage-backdrop.energized {
+      background:
+        radial-gradient(ellipse 65% 45% at 28% 55%, rgba(255,0,0,0.22) 0%, transparent 70%),
+        radial-gradient(ellipse 65% 45% at 72% 55%, rgba(168,85,247,0.24) 0%, transparent 70%),
+        #08090f;
     }
 
     .intro-stage {
       position: absolute;
       inset: 0;
-      background: #0f0f0f;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
       cursor: pointer;
+      z-index: 2;
     }
-
-    .intro-stage.stage-dismissing {
+    .intro-stage.stage-out {
       opacity: 0;
-      transform: scale(1.035);
-      filter: blur(10px);
-      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: scale(1.04);
+      filter: blur(14px);
+      transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* Panel de Control Inferior */
-    .lab-controls {
-      background: rgba(14, 18, 30, 0.95);
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 16px 24px;
+    /* ── 1. SEEKER LINE ─────────────────────────────────────────── */
+    .yt-loader-box {
+      position: absolute;
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      justify-content: space-between;
-      gap: 16px;
+      gap: 14px;
+      width: 500px;
+      max-width: 80%;
+      z-index: 10;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .yt-loader-play-triangle {
+      width: 0; height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-left: 18px solid #fff;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 8px rgba(255,255,255,0.7));
+      animation: seekerTrianglePulse 1.8s ease-in-out infinite;
+    }
+    @keyframes seekerTrianglePulse {
+      0%,100% { filter: drop-shadow(0 0 6px rgba(255,255,255,0.5)); }
+      50%      { filter: drop-shadow(0 0 16px rgba(255,255,255,1)); }
+    }
+    .yt-loader-track {
+      flex: 1;
+      height: 4.5px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 6px;
+      position: relative;
+      overflow: visible;
+    }
+    .yt-loader-fill {
+      position: absolute;
+      top: 0; left: 0;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #cc0000, #ff4444);
+      border-radius: 6px;
+      box-shadow: 0 0 16px rgba(255,0,0,0.9);
+    }
+    .yt-loader-flare {
+      position: absolute;
+      right: -5px; top: 50%;
+      transform: translateY(-50%);
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 12px #fff, 0 0 22px #ff0000, 0 0 40px rgba(255,0,0,0.5);
     }
 
-    .ctrl-group {
+    /* ── 2. YOUTUBE MUSIC BLOCK ──────────────────────────────────── */
+    .yt-block {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      opacity: 0;
+      will-change: transform, opacity, filter;
+    }
+    .yt-red-pill {
+      width: 66px; height: 46px;
+      background: linear-gradient(145deg, #ff1a1a, #cc0000);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 24px rgba(255,0,0,0.55);
+      flex-shrink: 0;
+      position: relative;
+      transform-origin: 50% 50%;
+    }
+    .yt-play-arrow {
+      width: 0; height: 0;
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+      border-left: 15px solid #fff;
+      margin-left: 3px;
+    }
+    .yt-point-skin {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .yt-text-wrap { display: flex; align-items: baseline; gap: 8px; }
+    .yt-txt-youtube {
+      font-family: 'YouTube Sans', 'Inter', sans-serif;
+      font-size: 3rem; font-weight: 900;
+      letter-spacing: -1.5px; color: #fff; line-height: 1;
+      display: inline-block; white-space: pre;
+    }
+    .yt-txt-music {
+      font-family: 'YouTube Sans', 'Inter', sans-serif;
+      font-size: 2.1rem; font-weight: 400;
+      letter-spacing: -0.8px; color: #aaa; line-height: 1;
+      display: inline-block; white-space: pre;
+    }
+
+    /* ── 3. AURAMUSIC BLOCK ─────────────────────────────────────── */
+    .aura-block {
+      position: absolute;
       display: flex;
       align-items: center;
       gap: 12px;
-    }
-
-    .ctrl-label {
-      font-size: 0.82rem;
-      color: rgba(255, 255, 255, 0.6);
-      font-weight: 600;
-    }
-
-    .ctrl-btn-primary {
-      background: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #8a2be2 100%);
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 12px;
-      font-size: 0.88rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 18px rgba(0, 242, 254, 0.3);
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      font-family: inherit;
-    }
-
-    .ctrl-btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(0, 242, 254, 0.45);
-    }
-
-    .ctrl-btn-secondary {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #fff;
-      padding: 10px 16px;
-      border-radius: 12px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-family: inherit;
-    }
-
-    .ctrl-btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.16);
-      border-color: rgba(255, 255, 255, 0.3);
-    }
-
-    .ctrl-slider-box {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .ctrl-slider {
-      accent-color: #00f2fe;
-      cursor: pointer;
-    }
-
-    /* Toast Notificador */
-    .lab-toast {
-      position: fixed;
-      top: 24px;
-      right: 24px;
-      background: rgba(14, 18, 30, 0.95);
-      border: 1px solid #00f2fe;
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: 12px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 20px rgba(0, 242, 254, 0.3);
-      backdrop-filter: blur(16px);
-      display: flex;
-      align-items: center;
-      gap: 10px;
       opacity: 0;
-      transform: translateY(-10px);
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 9999;
+      will-change: transform, opacity, filter;
+    }
+    .aura-sparkle {
+      font-size: 2.3rem;
+      display: inline-block;
+      filter: drop-shadow(0 0 12px #ff7e5f);
+      animation: spin 5s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .aura-title {
+      font-size: 3rem; font-weight: 900;
+      letter-spacing: -1.5px;
+      background: linear-gradient(135deg, #ff5252, #ff7e5f 40%, #c084fc 75%, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 18px rgba(255,126,95,0.6));
+      white-space: nowrap; line-height: 1;
+    }
+
+    /* Divisor entre los dos bloques */
+    .side-divider {
+      position: absolute;
+      width: 2px; height: 44px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.45), transparent);
+      border-radius: 2px;
+      opacity: 0;
+      transform: scaleY(0);
+      transition: all 0.35s ease;
+      will-change: opacity, transform;
+    }
+    .side-divider.lit {
+      background: linear-gradient(to bottom, transparent, #fff 50%, transparent);
+      box-shadow: 0 0 18px #fff, 0 0 30px #ff7e5f;
+      transform: scaleY(1.4) !important;
+      opacity: 1 !important;
+    }
+
+    /* CHARGING */
+    @keyframes ytCharge {
+      0%   { filter: drop-shadow(0 0 8px rgba(255,0,0,0.4)); }
+      100% { filter: drop-shadow(0 0 40px rgba(255,0,0,1)) drop-shadow(0 0 60px rgba(255,100,100,0.8)); }
+    }
+    @keyframes auraCharge {
+      0%   { filter: drop-shadow(0 0 10px rgba(255,126,95,0.5)); }
+      100% { filter: drop-shadow(0 0 42px rgba(255,126,95,1)) drop-shadow(0 0 55px rgba(168,85,247,0.9)); }
+    }
+    .yt-block.charging   { animation: ytCharge   0.7s ease-in-out infinite alternate; }
+    .aura-block.charging { animation: auraCharge 0.7s ease-in-out infinite alternate; }
+
+    .spark-particle {
+      position: absolute;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 30;
+    }
+
+    /* ── EFECTOS DE FUSIÓN ──────────────────────────────────────── */
+    .fusion-flash {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%,
+        rgba(255,255,255,1) 0%,
+        rgba(255,126,95,0.8) 28%,
+        rgba(168,85,247,0.5) 55%,
+        transparent 80%);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 50;
+    }
+    .fusion-ring {
+      position: absolute;
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      border: 4px solid #fff;
+      box-shadow: 0 0 50px #ff7e5f, 0 0 80px #a855f7, inset 0 0 40px rgba(255,126,95,0.5);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 45;
+      transform: scale(0.15);
+    }
+    .fusion-ring-2 {
+      position: absolute;
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      border: 2px solid rgba(168,85,247,0.7);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 44;
+      transform: scale(0.1);
+    }
+
+    /* ── 6. LOGO 50/50 FINAL Y PORTAL ZOOM ─────────────────────── */
+    .final-fused-stage {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      z-index: 40;
+      opacity: 0;
+      transform: scale(0.35) rotate(-6deg);
+      pointer-events: none;
+    }
+    .final-fused-stage.active {
+      pointer-events: auto;
+      animation: logoBirth 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
+                 logoFloat 3.5s ease-in-out infinite 0.8s alternate;
+    }
+    @keyframes logoBirth {
+      0%   { opacity: 0; transform: scale(0.35) rotate(-6deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    @keyframes logoFloat {
+      0%   { transform: translateY(0) scale(1); }
+      100% { transform: translateY(-5px) scale(1.015); }
+    }
+
+    .fused-emblem-box {
+      position: relative;
+      width: 190px; height: 190px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transform-origin: 50% 50%;
+      will-change: transform;
+    }
+    .fused-ambient-glow {
+      position: absolute;
+      inset: -28px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 26% 50%, rgba(255,0,0,0.85) 0%, transparent 62%),
+        radial-gradient(circle at 74% 50%, rgba(168,85,247,0.85) 0%, transparent 62%);
+      filter: blur(28px);
+      animation: ambientPulse 3s ease-in-out infinite alternate;
+      z-index: 1;
+    }
+    @keyframes ambientPulse {
+      0%   { transform: scale(0.94); opacity: 0.78; }
+      100% { transform: scale(1.16); opacity: 1; }
+    }
+    .fused-emblem-circle {
+      position: relative;
+      width: 190px; height: 190px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow:
+        0 18px 50px rgba(0,0,0,0.88),
+        -8px 0 30px rgba(255,0,0,0.45),
+        8px 0 30px rgba(168,85,247,0.45);
+      z-index: 2;
+      transition: box-shadow 0.5s ease;
+    }
+    .fused-emblem-svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    .fused-shimmer {
+      position: absolute;
+      top: -50%; left: -80%;
+      width: 48%; height: 200%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+      transform: rotate(25deg);
+      pointer-events: none;
+      z-index: 4;
+      opacity: 0;
+    }
+    .final-fused-stage.active .fused-shimmer {
+      animation: shimmerPass 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+    }
+    @keyframes shimmerPass {
+      0%   { left: -80%; opacity: 0; }
+      25%  { opacity: 1; }
+      100% { left: 150%; opacity: 0; }
+    }
+
+    /* Durante el vuelo del portal: se abre la máscara y el fondo se vuelve transparente en el triángulo */
+    .final-fused-stage.portal-flight {
+      animation: none;
+      opacity: 1;
+    }
+    .final-fused-stage.portal-flight .fused-ambient-glow { animation: none; opacity: 0; }
+    .final-fused-stage.portal-flight .fused-shimmer { display: none; }
+    .final-fused-stage.portal-flight .fused-emblem-circle {
+      box-shadow: none;
+      overflow: visible !important;
+      border-radius: 0 !important;
+    }
+    .final-fused-stage.portal-complete {
+      visibility: hidden;
       pointer-events: none;
     }
 
-    .lab-toast.visible {
-      opacity: 1;
-      transform: translateY(0);
+    /* Skip hint */
+    .tv-skip-hint {
+      position: absolute; bottom: 22px;
+      font-size: 0.76rem; color: rgba(255,255,255,0.32);
+      display: flex; align-items: center; gap: 6px;
+      opacity: 0; transition: opacity 0.5s ease; z-index: 100;
     }
+    .tv-skip-hint kbd {
+      background: rgba(255,255,255,0.09);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.75);
+      border-radius: 4px; padding: 2px 6px; font-size: 0.68rem;
+    }
+
+    /* ── CONTROLS ────────────────────────────────────────────────── */
+    .lab-controls {
+      background: rgba(11, 14, 24, 0.97);
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding: 14px 22px;
+      display: flex; flex-wrap: wrap;
+      align-items: center; justify-content: space-between; gap: 14px;
+    }
+    .ctrl-group { display: flex; align-items: center; gap: 11px; }
+    .ctrl-label { font-size: 0.8rem; color: rgba(255,255,255,0.55); font-weight: 600; }
+    .ctrl-btn-primary {
+      background: linear-gradient(135deg, #ff2a2a, #ff7e5f 50%, #a855f7);
+      color: #fff; border: none;
+      padding: 9px 18px; border-radius: 11px;
+      font-size: 0.86rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; gap: 7px;
+      box-shadow: 0 4px 18px rgba(255,42,42,0.35);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      font-family: inherit;
+    }
+    .ctrl-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(255,42,42,0.52); }
+    .ctrl-btn-secondary {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: #fff; padding: 9px 15px; border-radius: 11px;
+      font-size: 0.83rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s ease; font-family: inherit;
+    }
+    .ctrl-btn-secondary:hover { background: rgba(255,255,255,0.14); }
+    .ctrl-slider-box { display: flex; align-items: center; gap: 8px; }
+    .ctrl-slider { accent-color: #ff7e5f; cursor: pointer; width: 85px; }
   </style>
 </head>
 <body>
 
-  <!-- Cabecera -->
   <header class="lab-header">
     <div class="lab-title-group">
       <span class="lab-badge">Studio Lab</span>
-      <h1 class="lab-title">AuraMusic • Laboratorio de Intro & Fusión Cinemática</h1>
+      <h1 class="lab-title">AuraMusic &bull; Intro Lab &mdash; Portal Triangular Transparente</h1>
     </div>
     <div class="ctrl-group">
-      <span style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Haz clic en el reproductor o presiona <kbd style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">Espacio</kbd> para repetir</span>
+      <span style="font-size:0.78rem;color:rgba(255,255,255,0.45);">Clic o <kbd style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;">Espacio</kbd> para repetir</span>
     </div>
   </header>
 
-  <!-- Viewport de Previsualización (16:9 Estilo TV) -->
   <main class="viewport-container">
     <div class="tv-frame" id="tv-frame">
-      <div class="intro-stage" id="intro-stage" title="Haz clic para reiniciar la animación">
+      
+      <!-- ── CAPA DE YOUTUBE MUSIC CARGADO DETRÁS (SE VE A TRAVÉS DEL TRIÁNGULO) ── -->
+      <div class="mock-ytm-app" id="mock-ytm-app">
+        <div class="mock-top-bar">
+          <div class="mock-ytm-logo">
+            <svg viewBox="0 0 24 24" width="26" height="26"><path fill="#ff0000" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+            <span>YouTube Music</span>
+          </div>
+          <div class="mock-nav-links">
+            <span class="active">Principal</span>
+            <span>Explorar</span>
+            <span>Biblioteca</span>
+            <span>Aura Hub</span>
+          </div>
+          <div class="mock-search-box">&#128269; Buscar canciones, álbumes...</div>
+        </div>
+        <div class="mock-body-content">
+          <div class="mock-section-header">
+            <div class="mock-heading">Vuelve a escuchar &bull; AuraMusic Activo</div>
+          </div>
+          <div class="mock-albums-grid">
+            <div class="mock-album-card">
+              <div class="mock-album-cover cov-1"></div>
+              <div class="mock-album-title">Aura Mix Vol. 1</div>
+              <div class="mock-album-artist">Sincronización Cinemática</div>
+            </div>
+            <div class="mock-album-card">
+              <div class="mock-album-cover cov-2"></div>
+              <div class="mock-album-title">Lo-Fi Synthwave</div>
+              <div class="mock-album-artist">Aura Sound &middot; 2026</div>
+            </div>
+            <div class="mock-album-card">
+              <div class="mock-album-cover cov-3"></div>
+              <div class="mock-album-title">Chill Vibes Session</div>
+              <div class="mock-album-artist">Audio Espacial</div>
+            </div>
+            <div class="mock-album-card">
+              <div class="mock-album-cover cov-4"></div>
+              <div class="mock-album-title">Deep Bass Beats</div>
+              <div class="mock-album-artist">Ecualizador Aura</div>
+            </div>
+          </div>
+        </div>
+        <div class="mock-player-bar">
+          <div class="mock-playing-track">
+            <div class="mock-playing-thumb"></div>
+            <div>
+              <div style="font-size:0.92rem;font-weight:700;color:#fff;">Aura Startup Theme</div>
+              <div style="font-size:0.75rem;color:#888;">AuraMusic Engine</div>
+            </div>
+          </div>
+          <div class="mock-controls-center">
+            <span>&#9198;</span><span style="color:#ff4444;">&#9654;</span><span>&#9197;</span>
+          </div>
+          <div style="font-size:0.8rem;color:#aaa;">&#128266; &mdash;&mdash;&mdash;&mdash;&bull;&mdash;&mdash;</div>
+        </div>
+      </div>
 
-        <!-- 1. Línea Seeker de Carga YouTube TV -->
+      <!-- ── CAPA DEL SPLASH INTRO ── -->
+      <div class="stage-backdrop" id="stage-backdrop"></div>
+
+      <div class="intro-stage" id="intro-stage">
+
+        <!-- 1. Seeker Line -->
         <div class="yt-loader-box" id="yt-loader-box">
-          <div class="yt-loader-play-triangle" id="yt-triangle"></div>
+          <div class="yt-loader-play-triangle"></div>
           <div class="yt-loader-track">
-            <div class="yt-loader-fill" id="yt-loader-fill"></div>
+            <div class="yt-loader-fill" id="yt-loader-fill">
+              <div class="yt-loader-flare"></div>
+            </div>
           </div>
         </div>
 
-        <!-- 2 & 3. Fila Doble Lado a Lado (YouTube Music + AuraMusic) -->
-        <div class="side-by-side-wrapper" id="side-wrapper">
-          <div class="yt-block" id="yt-block">
-            <div class="yt-red-pill">
-              <div class="yt-play-arrow"></div>
-            </div>
-            <div class="yt-text-wrap">
-              <span class="yt-txt-youtube">YouTube</span>
-              <span class="yt-txt-music">Music</span>
-            </div>
+        <!-- 2. YouTube Music (se mueve independientemente) -->
+        <div class="yt-block" id="yt-block">
+          <div class="yt-red-pill">
+            <div class="yt-play-arrow"></div>
+            <span class="yt-point-skin" aria-hidden="true"></span>
           </div>
-
-          <div class="side-divider" id="side-divider"></div>
-
-          <div class="aura-block" id="aura-block">
-            <span class="aura-sparkle">✨</span>
-            <span class="aura-title">AuraMusic</span>
+          <div class="yt-text-wrap">
+            <span class="yt-txt-youtube">YouTube</span>
+            <span class="yt-txt-music">Music</span>
           </div>
         </div>
 
-        <!-- 4 & 5. Efectos de Fusión y Choque de Energía -->
+        <!-- Divisor -->
+        <div class="side-divider" id="side-divider"></div>
+
+        <!-- 3. AuraMusic -->
+        <div class="aura-block" id="aura-block">
+          <span class="aura-sparkle">&#10024;</span>
+          <span class="aura-title">AuraMusic</span>
+        </div>
+
+        <!-- 4 & 5. Efectos de Fusión -->
         <div class="fusion-flash" id="fusion-flash"></div>
-        <div class="fusion-energy-ring" id="energy-ring"></div>
+        <div class="fusion-ring"   id="fusion-ring"></div>
+        <div class="fusion-ring-2" id="fusion-ring-2"></div>
 
-        <!-- 6. Logo Final Triunfal de YouTube -->
-        <div class="final-yt-stage" id="final-stage">
-          <div class="final-red-pill"></div>
-          <span class="final-brand-title">YouTube</span>
-          <span class="final-music-tag">Music</span>
+        <!-- 6. Emblema grande y portal triangular transparente -->
+        <div class="final-fused-stage" id="final-stage">
+          <div class="fused-emblem-box">
+            <div class="fused-ambient-glow"></div>
+            <div class="fused-emblem-circle">
+              <svg class="fused-emblem-svg" id="portal-logo" xmlns="http://www.w3.org/2000/svg" viewBox="142 142 1316 1316" role="img" aria-label="Emblema original mitad YouTube Music y mitad Aura">
+                <defs>
+                  <clipPath id="disc-clip"><circle cx="800" cy="800" r="658"/></clipPath>
+                  <linearGradient id="aura-half-gradient" gradientUnits="userSpaceOnUse" x1="800" y1="800" x2="1458" y2="800">
+                    <stop offset="0" stop-color="#ff7959"/>
+                    <stop offset=".15" stop-color="#e86d5d"/>
+                    <stop offset=".30" stop-color="#cd5e64"/>
+                    <stop offset=".46" stop-color="#ad4c6b"/>
+                    <stop offset=".61" stop-color="#8e3b6f"/>
+                    <stop offset=".76" stop-color="#6f2b78"/>
+                    <stop offset="1" stop-color="#461281"/>
+                  </linearGradient>
+
+                  <!-- Máscara de apertura del portal triangular que perfora todo el canvas -->
+                  <mask id="play-aperture" maskUnits="userSpaceOnUse" x="-50000" y="-50000" width="100000" height="100000" style="mask-type:luminance">
+                    <rect x="-50000" y="-50000" width="100000" height="100000" fill="white"/>
+                    <path id="portal-hole" d="M679 625 L965 789 L679 962 Z" fill="black" opacity="0"/>
+                  </mask>
+                </defs>
+
+                <!-- Grupo enmascarado: Todo lo que esté aquí dentro se vuelve 100% transparente en el triángulo -->
+                <g mask="url(#play-aperture)">
+                  <!-- Fondo gigante oscuro que cubre la pantalla durante el vuelo pero se perfora en el triángulo -->
+                  <rect id="portal-bg-canvas" x="-50000" y="-50000" width="100000" height="100000" fill="#08090f" opacity="0"/>
+
+                  <!-- Emblema 50/50 circular -->
+                  <g clip-path="url(#disc-clip)">
+                    <g id="animated-logo" opacity="0">
+                      <g id="brand-halves" transform="rotate(0 800 800)">
+                        <path d="M800 142 A658 658 0 0 0 800 1458 Z" fill="#f10921"/>
+                        <path d="M800 142 A658 658 0 0 1 800 1458 Z" fill="url(#aura-half-gradient)"/>
+                      </g>
+                      <circle cx="800" cy="800" r="331" fill="none" stroke="white" stroke-width="33"/>
+                      <path d="M679 625 L965 789 L679 962 Z" fill="white"/>
+                    </g>
+                    <image id="reference-logo" href="assets/aura_logo_5050.png" width="1316" height="1316" x="142" y="142"/>
+                  </g>
+                </g>
+              </svg>
+              <div class="fused-shimmer"></div>
+            </div>
+          </div>
         </div>
 
-        <!-- Indicador inferior para omitir o repetir -->
+        <!-- Skip hint -->
         <div class="tv-skip-hint" id="tv-skip-hint">
-          Haz clic o pulsa <kbd>Espacio</kbd> para repetir la intro
+          Haz clic o presiona <kbd>Esc</kbd> para omitir
         </div>
 
       </div>
     </div>
   </main>
 
-  <!-- Controles Interactivos -->
   <footer class="lab-controls">
     <div class="ctrl-group">
-      <button type="button" id="btn-replay" class="ctrl-btn-primary">
-        🔄 Reproducir Intro
-      </button>
-
-      <button type="button" id="btn-toggle-sound" class="ctrl-btn-secondary">
-        🔊 Sonido: ON
-      </button>
+      <button id="btn-replay" class="ctrl-btn-primary">&#x21bb; Reproducir Intro</button>
+      <button id="btn-sound" class="ctrl-btn-secondary" aria-pressed="true">&#128266; Sonido: ON</button>
+      <span id="audio-status" role="status" class="ctrl-label" style="max-width:280px;font-size:.75rem;color:rgba(255,255,255,0.45)">Listo para reproducir.</span>
     </div>
-
+    <div class="ctrl-group">
+      <span class="ctrl-label">Vista Final:</span>
+      <span class="ctrl-label" style="color:#ffb49c;font-weight:700;">Portal Transparente &rarr; YouTube Cargado</span>
+    </div>
     <div class="ctrl-group">
       <span class="ctrl-label">Velocidad:</span>
       <div class="ctrl-slider-box">
-        <input type="range" id="slider-speed" class="ctrl-slider" min="0.5" max="2.0" step="0.1" value="1.0">
-        <span id="speed-label" style="font-size:0.8rem; font-weight:700; color:#00f2fe; width:36px;">1.0x</span>
+        <input type="range" id="slider-speed" class="ctrl-slider" min="0.4" max="2.0" step="0.1" value="1.0">
+        <span id="speed-label" style="font-size:0.8rem;font-weight:700;color:#ff7e5f;width:36px;">1.0x</span>
       </div>
-    </div>
-
-    <div class="ctrl-group">
-      <button type="button" id="btn-apply-to-extension" class="ctrl-btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);">
-        🚀 Aplicar a la Extensión
-      </button>
     </div>
   </footer>
 
-  <!-- Toast Notificador -->
-  <div class="lab-toast" id="lab-toast">
-    <span>✅</span>
-    <span id="lab-toast-msg">¡Animación sincronizada con la extensión!</span>
-  </div>
+<script>
+  // ── REFS ────────────────────────────────────────────────────────────
+  const stage          = document.getElementById('intro-stage');
+  const backdrop       = document.getElementById('stage-backdrop');
+  const loaderBox      = document.getElementById('yt-loader-box');
+  const loaderFill     = document.getElementById('yt-loader-fill');
+  const ytBlock        = document.getElementById('yt-block');
+  const ytPill         = ytBlock.querySelector('.yt-red-pill');
+  const ytArrow        = ytBlock.querySelector('.yt-play-arrow');
+  const pointSkin      = ytBlock.querySelector('.yt-point-skin');
+  const loaderTrack    = loaderBox.querySelector('.yt-loader-track');
+  const loaderFlare    = loaderBox.querySelector('.yt-loader-flare');
+  const loaderTriangle = loaderBox.querySelector('.yt-loader-play-triangle');
+  const ytWords = [
+    { el: ytBlock.querySelector('.yt-txt-youtube'), text: 'YouTube' },
+    { el: ytBlock.querySelector('.yt-txt-music'), text: 'Music' }
+  ];
+  const auraBlock      = document.getElementById('aura-block');
+  const divider        = document.getElementById('side-divider');
+  const flashEl        = document.getElementById('fusion-flash');
+  const ringEl         = document.getElementById('fusion-ring');
+  const ring2El        = document.getElementById('fusion-ring-2');
+  const finalStage     = document.getElementById('final-stage');
+  const skipHint       = document.getElementById('tv-skip-hint');
+  const btnReplay      = document.getElementById('btn-replay');
+  const btnSound       = document.getElementById('btn-sound');
+  const sliderSpeed    = document.getElementById('slider-speed');
+  const speedLabel     = document.getElementById('speed-label');
+  const emblemBox      = document.querySelector('.fused-emblem-box');
+  const emblemGlow     = document.querySelector('.fused-ambient-glow');
+  const portalHole     = document.getElementById('portal-hole');
+  const portalBgCanvas = document.getElementById('portal-bg-canvas');
+  const brandHalves    = document.getElementById('brand-halves');
+  const referenceLogo  = document.getElementById('reference-logo');
+  const animatedLogo   = document.getElementById('animated-logo');
+  const audioStatus    = document.getElementById('audio-status');
 
-  <script>
-    // --- LÓGICA DE ANIMACIÓN CINEMÁTICA INTERACTIVA ---
-    const stage = document.getElementById('intro-stage');
-    const loaderBox = document.getElementById('yt-loader-box');
-    const loaderFill = document.getElementById('yt-loader-fill');
-    const sideWrapper = document.getElementById('side-wrapper');
-    const ytBlock = document.getElementById('yt-block');
-    const sideDivider = document.getElementById('side-divider');
-    const auraBlock = document.getElementById('aura-block');
-    const fusionFlash = document.getElementById('fusion-flash');
-    const energyRing = document.getElementById('energy-ring');
-    const finalStage = document.getElementById('final-stage');
-    const skipHint = document.getElementById('tv-skip-hint');
+  let soundOn     = true;
+  let speedFactor = 1.0;
+  let timers      = [];
+  let motions     = [];
+  let sparks      = [];
+  let portalFrame = 0;
+  let runVersion  = 0;
+  let audio       = null;
 
-    const btnReplay = document.getElementById('btn-replay');
-    const btnSound = document.getElementById('btn-toggle-sound');
-    const sliderSpeed = document.getElementById('slider-speed');
-    const speedLabel = document.getElementById('speed-label');
-    const btnApply = document.getElementById('btn-apply-to-extension');
-    const toast = document.getElementById('lab-toast');
-    const toastMsg = document.getElementById('lab-toast-msg');
+  // ── MOTION HELPER ───────────────────────────────────────────────────
+  function motion(el, keyframes, duration, easing = 'linear') {
+    const animation = el.animate(keyframes, {
+      duration: duration / speedFactor,
+      easing,
+      fill: 'forwards'
+    });
+    motions.push(animation);
+    return animation;
+  }
 
-    let isSoundOn = true;
-    let speedFactor = 1.0;
-    let animTimeouts = [];
-    let audioInstance = null;
+  // ── UTILS ────────────────────────────────────────────────────────────
+  const t = ms => ms / speedFactor;
 
-    // Reproducción de sonido oficial de arranque
-    function playStartupSound() {
-      if (!isSoundOn) return;
-      try {
-        if (!audioInstance) {
-          audioInstance = new Audio('assets/startup.mp4');
-        }
-        audioInstance.currentTime = 0;
-        audioInstance.volume = 0.85;
-        audioInstance.play().catch(e => console.warn('Audio play prevented:', e));
-      } catch (err) {
-        console.warn('Audio error:', err);
-      }
+  function clearTimers() {
+    runVersion++;
+    cancelAnimationFrame(portalFrame);
+    portalFrame = 0;
+    timers.forEach(id => clearTimeout(id));
+    timers = [];
+    motions.forEach(a => { try { a.cancel(); } catch(_) {} });
+    motions = [];
+    try { if (audio) audio.pause(); } catch(_) {}
+  }
+
+  function later(fn, delay) {
+    const id = setTimeout(fn, delay);
+    timers.push(id);
+    return id;
+  }
+
+  function updateSoundUI() {
+    btnSound.textContent = soundOn ? '🔊 Sonido: ON' : '🔇 Sonido: OFF';
+    btnSound.setAttribute('aria-pressed', String(soundOn));
+  }
+
+  function playSound() {
+    if (!soundOn) return;
+    try {
+      if (!audio) audio = new Audio('assets/startup.mp4');
+      audio.currentTime = 0;
+      audio.playbackRate = speedFactor;
+      audio.volume = 0.85;
+      audio.play().then(() => {
+        audioStatus.textContent = 'Sonido sincronizado · firma original AuraMusic.';
+      }).catch(err => {
+        audioStatus.textContent = 'Autoplay bloqueado. Pulsa en la pantalla para activar sonido.';
+      });
+    } catch(_) {}
+  }
+
+  // ── SPARK PARTICLES ──────────────────────────────────────────────────
+  function clearSparks() {
+    sparks.forEach(s => s.remove());
+    sparks = [];
+  }
+
+  function spawnSparks(count = 18) {
+    clearSparks();
+    const frame = stage.getBoundingClientRect();
+    const divRect = divider.getBoundingClientRect();
+    const cx = divRect.left + divRect.width / 2 - frame.left;
+    const cy = divRect.top  + divRect.height / 2 - frame.top;
+
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.className = 'spark-particle';
+      const hue = Math.random() > 0.5 ? 15 : 285;
+      el.style.cssText = `
+        left: ${cx}px; top: ${cy}px;
+        background: hsl(${hue}, 100%, 70%);
+        box-shadow: 0 0 6px hsl(${hue}, 100%, 70%);
+      `;
+      stage.appendChild(el);
+      sparks.push(el);
+
+      const angle = (Math.random() * 360) * Math.PI / 180;
+      const dist  = 60 + Math.random() * 120;
+      const dur   = 0.4 + Math.random() * 0.4;
+      const tx = Math.cos(angle) * dist;
+      const ty = Math.sin(angle) * dist;
+
+      motion(el, [
+        { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+        { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(0.2)`, opacity: 0 }
+      ], dur * 1000, 'cubic-bezier(.16,1,.3,1)');
+
+      later(() => el.remove(), t(dur * 1000 + 50));
+    }
+  }
+
+  // ── RESET ─────────────────────────────────────────────────────────────
+  function resetStage() {
+    clearTimers();
+    clearSparks();
+    stage.classList.remove('stage-out');
+    backdrop.classList.remove('energized');
+    backdrop.style.opacity = '1';
+
+    // Loader
+    loaderBox.style.cssText  = 'opacity:1;transform:scale(1);transition:none';
+    loaderFill.style.cssText = 'width:0%;transition:none';
+    loaderTrack.style.transform = '';
+    loaderTrack.style.opacity = '';
+    loaderFlare.style.opacity = '';
+    loaderTriangle.style.opacity = '';
+    ytPill.style.transform = '';
+    pointSkin.style.opacity = '0';
+    ytArrow.style.opacity = '';
+    ytWords.forEach(({ el, text }) => {
+      el.textContent = text;
+      el.style.width = '';
+      el.style.visibility = 'hidden';
+    });
+
+    const frameW = stage.offsetWidth;
+    const ytOff  = -Math.round(frameW * 0.20);
+    const auOff  = Math.round(frameW * 0.20);
+
+    ytBlock.style.cssText   = `opacity:0;transform:translateX(${ytOff}px) scale(0.85);transition:none;`;
+    auraBlock.style.cssText = `opacity:0;transform:translateX(${auOff}px) translateY(-280px) scale(1.1);transition:none;`;
+    ytBlock.classList.remove('charging');
+    auraBlock.classList.remove('charging');
+
+    divider.style.cssText = 'opacity:0;transform:scaleY(0);transition:none;';
+    divider.classList.remove('lit');
+
+    // Fusion FX
+    flashEl.style.cssText  = 'opacity:0;transition:none;';
+    ringEl.style.cssText   = 'opacity:0;transform:scale(0.15);transition:none;';
+    ring2El.style.cssText  = 'opacity:0;transform:scale(0.1);transition:none;';
+
+    // Final stage
+    finalStage.classList.remove('active', 'portal-flight', 'portal-complete');
+    finalStage.style.opacity = '0';
+    finalStage.style.transform = '';
+
+    portalHole.style.opacity = '0';
+    if (portalBgCanvas) portalBgCanvas.style.opacity = '0';
+    referenceLogo.style.opacity = '1';
+    animatedLogo.style.opacity = '0';
+    brandHalves.setAttribute('transform', 'rotate(0 800 800)');
+    emblemBox.style.transform = '';
+    emblemGlow.style.opacity = '';
+
+    skipHint.style.opacity = '0';
+    void stage.offsetWidth;
+  }
+
+  // ── FLY THROUGH EMBLEM (PORTAL DIRECTO A YOUTUBE MUSIC) ─────────────
+  function flyThroughEmblem() {
+    const holdTransform = getComputedStyle(finalStage).transform;
+    finalStage.style.transform = holdTransform;
+    finalStage.style.opacity = '1';
+    finalStage.classList.add('portal-flight');
+    skipHint.style.opacity = '0';
+
+    // Activar el fondo oscuro del SVG que tiene el orificio y desvanecer el fondo exterior
+    if (portalBgCanvas) portalBgCanvas.style.opacity = '1';
+    motion(backdrop, [{ opacity: 1 }, { opacity: 0 }], 300, 'ease-out');
+
+    const size = emblemBox.offsetWidth;
+    const unit = size / 1316;
+    const apertureRadius = 90 * unit;
+    const diagonal = Math.hypot(stage.clientWidth, stage.clientHeight);
+    const endScale = Math.max(22, (diagonal / (2 * apertureRadius)) * 1.35);
+    const duration = 3400;
+    const clamp = n => Math.max(0, Math.min(1, n));
+    const smooth = n => { n = clamp(n); return n * n * n * (10 + n * (-15 + 6 * n)); };
+    const frames = [];
+    const holeFrames = [];
+    const glowFrames = [];
+
+    for (let i = 0; i <= 180; i++) {
+      const u = i / 180;
+      const angle = 360 * smooth((u - .15) / .55);
+      const cameraTravel = .12 * smooth(u / .70) + .88 * smooth((u - .43) / .57);
+      const scale = Math.exp(Math.log(endScale) * cameraTravel);
+      const align = smooth((u - .28) / .40);
+      const radians = angle * Math.PI / 180;
+      const dx = -25.1 * unit;
+      const dy = -7.4 * unit;
+      const tx = -(dx * Math.cos(radians) - dy * Math.sin(radians)) * scale * align;
+      const ty = -(dx * Math.sin(radians) + dy * Math.cos(radians)) * scale * align;
+      frames.push({
+        transform: `translate3d(${tx}px, ${ty}px, 0) rotate(${angle}deg) scale(${scale})`,
+        offset: u
+      });
+      // El orificio triangular se vuelve transparente temprano para que se vea YouTube Music
+      holeFrames.push({ opacity: smooth((u - .08) / .24), offset: u });
+      glowFrames.push({ opacity: .8 * (1 - smooth(u / .42)), offset: u });
     }
 
-    function clearAllTimers() {
-      animTimeouts.forEach(t => clearTimeout(t));
-      animTimeouts = [];
-      if (audioInstance) {
-        try { audioInstance.pause(); } catch(_) {}
+    motion(finalStage, [
+      { transform: holdTransform },
+      { transform: 'matrix(1, 0, 0, 1, 0, 0)' }
+    ], 500, 'cubic-bezier(.2,0,0,1)');
+
+    // Cambio suave a los vectores nítidos del logo para la rotación y zoom infinito
+    animatedLogo.style.opacity = '1';
+    motion(referenceLogo, [{ opacity: 1 }, { opacity: 0 }], 180, 'ease-in-out');
+
+    const camera = motion(emblemBox, frames, duration);
+
+    const syncHalves = () => {
+      const u = clamp((Number(camera.currentTime) || 0) / t(duration));
+      const angle = 180 * smooth((u - .06) / .49);
+      brandHalves.setAttribute('transform', `rotate(${angle} 800 800)`);
+      if (camera.playState === 'running' || camera.playState === 'pending') {
+        portalFrame = requestAnimationFrame(syncHalves);
+      } else {
+        portalFrame = 0;
       }
+    };
+    syncHalves();
+
+    motion(portalHole, holeFrames, duration);
+    motion(emblemGlow, glowFrames, duration);
+
+    camera.finished.then(() => {
+      if (camera.playState !== 'finished') return;
+      cancelAnimationFrame(portalFrame);
+      portalFrame = 0;
+      brandHalves.setAttribute('transform', 'rotate(180 800 800)');
+      finalStage.classList.add('portal-complete');
+      stage.classList.add('stage-out');
+      skipHint.style.opacity = '0';
+    }, () => {});
+  }
+
+  // ── REVEAL YOUTUBE FROM POINT ──────────────────────────────────────
+  function revealYouTubeFromPoint(ytOff) {
+    const dotRect = loaderFlare.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const sx = stageRect.width / stage.offsetWidth || 1;
+    const sy = stageRect.height / stage.offsetHeight || 1;
+
+    ytBlock.style.transition = 'none';
+    ytBlock.style.transform = `translateX(${ytOff}px) scale(1)`;
+    ytBlock.style.opacity = '1';
+
+    const widths = ytWords.map(({ el }) => el.getBoundingClientRect().width / sx);
+    ytWords.forEach(({ el }, i) => {
+      el.style.width = `${widths[i]}px`;
+      el.textContent = '';
+      el.style.visibility = 'visible';
+    });
+
+    const target = ytPill.getBoundingClientRect();
+    const dx = (dotRect.left + dotRect.width / 2 - target.left - target.width / 2) / sx;
+    const dy = (dotRect.top + dotRect.height / 2 - target.top - target.height / 2) / sy;
+    const fromX = dotRect.width / Math.max(target.width, 1);
+    const fromY = dotRect.height / Math.max(target.height, 1);
+    const clamp = n => Math.max(0, Math.min(1, n));
+    const smooth = n => { n = clamp(n); return n*n*n*(10+n*(-15+6*n)); };
+    const frames = [];
+
+    for (let i = 0; i <= 90; i++) {
+      const u = i / 90;
+      const grow = smooth(u / .27);
+      const travel = smooth((u - .16) / .84);
+      const lift = Math.min(32, stage.offsetHeight * .07);
+      const x = dx * (1 - travel);
+      const y = dy * (1 - travel) - lift * Math.sin(Math.PI * travel);
+      const scaleX = fromX + (1 - fromX) * grow;
+      const scaleY = fromY + (1 - fromY) * grow;
+      frames.push({
+        transform: `translate3d(${x}px, ${y}px, 0) scale(${scaleX}, ${scaleY})`,
+        borderRadius: `calc(${50*(1-grow)}% + ${14*grow}px)`,
+        offset: u
+      });
     }
 
-    function resetStage() {
-      clearAllTimers();
-      stage.classList.remove('stage-dismissing');
+    ytPill.style.transform = frames[0].transform;
+    loaderFlare.style.opacity = '0';
+    motion(ytPill, frames, 880);
+    motion(pointSkin, [{ opacity: 1 }, { opacity: 0 }], 200, 'ease-in-out');
+    motion(ytArrow, [
+      { opacity: 0, offset: 0 },
+      { opacity: 0, offset: .35 },
+      { opacity: 1, offset: 1 }
+    ], 300, 'ease-out');
 
-      // Reset Seeker Loader
-      loaderBox.style.transition = 'none';
-      loaderBox.style.opacity = '1';
-      loaderBox.style.transform = 'scale(1)';
-      loaderFill.style.transition = 'none';
-      loaderFill.style.width = '0%';
+    motion(loaderTrack, [
+      { transform: 'scaleX(1)', opacity: 1 },
+      { transform: 'scaleX(0)', opacity: 0 }
+    ], 220, 'cubic-bezier(.4,0,.2,1)');
+    motion(loaderTriangle, [{ opacity: 1 }, { opacity: 0 }], 160, 'ease-out');
 
-      // Reset Side-by-Side Wrapper
-      sideWrapper.style.transition = 'none';
-      sideWrapper.style.opacity = '1';
+    later(() => { loaderBox.style.opacity = '0'; }, t(230));
 
-      // Reset YouTube Music Block
-      ytBlock.style.transition = 'none';
-      ytBlock.style.opacity = '0';
-      ytBlock.style.transform = 'scale(0.85)';
+    let letter = 0;
+    ytWords.forEach(({ el, text }) => {
+      for (let count = 1; count <= text.length; count++) {
+        const length = count;
+        later(() => { el.textContent = text.slice(0, length); }, t(280 + letter * 43));
+        letter++;
+      }
+    });
+    skipHint.style.opacity = '1';
+  }
 
-      // Reset Divider
-      sideDivider.style.transition = 'none';
-      sideDivider.style.opacity = '0';
-      sideDivider.style.transform = 'scaleY(0)';
+  // ── MAIN SEQUENCE ─────────────────────────────────────────────────────
+  function run() {
+    speedFactor = parseFloat(sliderSpeed.value);
+    resetStage();
 
-      // Reset AuraMusic Block
+    const frameW = stage.offsetWidth;
+    const ytOff  = -Math.round(frameW * 0.20);
+    const auOff  = Math.round(frameW * 0.20);
+
+    // PASO 1 ─ Seeker line
+    const fill = t(1420);
+    loaderFill.style.transition = `width ${fill}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+    loaderFill.style.width = '100%';
+    playSound();
+
+    // PASO 2 ─ Revelar YouTube Music desde el punto
+    later(() => revealYouTubeFromPoint(ytOff), fill + t(40));
+
+    // PASO 3 ─ Caída de AuraMusic
+    const dropAt = fill + t(560);
+    later(() => {
+      divider.style.transition = `all ${t(320)}ms ease`;
+      divider.style.opacity = '0.55';
+      divider.style.transform = 'scaleY(1)';
+
       auraBlock.style.transition = 'none';
-      auraBlock.style.opacity = '0';
-      auraBlock.style.transform = 'translateY(-280px) scale(1.15) rotate(-4deg)';
+      motion(auraBlock, [
+        { transform: `translateX(${auOff}px) translateY(-280px) scale(1.1)`, opacity: 0, offset: 0, easing: 'cubic-bezier(.3,0,.6,1)' },
+        { transform: `translateX(${auOff}px) translateY(7px) scale(1.015,.985)`, opacity: 1, offset: .68, easing: 'cubic-bezier(.16,1,.3,1)' },
+        { transform: `translateX(${auOff}px) translateY(-3px) scale(.998,1.002)`, opacity: 1, offset: .86, easing: 'ease-in-out' },
+        { transform: `translateX(${auOff}px) translateY(0) scale(1)`, opacity: 1, offset: 1 }
+      ], 650);
+    }, dropAt);
+
+    // PASO 4 ─ Carga de poder y brillo neón
+    const chargeAt = dropAt + t(700);
+    later(() => {
+      ytBlock.classList.add('charging');
+      auraBlock.classList.add('charging');
+      divider.classList.add('lit');
+      backdrop.classList.add('energized');
+    }, chargeAt);
+
+    // PASO 5 ─ Colisión al centro
+    const fusionAt = chargeAt + t(850);
+    later(() => {
+      ytBlock.classList.remove('charging');
       auraBlock.classList.remove('charging');
 
-      // Reset Fusion Effects
-      fusionFlash.style.transition = 'none';
-      fusionFlash.style.opacity = '0';
+      [ [ytBlock, ytOff], [auraBlock, auOff] ].forEach(([el, offset]) => {
+        el.style.transition = 'none';
+        motion(el, [
+          { transform: `translateX(${offset}px) scale(1)`, opacity: 1, filter: 'blur(0px)', offset: 0, easing: 'ease-out' },
+          { transform: `translateX(${offset + Math.sign(offset) * 10}px) scale(1.02)`, opacity: 1, filter: 'blur(0px)', offset: .22, easing: 'cubic-bezier(.65,0,.85,.3)' },
+          { transform: 'translateX(0px) scale(.78)', opacity: 0, filter: 'blur(2px)', offset: 1 }
+        ], 500);
+      });
 
-      energyRing.style.transition = 'none';
-      energyRing.style.opacity = '0';
-      energyRing.style.transform = 'scale(0.1)';
+      divider.style.transition = `all ${t(200)}ms ease`;
+      divider.style.transform = 'scaleY(2)';
+    }, fusionAt);
 
-      // Reset Final Stage
-      finalStage.classList.remove('active');
+    // PASO 6 ─ Impacto: flash + anillos + chispas + logo 50/50
+    later(() => {
+      spawnSparks(22);
+      ytBlock.style.opacity = '0';
+      auraBlock.style.opacity = '0';
+      divider.classList.remove('lit');
+      divider.style.opacity = '0';
+      backdrop.classList.remove('energized');
 
-      skipHint.style.opacity = '0';
+      flashEl.style.transition = 'none';
+      motion(flashEl, [
+        { opacity: 0, offset: 0 },
+        { opacity: .88, offset: .12, easing: 'cubic-bezier(.22,1,.36,1)' },
+        { opacity: 0, offset: 1 }
+      ], 480);
 
-      void loaderBox.offsetWidth; // Forzar reflow del navegador
+      ringEl.style.transition = 'none';
+      ring2El.style.transition = 'none';
+      motion(ringEl, [
+        { transform: 'scale(.15)', opacity: 0, offset: 0, easing: 'cubic-bezier(.16,1,.3,1)' },
+        { transform: 'scale(5.5)', opacity: .9, offset: .38, easing: 'ease-out' },
+        { transform: 'scale(8.5)', opacity: 0, offset: 1 }
+      ], 690);
+
+      later(() => motion(ring2El, [
+        { transform: 'scale(.1)', opacity: 0, offset: 0, easing: 'cubic-bezier(.16,1,.3,1)' },
+        { transform: 'scale(6.5)', opacity: .65, offset: .4, easing: 'ease-out' },
+        { transform: 'scale(11)', opacity: 0, offset: 1 }
+      ], 760), t(80));
+
+      later(() => finalStage.classList.add('active'), t(60));
+
+    }, fusionAt + t(500));
+
+    // PASO 7 ─ Pausa de admiración del emblema, y vuelo hacia el triángulo ▶
+    later(flyThroughEmblem, fusionAt + t(500) + t(1300));
+  }
+
+  // ── EVENTS ────────────────────────────────────────────────────────────
+  btnReplay.addEventListener('click', run);
+  stage.addEventListener('click', run);
+
+  window.addEventListener('keydown', e => {
+    if (e.key === ' ' && !['SELECT','INPUT','BUTTON'].includes(document.activeElement.tagName)) {
+      e.preventDefault(); run();
     }
+  });
 
-    function runIntroSequence() {
-      resetStage();
+  btnSound.addEventListener('click', () => {
+    soundOn = !soundOn;
+    updateSoundUI();
+    if (soundOn) run();
+    else if (audio) audio.pause();
+  });
 
-      const baseSpeed = 1 / speedFactor;
-      const t = (ms) => ms * baseSpeed;
+  sliderSpeed.addEventListener('input', e => {
+    speedLabel.textContent = parseFloat(e.target.value).toFixed(1) + 'x';
+  });
+  sliderSpeed.addEventListener('change', run);
 
-      // PASO 1: Llenar la línea roja seeker (YouTube TV)
-      const fillDuration = t(1450);
-      loaderFill.style.transition = `width ${fillDuration}ms cubic-bezier(0.25, 1, 0.5, 1)`;
-      loaderFill.style.width = '100%';
-
-      // Sonido de inicio sincronizado
-      playStartupSound();
-
-      // PASO 2: Contraer la línea seeker y revelar YouTube Music a la izquierda
-      animTimeouts.push(setTimeout(() => {
-        loaderBox.style.transition = `all ${t(350)}ms cubic-bezier(0.16, 1, 0.3, 1)`;
-        loaderBox.style.opacity = '0';
-        loaderBox.style.transform = 'scale(0.8)';
-
-        ytBlock.style.transition = `all ${t(450)}ms cubic-bezier(0.175, 0.885, 0.32, 1.275)`;
-        ytBlock.style.opacity = '1';
-        ytBlock.style.transform = 'scale(1)';
-
-        skipHint.style.opacity = '1';
-      }, fillDuration + t(50)));
-
-      // PASO 3: ¡CAÍDA DE AURAMUSIC AL LADO (SIDE-BY-SIDE, NO ENCIMA)!
-      const dropDelay = fillDuration + t(600);
-      animTimeouts.push(setTimeout(() => {
-        sideDivider.style.transition = `all ${t(300)}ms ease`;
-        sideDivider.style.opacity = '0.5';
-        sideDivider.style.transform = 'scaleY(1)';
-
-        auraBlock.style.transition = `transform ${t(550)}ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity ${t(250)}ms ease`;
-        auraBlock.style.opacity = '1';
-        auraBlock.style.transform = 'translateY(0) scale(1) rotate(0deg)';
-      }, dropDelay));
-
-      // PASO 4: ¡AURAMUSIC TOMA FUERZA (CARGA NEÓN VIBRANTE)!
-      const chargeDelay = dropDelay + t(700);
-      animTimeouts.push(setTimeout(() => {
-        auraBlock.classList.add('charging');
-      }, chargeDelay));
-
-      // PASO 5: ¡FUSIÓN MAGNÉTICA Y COLISIÓN AL CENTRO!
-      const fusionDelay = chargeDelay + t(800);
-      animTimeouts.push(setTimeout(() => {
-        auraBlock.classList.remove('charging');
-        auraBlock.style.filter = 'drop-shadow(0 0 35px #00f2fe) drop-shadow(0 0 25px #ff007f)';
-        ytBlock.style.filter = 'drop-shadow(0 0 30px rgba(255, 0, 0, 0.85))';
-
-        ytBlock.style.transition = `all ${t(420)}ms cubic-bezier(0.7, 0, 0.84, 0)`;
-        auraBlock.style.transition = `all ${t(420)}ms cubic-bezier(0.7, 0, 0.84, 0)`;
-        sideDivider.style.transition = `opacity ${t(200)}ms ease`;
-        sideDivider.style.opacity = '0';
-
-        // Atracción centrípeta hacia el centro
-        ytBlock.style.transform = 'translateX(90px) scale(0.9)';
-        auraBlock.style.transform = 'translateX(-90px) scale(0.9)';
-
-        // PASO 6: ¡COLISIÓN, DESTELLO RADIAL Y SURGIMIENTO DEL LOGO DE YOUTUBE!
-        animTimeouts.push(setTimeout(() => {
-          sideWrapper.style.opacity = '0';
-
-          // Destello radial blanco-neón y onda de choque
-          fusionFlash.style.opacity = '1';
-          energyRing.style.transition = `all ${t(500)}ms cubic-bezier(0.16, 1, 0.3, 1)`;
-          energyRing.style.opacity = '1';
-          energyRing.style.transform = 'scale(7.5)';
-
-          // Emerger triunfal el logo de YouTube Music
-          finalStage.classList.add('active');
-
-          animTimeouts.push(setTimeout(() => {
-            fusionFlash.style.transition = `opacity ${t(350)}ms ease-out`;
-            fusionFlash.style.opacity = '0';
-            energyRing.style.opacity = '0';
-          }, t(120)));
-
-        }, t(420)));
-
-      }, fusionDelay));
-
-      // PASO 7: Desvanecimiento opcional o pausa
-      const totalDuration = fusionDelay + t(2000);
-      animTimeouts.push(setTimeout(() => {
-        stage.classList.add('stage-dismissing');
-      }, totalDuration));
-    }
-
-    // Eventos interactivos
-    btnReplay.addEventListener('click', runIntroSequence);
-    stage.addEventListener('click', runIntroSequence);
-
-    window.addEventListener('keydown', (e) => {
-      if (e.key === ' ' && document.activeElement.tagName !== 'SELECT' && document.activeElement.tagName !== 'INPUT') {
-        e.preventDefault();
-        runIntroSequence();
-      }
-    });
-
-    btnSound.addEventListener('click', () => {
-      isSoundOn = !isSoundOn;
-      btnSound.textContent = isSoundOn ? '🔊 Sonido: ON' : '🔇 Sonido: OFF';
-      btnSound.style.color = isSoundOn ? '#00ff88' : 'rgba(255,255,255,0.6)';
-    });
-
-    sliderSpeed.addEventListener('input', (e) => {
-      speedFactor = parseFloat(e.target.value);
-      speedLabel.textContent = `${speedFactor.toFixed(1)}x`;
-    });
-
-    function showToast(msg) {
-      toastMsg.textContent = msg;
-      toast.classList.add('visible');
-      setTimeout(() => toast.classList.remove('visible'), 3200);
-    }
-
-    btnApply.addEventListener('click', async () => {
-      btnApply.disabled = true;
-      btnApply.textContent = '⏳ Guardando...';
-      try {
-        await fetch('/api/intro/save-preference', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ speed: speedFactor })
-        });
-        showToast('✨ ¡Animación de Fusión aplicada exitosamente a la Extensión!');
-      } catch (_) {
-        showToast('✨ ¡Estilo listo! La extensión ya tiene sincronizado este diseño.');
-      }
-      btnApply.disabled = false;
-      btnApply.textContent = '🚀 Aplicar a la Extensión';
-    });
-
-    // Iniciar automáticamente al cargar
-    window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(runIntroSequence, 400);
-    });
-  </script>
+  window.addEventListener('DOMContentLoaded', () => {
+    resetStage();
+    setTimeout(run, 400);
+  });
+</script>
 </body>
 </html>
