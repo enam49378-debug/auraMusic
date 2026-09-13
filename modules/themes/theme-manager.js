@@ -322,42 +322,42 @@ window.AuraMusic = window.AuraMusic || {};
     switch (theme) {
       case 'auramusic':
         knobStyles = `
-          width: 22px !important;
-          height: 22px !important;
-          min-width: 22px !important;
-          min-height: 22px !important;
+          width: 24px !important;
+          height: 24px !important;
+          min-width: 24px !important;
+          min-height: 24px !important;
           border-radius: 50% !important;
           background: #ffffff !important;
           border: 3.5px solid #00e5ff !important;
-          box-shadow: 0 0 18px #00e5ff, 0 0 32px rgba(189, 0, 255, 0.95), 0 2px 8px rgba(0, 0, 0, 0.6) !important;
+          box-shadow: 0 0 20px #00e5ff, 0 0 35px rgba(189, 0, 255, 0.95), 0 2px 8px rgba(0, 0, 0, 0.6) !important;
           transform: scale(1) !important;
         `;
         break;
 
       case 'aesthetic':
         knobStyles = `
-          width: 20px !important;
-          height: 20px !important;
-          min-width: 20px !important;
-          min-height: 20px !important;
+          width: 24px !important;
+          height: 24px !important;
+          min-width: 24px !important;
+          min-height: 24px !important;
           border-radius: 50% !important;
           background: #ffffff !important;
           border: 3.5px solid #ff8fa3 !important;
-          box-shadow: 0 0 16px rgba(255, 143, 163, 1), 0 0 28px rgba(199, 125, 255, 0.95), 0 2px 6px rgba(0, 0, 0, 0.5) !important;
+          box-shadow: 0 0 18px rgba(255, 143, 163, 1), 0 0 32px rgba(199, 125, 255, 0.95), 0 2px 6px rgba(0, 0, 0, 0.5) !important;
           transform: scale(1) !important;
         `;
         break;
 
       case 'minecraft':
         knobStyles = `
-          width: 20px !important;
-          height: 20px !important;
-          min-width: 20px !important;
-          min-height: 20px !important;
+          width: 22px !important;
+          height: 22px !important;
+          min-width: 22px !important;
+          min-height: 22px !important;
           border-radius: 0px !important;
           background: #ffff55 !important;
-          border: 2px solid #000000 !important;
-          box-shadow: inset 2px 2px 0 #ffffff, inset -2px -2px 0 #aa5500, 0 0 16px rgba(255, 255, 85, 0.95) !important;
+          border: 2.5px solid #000000 !important;
+          box-shadow: inset 2px 2px 0 #ffffff, inset -2px -2px 0 #aa5500, 0 0 18px rgba(255, 255, 85, 0.95) !important;
           image-rendering: pixelated !important;
           transform: scale(1) !important;
         `;
@@ -365,115 +365,115 @@ window.AuraMusic = window.AuraMusic || {};
 
       case 'cyberpunk':
         knobStyles = `
-          width: 20px !important;
-          height: 20px !important;
-          min-width: 20px !important;
-          min-height: 20px !important;
+          width: 22px !important;
+          height: 22px !important;
+          min-width: 22px !important;
+          min-height: 22px !important;
           border-radius: 2px !important;
           background: #00f5ff !important;
           border: 2.5px solid #ff2d78 !important;
-          box-shadow: 0 0 20px #00f5ff, 0 0 32px #ff2d78 !important;
+          box-shadow: 0 0 22px #00f5ff, 0 0 35px #ff2d78 !important;
           transform: rotate(45deg) scale(1) !important;
         `;
         break;
 
       case 'spotify':
         knobStyles = `
-          width: 20px !important;
-          height: 20px !important;
-          min-width: 20px !important;
-          min-height: 20px !important;
+          width: 22px !important;
+          height: 22px !important;
+          min-width: 22px !important;
+          min-height: 22px !important;
           border-radius: 50% !important;
           background: #ffffff !important;
-          border: 3px solid #1ed760 !important;
-          box-shadow: 0 0 14px rgba(30, 215, 96, 0.9), 0 2px 8px rgba(0, 0, 0, 0.6) !important;
+          border: 3.5px solid #1ed760 !important;
+          box-shadow: 0 0 18px rgba(30, 215, 96, 0.95), 0 2px 8px rgba(0, 0, 0, 0.6) !important;
           transform: scale(1) !important;
         `;
         break;
 
       case 'whatsapp':
         knobStyles = `
-          width: 20px !important;
-          height: 20px !important;
-          min-width: 20px !important;
-          min-height: 20px !important;
+          width: 22px !important;
+          height: 22px !important;
+          min-width: 22px !important;
+          min-height: 22px !important;
           border-radius: 50% !important;
           background: #00a884 !important;
           border: 3.5px solid #ffffff !important;
-          box-shadow: 0 0 18px rgba(0, 168, 132, 0.95), 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+          box-shadow: 0 0 20px rgba(0, 168, 132, 0.95), 0 2px 8px rgba(0, 0, 0, 0.5) !important;
           transform: scale(1) !important;
         `;
         break;
 
       case 'apple':
         knobStyles = `
-          width: 20px !important;
-          height: 20px !important;
-          min-width: 20px !important;
-          min-height: 20px !important;
+          width: 22px !important;
+          height: 22px !important;
+          min-width: 22px !important;
+          min-height: 22px !important;
           border-radius: 50% !important;
           background: #ffffff !important;
           border: 3.5px solid #fc3c44 !important;
-          box-shadow: 0 0 18px rgba(252, 60, 68, 0.9), 0 3px 10px rgba(0, 0, 0, 0.5) !important;
+          box-shadow: 0 0 20px rgba(252, 60, 68, 0.9), 0 3px 10px rgba(0, 0, 0, 0.5) !important;
           transform: scale(1) !important;
         `;
         break;
 
       case 'oled':
         knobStyles = `
-          width: 20px !important;
-          height: 20px !important;
-          min-width: 20px !important;
-          min-height: 20px !important;
+          width: 24px !important;
+          height: 24px !important;
+          min-width: 24px !important;
+          min-height: 24px !important;
           border-radius: 50% !important;
           background: #000000 !important;
           border: 3.5px solid #00e5ff !important;
-          box-shadow: 0 0 20px #00e5ff, 0 0 35px rgba(0, 229, 255, 0.7) !important;
+          box-shadow: 0 0 22px #00e5ff, 0 0 40px rgba(0, 229, 255, 0.8) !important;
           transform: scale(1) !important;
         `;
         break;
 
       case 'jesuluto':
         knobStyles = `
-          width: 20px !important;
-          height: 20px !important;
-          min-width: 20px !important;
-          min-height: 20px !important;
+          width: 24px !important;
+          height: 24px !important;
+          min-width: 24px !important;
+          min-height: 24px !important;
           border-radius: 50% !important;
           background: #00ff77 !important;
-          border: 3px solid #ffffff !important;
-          box-shadow: 0 0 20px #00ff77, 0 0 35px rgba(0, 255, 119, 0.8) !important;
+          border: 3.5px solid #ffffff !important;
+          box-shadow: 0 0 22px #00ff77, 0 0 40px rgba(0, 255, 119, 0.85) !important;
           transform: scale(1) !important;
         `;
         break;
 
       case 'komi':
         knobStyles = `
-          width: 26px !important;
-          height: 26px !important;
-          min-width: 26px !important;
-          min-height: 26px !important;
+          width: 28px !important;
+          height: 28px !important;
+          min-width: 28px !important;
+          min-height: 28px !important;
           border-radius: 0px !important;
           border: none !important;
           background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'%3E%3Cpath d='M 6 12 L 3 3 L 12 6 C 13.5 5.5 18.5 5.5 20 6 L 29 3 L 26 12 C 29 16 29 22 26 26 C 22 30 10 30 6 26 C 3 22 3 16 6 12 Z' fill='%23ffffff' stroke='%23181820' stroke-width='2.2' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpolygon points='6,10 5,5 10,7' fill='%23f8b6cf'/%3E%3Cpolygon points='26,10 27,5 22,7' fill='%23f8b6cf'/%3E%3Cellipse cx='11' cy='17' rx='1.8' ry='2.2' fill='%23181820'/%3E%3Cellipse cx='21' cy='17' rx='1.8' ry='2.2' fill='%23181820'/%3E%3Cpolygon points='16,19 14.8,17.8 17.2,17.8' fill='%23f8b6cf'/%3E%3Cpath d='M 14.5 20 C 15 21 16 21 16 20 C 16 21 17 21 17.5 20' stroke='%23181820' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") !important;
           background-position: center !important;
           background-repeat: no-repeat !important;
           background-size: contain !important;
-          filter: drop-shadow(0 2px 8px rgba(255, 141, 176, 0.95)) !important;
+          filter: drop-shadow(0 2px 10px rgba(255, 141, 176, 0.95)) !important;
           transform: scale(1.2) !important;
         `;
         break;
 
       default:
         knobStyles = `
-          width: 20px !important;
-          height: 20px !important;
-          min-width: 20px !important;
-          min-height: 20px !important;
+          width: 24px !important;
+          height: 24px !important;
+          min-width: 24px !important;
+          min-height: 24px !important;
           border-radius: 50% !important;
           background: #ff0000 !important;
           border: 3.5px solid #ffffff !important;
-          box-shadow: 0 0 18px rgba(255, 0, 0, 1), 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+          box-shadow: 0 0 20px rgba(255, 0, 0, 1), 0 2px 8px rgba(0, 0, 0, 0.5) !important;
           transform: scale(1) !important;
         `;
         break;
@@ -486,27 +486,53 @@ window.AuraMusic = window.AuraMusic || {};
       }
       #sliderContainer {
         height: 24px !important;
+        position: relative !important;
         margin: 0 !important;
-        padding: 0 10px !important;
+        padding: 0 !important;
         overflow: visible !important;
       }
+      .bar-container {
+        position: absolute !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: visible !important;
+        pointer-events: none !important;
+      }
       #sliderBar {
+        position: absolute !important;
+        top: 50% !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
         height: 8px !important;
+        margin: 0 !important;
+        margin-top: -4px !important;
+        padding: 0 !important;
         border-radius: 999px !important;
         overflow: hidden !important;
       }
       #sliderKnob {
-        width: 32px !important;
-        height: 32px !important;
+        position: absolute !important;
+        width: 24px !important;
+        height: 24px !important;
         top: 50% !important;
-        margin-top: -16px !important;
+        margin-top: -12px !important;
+        margin-left: -12px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         opacity: 1 !important;
         visibility: visible !important;
-        pointer-events: auto !important;
+        pointer-events: none !important;
         overflow: visible !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        transition: transform 0.15s ease !important;
       }
       #sliderKnobInner,
       #sliderKnobInner.tp-yt-paper-slider,
@@ -520,7 +546,7 @@ window.AuraMusic = window.AuraMusic || {};
         opacity: 1 !important;
         visibility: visible !important;
         margin: 0 auto !important;
-        cursor: grab !important;
+        pointer-events: none !important;
         box-sizing: border-box !important;
         transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease !important;
         ${knobStyles}
@@ -528,8 +554,7 @@ window.AuraMusic = window.AuraMusic || {};
       :host(:hover) #sliderKnobInner,
       :host([dragging]) #sliderKnobInner,
       #sliderKnob:hover #sliderKnobInner {
-        ${theme === 'cyberpunk' ? 'transform: rotate(45deg) scale(1.4) !important;' : (theme === 'komi' ? 'transform: scale(1.55) rotate(6deg) !important;' : 'transform: scale(1.4) !important;')}
-        cursor: grabbing !important;
+        ${theme === 'cyberpunk' ? 'transform: rotate(45deg) scale(1.35) !important;' : (theme === 'komi' ? 'transform: scale(1.4) rotate(6deg) !important;' : 'transform: scale(1.3) !important;')}
       }
     `;
   }

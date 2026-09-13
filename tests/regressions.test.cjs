@@ -1,4 +1,4 @@
-﻿const test = require('node:test');
+const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -259,3 +259,32 @@ test('saving unchanged settings does not restart visual effects', () => {
   fixture.change(JSON.parse(JSON.stringify(fixture.sandbox.state)));
   assert.equal(fixture.applied.length, initialApplications);
 });
+
+test('project includes valid MIT open source LICENSE and updated README', () => {
+  const licensePath = path.join(__dirname, '..', 'LICENSE');
+  assert.ok(fs.existsSync(licensePath), 'LICENSE file must exist');
+  const licenseText = fs.readFileSync(licensePath, 'utf8');
+  assert.ok(licenseText.includes('MIT License'), 'LICENSE must be MIT');
+  assert.ok(licenseText.includes('AuraMusic Contributors'), 'LICENSE must credit AuraMusic');
+
+  const readmePath = path.join(__dirname, '..', 'README.md');
+  const readmeText = fs.readFileSync(readmePath, 'utf8');
+  assert.ok(readmeText.includes('Licencia y Código Abierto'), 'README must declare open source');
+  assert.ok(readmeText.includes('Licencia MIT'), 'README must mention MIT license');
+});
+
+test('sliderKnob shadow DOM CSS enforces pointer-events: none and no flex on container', () => {
+  const themeManagerSrc = fs.readFileSync(path.join(__dirname, '..', 'modules/themes/theme-manager.js'), 'utf8');
+  assert.ok(themeManagerSrc.includes('#sliderKnob {'), 'theme-manager must style #sliderKnob');
+  assert.ok(!themeManagerSrc.includes('#sliderContainer {\n        height: 24px !important;\n        position: relative !important;\n        display: flex'), 'sliderContainer must not use display: flex');
+  assert.ok(themeManagerSrc.includes('#sliderKnob {\n        position: absolute !important;\n        width: 24px !important;\n        height: 24px !important;\n        top: 50% !important;\n        margin-top: -12px !important;\n        margin-left: -12px !important;'), 'sliderKnob must be vertically and horizontally centered with 24px diameter');
+});
+
+test('player-bridge includes active watchdog reconcileTimelineKnob and user interaction handler', () => {
+  const bridgeSrc = fs.readFileSync(path.join(__dirname, '..', 'modules/core/player-bridge.js'), 'utf8');
+  assert.ok(bridgeSrc.includes('function reconcileTimelineKnob'), 'reconcileTimelineKnob must exist');
+  assert.ok(bridgeSrc.includes('function setupProgressBarUserInteraction'), 'setupProgressBarUserInteraction must exist');
+  assert.ok(bridgeSrc.includes("knob.style.left = `${expectedPct}%`"), 'reconcileTimelineKnob must sync knob position');
+  assert.ok(bridgeSrc.includes("slider.removeAttribute('dragging')"), 'reconcileTimelineKnob must clear stuck dragging state');
+});
+

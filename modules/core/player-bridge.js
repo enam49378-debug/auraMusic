@@ -516,7 +516,100 @@
           isPlaying: (playerState === 1)
         });
       }
+
+      // 4. Reconciliar y asegurar alineación visual 1:1 de la línea de tiempo y circulito (#sliderKnob)
+      setupProgressBarUserInteraction();
+      reconcileTimelineKnob(currentTime, cachedDuration);
     } catch (err) {}
+  }
+
+  // --- RECONCILIADOR VISUAL Y DETECTOR DE INTERACCIÓN NATIVA DE LA LÍNEA DE TIEMPO ---
+  let isUserInteractingWithSlider = false;
+
+  function reconcileTimelineKnob(curTime, dur) {
+    if (isUserInteractingWithSlider) return;
+    if (!dur || dur <= 0 || curTime < 0) return;
+
+    const slider = findProgressBar();
+    if (!slider) return;
+
+    // Si Polymer quedó en estado dragging sin que el ratón esté presionado:
+    if (slider.hasAttribute('dragging') || slider.dragging) {
+      slider.dragging = false;
+      slider.removeAttribute('dragging');
+    }
+
+    const expectedPct = Math.max(0, Math.min(100, (curTime / dur) * 100));
+
+    if (slider.shadowRoot) {
+      const knob = slider.shadowRoot.querySelector('#sliderKnob');
+      if (knob) {
+        const curLeft = parseFloat(knob.style.left);
+        // Si no tiene posición o diverge más de 0.6% de la reproducción real:
+        if (isNaN(curLeft) || Math.abs(curLeft - expectedPct) > 0.6) {
+          knob.style.left = `${expectedPct}%`;
+        }
+      }
+
+      const sliderBar = slider.shadowRoot.querySelector('#sliderBar, tp-yt-paper-progress');
+      if (sliderBar && sliderBar.shadowRoot) {
+        const primary = sliderBar.shadowRoot.querySelector('#primaryProgress');
+        if (primary) {
+          primary.style.transform = `scaleX(${expectedPct / 100})`;
+        }
+      }
+    }
+  }
+
+  function setupProgressBarUserInteraction() {
+    const slider = findProgressBar();
+    if (!slider || slider.__auramusic_hooked) return;
+    slider.__auramusic_hooked = true;
+
+    function handleSeekFromPointer(e) {
+      const rect = slider.getBoundingClientRect();
+      if (!rect || rect.width <= 0) return;
+      const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const player = getPlayer();
+      const dur = cachedDuration > 0 ? cachedDuration : (typeof player?.getDuration === 'function' ? player.getDuration() : 0);
+      if (dur > 0) {
+        const targetSeconds = ratio * dur;
+        handleCommand({ action: 'seekTo', time: targetSeconds, autoPlay: true });
+
+        // Actualizar visualmente al instante
+        if (slider.shadowRoot) {
+          const knob = slider.shadowRoot.querySelector('#sliderKnob');
+          if (knob) knob.style.left = `${ratio * 100}%`;
+          const sliderBar = slider.shadowRoot.querySelector('#sliderBar, tp-yt-paper-progress');
+          if (sliderBar && sliderBar.shadowRoot) {
+            const primary = sliderBar.shadowRoot.querySelector('#primaryProgress');
+            if (primary) primary.style.transform = `scaleX(${ratio})`;
+          }
+        }
+      }
+    }
+
+    slider.addEventListener('pointerdown', (e) => {
+      isUserInteractingWithSlider = true;
+      handleSeekFromPointer(e);
+    }, { passive: true });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!isUserInteractingWithSlider) return;
+      handleSeekFromPointer(e);
+    }, { passive: true });
+
+    const endInteraction = () => {
+      if (isUserInteractingWithSlider) {
+        isUserInteractingWithSlider = false;
+        if (slider) {
+          slider.dragging = false;
+          slider.removeAttribute('dragging');
+        }
+      }
+    };
+    window.addEventListener('pointerup', endInteraction, { passive: true });
+    window.addEventListener('pointercancel', endInteraction, { passive: true });
   }
 
   // Bucle maestro adaptativo ultra-optimizado:

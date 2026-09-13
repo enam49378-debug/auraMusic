@@ -95,5 +95,7 @@ ytm-auramusic/
 
 ---
 
-## 📄 Licencia
-Este proyecto es de uso personal y educativo. Todos los derechos reservados a sus respectivos autores.
+## 📄 Licencia y Código Abierto
+Este proyecto es un software de **código abierto** bajo los términos de la [Licencia MIT](LICENSE).
+
+Eres libre de usar, estudiar, modificar, bifurcar y distribuir este software conforme a las condiciones de la licencia. ¡Las contribuciones de la comunidad son bienvenidas!

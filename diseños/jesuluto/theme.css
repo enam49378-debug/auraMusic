@@ -112,21 +112,38 @@ body.auramusic-theme-jesuluto tp-yt-paper-progress #primaryProgress.tp-yt-paper-
   100% { background-position: 0% 50%; }
 }
 
-body.auramusic-theme-jesuluto tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
+body.auramusic-theme-jesuluto tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider,
+body.auramusic-theme-jesuluto #progress-bar.ytmusic-player-bar #sliderKnob {
+  position: absolute !important;
   opacity: 1 !important;
   visibility: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  top: 50% !important;
+  margin-top: -12px !important;
+  margin-left: -12px !important;
+  pointer-events: none !important;
+  overflow: visible !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 body.auramusic-theme-jesuluto tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider,
-body.auramusic-theme-jesuluto #progress-bar.ytmusic-player-bar #sliderKnobInner.tp-yt-paper-slider {
+body.auramusic-theme-jesuluto #progress-bar.ytmusic-player-bar #sliderKnobInner.tp-yt-paper-slider,
+body.auramusic-theme-jesuluto #progress-bar.ytmusic-player-bar #sliderKnobInner {
   background: #00ff77 !important;
-  border: 2.5px solid #ffffff !important;
+  border: 3.5px solid #ffffff !important;
   border-radius: 50% !important;
-  box-shadow: 0 0 16px #00ff77, 0 0 28px rgba(0, 255, 119, 0.6) !important;
-  width: 16px !important;
-  height: 16px !important;
-  min-width: 16px !important;
-  min-height: 16px !important;
+  box-shadow: 0 0 22px #00ff77, 0 0 40px rgba(0, 255, 119, 0.85) !important;
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  margin: 0 auto !important;
   transform: scale(1) !important;
   opacity: 1 !important;
   visibility: visible !important;
@@ -135,9 +152,11 @@ body.auramusic-theme-jesuluto #progress-bar.ytmusic-player-bar #sliderKnobInner.
 }
 
 body.auramusic-theme-jesuluto tp-yt-paper-slider:hover #sliderKnobInner.tp-yt-paper-slider,
-body.auramusic-theme-jesuluto tp-yt-paper-slider[dragging] #sliderKnobInner.tp-yt-paper-slider {
-  transform: scale(1.45) !important;
-  box-shadow: 0 0 26px #00ff77, 0 0 40px rgba(0, 255, 119, 0.9) !important;
+body.auramusic-theme-jesuluto tp-yt-paper-slider[dragging] #sliderKnobInner.tp-yt-paper-slider,
+body.auramusic-theme-jesuluto #progress-bar.ytmusic-player-bar:hover #sliderKnobInner,
+body.auramusic-theme-jesuluto #progress-bar.ytmusic-player-bar[dragging] #sliderKnobInner {
+  transform: scale(1.35) !important;
+  box-shadow: 0 0 28px #00ff77, 0 0 48px rgba(0, 255, 119, 1) !important;
   cursor: grabbing !important;
 }
 

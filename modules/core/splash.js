@@ -396,148 +396,6 @@
       });
     }
 
-    // ── VUELO DEL PORTAL: EL TRIÁNGULO SE VUELVE TRANSPARENTE ──────────
-    function flyThroughEmblem() {
-      if (isDismissed) return;
-
-      const holdTransform = getComputedStyle(finalStage).transform;
-      finalStage.style.transform = holdTransform;
-      finalStage.style.opacity = '1';
-      finalStage.classList.add('portal-flight');
-
-      // Modo portal activo
-      splash.classList.add('portal-active');
-
-      const size = emblemBox.offsetWidth || 190;
-      const unit = size / 1316;
-      // In-radio del triángulo en pantalla (~96 unidades SVG)
-      const inRadiusPx = 96 * unit;
-      // Radio de la pantalla de esquina a centro
-      const screenRadius = Math.hypot(window.innerWidth / 2, window.innerHeight / 2);
-      // endScale garantizado para que el triángulo cubra 100% de la pantalla sin cortes
-      const endScale = Math.max(35, (screenRadius / inRadiusPx) * 1.65);
-      const duration = 3400;
-
-      const clamp = n => Math.max(0, Math.min(1, n));
-      const smooth = n => { n = clamp(n); return n * n * n * (10 + n * (-15 + 6 * n)); };
-      const frames = [];
-      const holeFrames = [];
-
-      for (let i = 0; i <= 180; i++) {
-        const u = i / 180;
-        const angle = 360 * smooth((u - .15) / .55);
-        const cameraTravel = .12 * smooth(u / .70) + .88 * smooth((u - .43) / .57);
-        const scale = Math.exp(Math.log(endScale) * cameraTravel);
-        const align = smooth((u - .28) / .40);
-        const radians = angle * Math.PI / 180;
-
-        // Desplazamiento exacto al centro del orificio triangular (dx = -38 unidades SVG, dy = -10 unidades SVG)
-        const dx = -38 * unit;
-        const dy = -10 * unit;
-        const tx = -(dx * Math.cos(radians) - dy * Math.sin(radians)) * scale * align;
-        const ty = -(dx * Math.sin(radians) + dy * Math.cos(radians)) * scale * align;
-
-        frames.push({
-          transform: `translate3d(${tx}px, ${ty}px, 0) rotate(${angle}deg) scale(${scale})`,
-          offset: u
-        });
-
-        // El orificio triangular se vuelve 100% transparente en los primeros frames de forma fluida
-        holeFrames.push({ opacity: smooth(u / 0.05), offset: u });
-      }
-
-      motion(finalStage, [
-        { transform: holdTransform },
-        { transform: 'matrix(1, 0, 0, 1, 0, 0)' }
-      ], 500, 'cubic-bezier(.2,0,0,1)');
-
-      // Reemplazo a vectores nítidos para zoom infinito
-      animatedLogo.style.opacity = '1';
-      motion(referenceLogo, [{ opacity: 1 }, { opacity: 0 }], 180, 'ease-in-out');
-      if (centerTriangle) {
-        motion(centerTriangle, [{ opacity: 1 }, { opacity: 0 }], 180, 'ease-out');
-      }
-
-      const camera = motion(emblemBox, frames, duration);
-
-      const svgCenterX = (stage.clientWidth || window.innerWidth) / 2;
-      const svgCenterY = (stage.clientHeight || window.innerHeight) / 2;
-
-      const syncHalves = () => {
-        if (!camera) return;
-        const curTime = Number(camera.currentTime) || 0;
-        const u = clamp(curTime / duration);
-
-        // 1. Rotación de las dos mitades 50/50
-        const angleHalves = 180 * smooth((u - .06) / .49);
-        brandHalves.setAttribute('transform', `rotate(${angleHalves} 800 800)`);
-
-        // 2. Perforación exacta y segura del orificio en el fondo oscuro
-        if (portalTriangle) {
-          const angle = 360 * smooth((u - .15) / .55);
-          const cameraTravel = .12 * smooth(u / .70) + .88 * smooth((u - .43) / .57);
-          const scale = Math.exp(Math.log(endScale) * cameraTravel);
-          const align = smooth((u - .28) / .40);
-          const rad = angle * Math.PI / 180;
-
-          const dx = -38 * unit;
-          const dy = -10 * unit;
-          const tx = -(dx * Math.cos(rad) - dy * Math.sin(rad)) * scale * align;
-          const ty = -(dx * Math.sin(rad) + dy * Math.cos(rad)) * scale * align;
-
-          const cos = Math.cos(rad);
-          const sin = Math.sin(rad);
-
-          // Centroide del triángulo: (-25.67, -8.0)
-          const cx_v = -25.67 * unit;
-          const cy_v = -8.0 * unit;
-
-          // 1.10x de holgura desde el centroide para garantizar que el orificio del fondo
-          // cubra holgadamente todo el hueco y quede oculto detrás del disco opaco:
-          const expand = 1.10;
-
-          const calcPt = (vx, vy) => {
-            const lx = cx_v + (vx - cx_v) * expand;
-            const ly = cy_v + (vy - cy_v) * expand;
-            const rx = (lx * cos - ly * sin) * scale;
-            const ry = (lx * sin + ly * cos) * scale;
-            return `${(svgCenterX + tx + rx).toFixed(1)},${(svgCenterY + ty + ry).toFixed(1)}`;
-          };
-
-          const p1 = calcPt(-121 * unit, -175 * unit);
-          const p2 = calcPt(165 * unit, -11 * unit);
-          const p3 = calcPt(-121 * unit, 162 * unit);
-
-          portalTriangle.setAttribute('points', `${p1} ${p2} ${p3}`);
-        }
-
-        if (camera.playState === 'running' || camera.playState === 'pending') {
-          portalFrame = requestAnimationFrame(syncHalves);
-        } else {
-          portalFrame = 0;
-        }
-      };
-      syncHalves();
-
-      motion(portalHole, holeFrames, duration);
-
-      if (camera && camera.finished) {
-        camera.finished.then(() => {
-          if (camera.playState !== 'finished') return;
-          if (portalFrame) cancelAnimationFrame(portalFrame);
-          portalFrame = 0;
-          brandHalves.setAttribute('transform', 'rotate(180 800 800)');
-          
-          // Ocultar de inmediato el logo y escenario para que JAMÁS salte o reaparezca al centro
-          finalStage.style.display = 'none';
-          stage.style.display = 'none';
-
-          // El usuario ya está 100% viendo YouTube Music a través del triángulo expandido. Descarte inmediato y fluido.
-          dismissSplash(true);
-        }).catch(() => {});
-      }
-    }
-
     // ── INICIALIZACIÓN Y FLUJO PRINCIPAL DE TIEMPOS ───────────────────
     // La barra inicia vacía (0%) en reposo silencioso mientras YouTube Music procesa scripts
     loaderFill.style.width = '0%';
@@ -567,31 +425,60 @@
       });
     }
 
-    waitForAppReady(600, 2200).then(() => {
+    // ── CONTROLADOR DE RELOJ MAESTRO DE AUDIO (INMUNE A LAG Y CAÍDAS DE FPS) ──
+    const T_FILL_END   = 1.05;
+    const T_DROP       = 1.53;
+    const T_CHARGE     = 2.18;
+    const T_COLLIDE    = 2.98;
+    const T_IMPACT     = 3.48;
+    const T_PORTAL     = 4.68;
+    const T_PORTAL_DUR = 3.40;
+    const T_END        = 8.08;
+
+    let triggered = {
+      reveal: false,
+      drop: false,
+      charge: false,
+      collide: false,
+      impact: false,
+      portalInit: false,
+      ended: false
+    };
+
+    // Parámetros calculados para el vuelo de cámara del portal triangular
+    const clamp = n => Math.max(0, Math.min(1, n));
+    const smooth = n => { n = clamp(n); return n * n * n * (10 + n * (-15 + 6 * n)); };
+    let portalOriginX = 0;
+    let portalOriginY = 0;
+    let portalSize = 190;
+    let portalUnit = 190 / 1316;
+    let portalEndScale = 45;
+    let dx = -38 * portalUnit;
+    let dy = -10 * portalUnit;
+    let cx_v = -25.67 * portalUnit;
+    let cy_v = -8.0 * portalUnit;
+    let holdTransform = '';
+
+    function onMasterClockTick(t, ytOff, auOff) {
       if (isDismissed) return;
 
-      const frameW = stage.offsetWidth || window.innerWidth;
-      const ytOff  = -Math.round(frameW * 0.20);
-      const auOff  = Math.round(frameW * 0.20);
+      // 1. Seeker Fill: La barra roja sigue matemáticamente el tiempo exacto del audio
+      if (t < T_FILL_END) {
+        loaderFlare.style.opacity = '1';
+        const progress = Math.min(1, Math.max(0, t / T_FILL_END));
+        loaderFill.style.width = (progress * 100).toFixed(1) + '%';
+      }
 
-      // Estado inicial de bloques
-      ytBlock.style.transform = `translateX(${ytOff}px) scale(0.85)`;
-      auraBlock.style.transform = `translateX(${auOff}px) translateY(-280px) scale(1.1)`;
+      // 2. Revelación de YouTube Music (1.05s)
+      if (t >= T_FILL_END && !triggered.reveal) {
+        triggered.reveal = true;
+        loaderFill.style.width = '100%';
+        revealYouTubeFromPoint(ytOff);
+      }
 
-      // PASO 1: Ahora que YouTube Music ya cargó, arranca el sonido y la barra se llena fluida al 100% sin trabarse
-      const fillDuration = 1050;
-      playSoundIfAllowed(soundEnabled);
-      loaderFlare.style.opacity = '1';
-      loaderFill.style.transition = `width ${fillDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
-      loaderFill.style.width = '100%';
-
-      // PASO 2: Revelar YouTube Music desde el punto exactamente al completarse la barra (1.05s)
-      later(() => revealYouTubeFromPoint(ytOff), fillDuration);
-
-      // PASO 3: Caída elástica de AuraMusic al lado derecho (1.53s)
-      const dropAt = fillDuration + 480;
-      later(() => {
-        if (isDismissed) return;
+      // 3. Caída elástica de AuraMusic (1.53s)
+      if (t >= T_DROP && !triggered.drop) {
+        triggered.drop = true;
         divider.style.transition = 'all 320ms ease';
         divider.style.opacity = '0.55';
         divider.style.transform = 'scaleY(1)';
@@ -603,22 +490,20 @@
           { transform: `translateX(${auOff}px) translateY(-3px) scale(.998,1.002)`, opacity: 1, offset: .86, easing: 'ease-in-out' },
           { transform: `translateX(${auOff}px) translateY(0) scale(1)`, opacity: 1, offset: 1 }
         ], 650);
-      }, dropAt);
+      }
 
-      // PASO 4: Carga de poder neón (2.18s)
-      const chargeAt = dropAt + 650;
-      later(() => {
-        if (isDismissed) return;
+      // 4. Carga de energía neón en ambos bloques (2.18s)
+      if (t >= T_CHARGE && !triggered.charge) {
+        triggered.charge = true;
         ytBlock.classList.add('charging');
         auraBlock.classList.add('charging');
         divider.classList.add('lit');
         backdrop.classList.add('energized');
-      }, chargeAt);
+      }
 
-      // PASO 5: Fusión y colisión magnética hacia el centro (2.98s)
-      const fusionAt = chargeAt + 800;
-      later(() => {
-        if (isDismissed) return;
+      // 5. Fusión magnética hacia el centro (2.98s)
+      if (t >= T_COLLIDE && !triggered.collide) {
+        triggered.collide = true;
         ytBlock.classList.remove('charging');
         auraBlock.classList.remove('charging');
 
@@ -633,11 +518,11 @@
 
         divider.style.transition = 'all 200ms ease';
         divider.style.transform = 'scaleY(2)';
-      }, fusionAt);
+      }
 
-      // PASO 6: Impacto (flash, anillos, chispas) y nacimiento del logo 50/50 (3.48s)
-      later(() => {
-        if (isDismissed) return;
+      // 6. Impacto sonoro, flash, anillos de choque, chispas y nacimiento del logo 50/50 (3.48s)
+      if (t >= T_IMPACT && !triggered.impact) {
+        triggered.impact = true;
         spawnSparks(22);
         ytBlock.style.opacity = '0';
         auraBlock.style.opacity = '0';
@@ -673,11 +558,206 @@
         later(() => {
           if (!isDismissed) finalStage.classList.add('active');
         }, 60);
+      }
 
-      }, fusionAt + 500);
+      // 7. Vuelo hacia el interior del triángulo del portal (4.68s - 8.08s)
+      if (t >= T_PORTAL) {
+        if (!triggered.portalInit) {
+          triggered.portalInit = true;
 
-      // PASO 7: Vuelo hacia el interior del triángulo ▶ (portal transparente a YouTube Music, 4.68s)
-      later(flyThroughEmblem, fusionAt + 500 + 1200);
+          // Medir el centro físico y escala exactos del emblema directamente en el momento del vuelo
+          const bRect = backdrop.getBoundingClientRect();
+          const eRect = emblemBox.getBoundingClientRect();
+          portalOriginX = (eRect.left + eRect.width / 2) - bRect.left;
+          portalOriginY = (eRect.top + eRect.height / 2) - bRect.top;
+          portalSize = eRect.width || 190;
+          portalUnit = portalSize / 1316;
+
+          const inRadiusPx = 96 * portalUnit;
+          const screenRadius = Math.hypot(bRect.width / 2, bRect.height / 2);
+          portalEndScale = Math.max(35, (screenRadius / inRadiusPx) * 1.65);
+
+          dx = -38 * portalUnit;
+          dy = -10 * portalUnit;
+          cx_v = -25.67 * portalUnit;
+          cy_v = -8.0 * portalUnit;
+
+          holdTransform = getComputedStyle(finalStage).transform;
+          finalStage.style.transform = holdTransform;
+          finalStage.style.opacity = '1';
+          finalStage.classList.add('portal-flight');
+          splash.classList.add('portal-active');
+
+          motion(finalStage, [
+            { transform: holdTransform },
+            { transform: 'matrix(1, 0, 0, 1, 0, 0)' }
+          ], 260, 'cubic-bezier(.2,0,0,1)');
+
+          later(() => {
+            if (!isDismissed) finalStage.style.transform = 'matrix(1, 0, 0, 1, 0, 0)';
+          }, 270);
+
+          animatedLogo.style.opacity = '1';
+          motion(referenceLogo, [{ opacity: 1 }, { opacity: 0 }], 180, 'ease-in-out');
+          if (centerTriangle) {
+            motion(centerTriangle, [{ opacity: 1 }, { opacity: 0 }], 180, 'ease-out');
+          }
+        }
+
+        const u = clamp((t - T_PORTAL) / T_PORTAL_DUR);
+
+        // Transformación de cámara acoplada frame a frame al audio
+        const angle = 360 * smooth((u - .15) / .55);
+        const cameraTravel = .12 * smooth(u / .70) + .88 * smooth((u - .43) / .57);
+        const scale = Math.exp(Math.log(portalEndScale) * cameraTravel);
+        const align = smooth((u - .28) / .40);
+        const rad = angle * Math.PI / 180;
+
+        const tx = -(dx * Math.cos(rad) - dy * Math.sin(rad)) * scale * align;
+        const ty = -(dx * Math.sin(rad) + dy * Math.cos(rad)) * scale * align;
+
+        emblemBox.style.transform = `translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0) rotate(${angle.toFixed(1)}deg) scale(${scale.toFixed(3)})`;
+        portalHole.setAttribute('opacity', smooth(u / 0.05).toFixed(3));
+
+        // Rotación continua 50/50
+        const angleHalves = 180 * smooth((u - .06) / .49);
+        brandHalves.setAttribute('transform', `rotate(${angleHalves.toFixed(1)} 800 800)`);
+
+        // Recorte exacto en el fondo oscuro
+        if (portalTriangle) {
+          const cos = Math.cos(rad);
+          const sin = Math.sin(rad);
+          const openU = Math.min(1.10, Math.max(0, smooth(u / 0.08) * 1.10));
+
+          if (openU > 0) {
+            const calcPt = (vx, vy) => {
+              const lx = cx_v + (vx - cx_v) * openU;
+              const ly = cy_v + (vy - cy_v) * openU;
+              const rx = (lx * cos - ly * sin) * scale;
+              const ry = (lx * sin + ly * cos) * scale;
+              return `${(portalOriginX + tx + rx).toFixed(1)},${(portalOriginY + ty + ry).toFixed(1)}`;
+            };
+
+            const p1 = calcPt(-121 * portalUnit, -175 * portalUnit);
+            const p2 = calcPt(165 * portalUnit, -11 * portalUnit);
+            const p3 = calcPt(-121 * portalUnit, 162 * portalUnit);
+
+            portalTriangle.setAttribute('points', `${p1} ${p2} ${p3}`);
+          } else {
+            portalTriangle.setAttribute('points', '0,0 0,0 0,0');
+          }
+        }
+      }
+
+      // 8. Conclusión e ingreso definitivo a YouTube Music
+      if (t >= T_END && !triggered.ended) {
+        triggered.ended = true;
+        brandHalves.setAttribute('transform', 'rotate(180 800 800)');
+        finalStage.style.display = 'none';
+        stage.style.display = 'none';
+        dismissSplash(true);
+      }
+    }
+
+    waitForAppReady(600, 2200).then(() => {
+      if (isDismissed) return;
+
+      const frameW = stage.offsetWidth || window.innerWidth;
+      const ytOff  = -Math.round(frameW * 0.20);
+      const auOff  = Math.round(frameW * 0.20);
+
+      // Estado inicial de bloques
+      ytBlock.style.transform = `translateX(${ytOff}px) scale(0.85)`;
+      auraBlock.style.transform = `translateX(${auOff}px) translateY(-280px) scale(1.1)`;
+
+      let masterFrame = 0;
+      let fallbackStartTime = 0;
+      let isAudioMaster = false;
+
+      function masterTick() {
+        if (isDismissed) return;
+        let t = 0;
+        if (isAudioMaster && audioInstance && !audioInstance.paused) {
+          t = audioInstance.currentTime;
+        } else if (fallbackStartTime > 0) {
+          t = (performance.now() - fallbackStartTime) / 1000;
+        }
+
+        onMasterClockTick(t, ytOff, auOff);
+
+        if (!triggered.ended) {
+          masterFrame = requestAnimationFrame(masterTick);
+          portalFrame = masterFrame;
+        }
+      }
+
+      function startMasterLoop() {
+        if (!isAudioMaster) {
+          fallbackStartTime = performance.now();
+        }
+        masterFrame = requestAnimationFrame(masterTick);
+        portalFrame = masterFrame;
+      }
+
+      if (soundEnabled) {
+        try {
+          if (!audioInstance) {
+            audioInstance = new Audio(getSoundUrl());
+          }
+          audioInstance.preload = 'auto';
+          audioInstance.currentTime = 0;
+          audioInstance.volume = 0.85;
+
+          let started = false;
+          const onAudioPlaying = () => {
+            if (started) return;
+            started = true;
+            isAudioMaster = true;
+            startMasterLoop();
+          };
+
+          audioInstance.addEventListener('playing', onAudioPlaying, { once: true });
+          audioInstance.addEventListener('timeupdate', () => {
+            if (!started && audioInstance.currentTime > 0) {
+              onAudioPlaying();
+            }
+          });
+          audioInstance.addEventListener('ended', () => {
+            if (!isDismissed) dismissSplash(true);
+          });
+
+          const p = audioInstance.play();
+          if (p && p.then) {
+            p.then(() => {}).catch(() => {
+              // Autoplay bloqueado por Chrome -> fallback inmediato sin trabarse
+              if (!started) {
+                started = true;
+                isAudioMaster = false;
+                startMasterLoop();
+              }
+            });
+          }
+
+          // Timeout de seguridad en caso de que el driver de audio demore
+          setTimeout(() => {
+            if (!started) {
+              started = true;
+              if (audioInstance && !audioInstance.paused && audioInstance.currentTime > 0) {
+                isAudioMaster = true;
+              } else {
+                isAudioMaster = false;
+              }
+              startMasterLoop();
+            }
+          }, 350);
+        } catch (e) {
+          isAudioMaster = false;
+          startMasterLoop();
+        }
+      } else {
+        isAudioMaster = false;
+        startMasterLoop();
+      }
     });
 
     // Temporizador de seguridad máximo (garantiza que jamás se bloquee la pantalla ante cualquier imprevisto)
