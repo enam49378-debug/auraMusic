@@ -35,8 +35,8 @@ body.auramusic-splash-active::-webkit-scrollbar {
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  /* Sólido al inicio para tapar completamente YouTube Music y que no haya parpadeos al cargar */
-  background: #08090f !important;
+  /* Fondo transparente: el SVG backdrop continuo cubre 100% de la pantalla hasta el portal */
+  background: transparent !important;
   z-index: 2147483647 !important;
   display: flex !important;
   align-items: center !important;
@@ -49,16 +49,10 @@ body.auramusic-splash-active::-webkit-scrollbar {
   cursor: default !important; /* No pointer: no se omite con clic */
   pointer-events: auto !important;
   box-sizing: border-box !important;
-  transition: background 0.25s ease;
 }
 
 #auramusic-splash-screen * {
   box-sizing: border-box;
-}
-
-/* Solo cuando arranca el vuelo del portal se activa la transparencia en el contenedor */
-#auramusic-splash-screen.portal-active {
-  background: transparent !important;
 }
 
 #auramusic-splash-screen.splash-dismissed {
@@ -67,24 +61,27 @@ body.auramusic-splash-active::-webkit-scrollbar {
   transition: opacity 0.25s ease-out !important;
 }
 
-/* Fondo principal durante la intro previa al portal */
+/* Fondo continuo SVG durante toda la intro con perforación de portal */
 .splash-stage-backdrop {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(ellipse 60% 40% at 30% 55%, rgba(255,0,0,0.08) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 40% at 70% 55%, rgba(168,85,247,0.08) 0%, transparent 70%),
-    #08090f;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   z-index: 1;
-  transition: background 0.8s ease, opacity 0.3s ease;
 }
 
-.splash-stage-backdrop.energized {
-  background:
-    radial-gradient(ellipse 65% 45% at 28% 55%, rgba(255,0,0,0.22) 0%, transparent 70%),
-    radial-gradient(ellipse 65% 45% at 72% 55%, rgba(168,85,247,0.24) 0%, transparent 70%),
-    #08090f;
+.splash-stage-backdrop #splash-glow-stop-yt,
+.splash-stage-backdrop #splash-glow-stop-aura {
+  transition: stop-opacity 0.8s ease;
+}
+
+.splash-stage-backdrop.energized #splash-glow-stop-yt {
+  stop-opacity: 0.22;
+}
+
+.splash-stage-backdrop.energized #splash-glow-stop-aura {
+  stop-opacity: 0.24;
 }
 
 /* Escenario principal de la intro */

@@ -37,7 +37,8 @@
   }
 
   // Comprueba si hay actualizaciones en GitHub (por versión SemVer o nuevo Commit SHA)
-  async function checkGithubUpdate(manualTrigger = false, forceShowModal = false, showModalIfAvailable = true) {
+  // Comprueba si hay actualizaciones en GitHub (por versión SemVer o nuevo Commit SHA)
+  async function checkGithubUpdate(manualTrigger = false, forceShowModal = false, showModalIfAvailable = false) {
     const localVer = getLocalVersion();
     let remoteVer = null;
     let localCommit = '';
@@ -115,8 +116,31 @@
       } catch (_) {}
     }
 
-    hasSemverUpdate = compareSemver(remoteVer, localVer) > 0;
-    hasCommitUpdate = Boolean(remoteCommit && localCommit && remoteCommit !== localCommit);
+    const isHexSha = s => typeof s === 'string' && /^[0-9a-f]{6,40}$/i.test(s.trim());
+    const semverDiff = compareSemver(remoteVer, localVer);
+
+    // Comparación robusta contra falsos positivos:
+    // Si la versión local es mayor que la de GitHub (ej. desarrollo local v1.3.7 vs GitHub v1.3.6):
+    // Jamás se debe notificar como actualización.
+    if (semverDiff < 0) {
+      hasSemverUpdate = false;
+      hasCommitUpdate = false;
+    } else if (semverDiff > 0) {
+      hasSemverUpdate = true;
+      hasCommitUpdate = false;
+    } else {
+      // Misma versión semver (semverDiff === 0):
+      hasSemverUpdate = false;
+      if (serverAvailable) {
+        // El servidor local ya verificó commitsAhead y commitsBehind vía git rev-list
+        hasCommitUpdate = Boolean(hasCommitUpdate);
+      } else if (isHexSha(remoteCommit) && isHexSha(localCommit) && remoteCommit.toLowerCase() !== localCommit.toLowerCase()) {
+        hasCommitUpdate = true;
+      } else {
+        hasCommitUpdate = false;
+      }
+    }
+
     const hasUpdate = hasSemverUpdate || hasCommitUpdate;
 
     const result = {
@@ -130,7 +154,9 @@
       serverAvailable
     };
 
-    if (forceShowModal || (hasUpdate && showModalIfAvailable)) {
+    // Solo mostrar modal si fue forzado (botón explícito), si el usuario hizo clic manual en buscar actualización,
+    // o si explícitamente se pidió showModalIfAvailable (por defecto false para no molestar mientras se escucha música).
+    if (forceShowModal || (hasUpdate && (manualTrigger || showModalIfAvailable))) {
       showUpdateModal(result);
     } else if (manualTrigger) {
       showToast(`✨ AuraMusic v${localVer} ya está al día con GitHub`);

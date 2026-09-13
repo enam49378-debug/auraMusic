@@ -201,19 +201,20 @@
     .stage-backdrop {
       position: absolute;
       inset: 0;
-      background:
-        radial-gradient(ellipse 60% 40% at 30% 55%, rgba(255,0,0,0.08) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 40% at 70% 55%, rgba(168,85,247,0.08) 0%, transparent 70%),
-        #08090f;
+      width: 100%;
+      height: 100%;
       pointer-events: none;
       z-index: 1;
-      transition: all 0.8s ease;
     }
-    .stage-backdrop.energized {
-      background:
-        radial-gradient(ellipse 65% 45% at 28% 55%, rgba(255,0,0,0.22) 0%, transparent 70%),
-        radial-gradient(ellipse 65% 45% at 72% 55%, rgba(168,85,247,0.24) 0%, transparent 70%),
-        #08090f;
+    .stage-backdrop #lab-glow-stop-yt,
+    .stage-backdrop #lab-glow-stop-aura {
+      transition: stop-opacity 0.8s ease;
+    }
+    .stage-backdrop.energized #lab-glow-stop-yt {
+      stop-opacity: 0.22;
+    }
+    .stage-backdrop.energized #lab-glow-stop-aura {
+      stop-opacity: 0.24;
     }
 
     .intro-stage {
@@ -654,8 +655,28 @@
         </div>
       </div>
 
-      <!-- ── CAPA DEL SPLASH INTRO ── -->
-      <div class="stage-backdrop" id="stage-backdrop"></div>
+      <!-- ── CAPA DEL SPLASH INTRO CONTINUO SVG ── -->
+      <svg class="stage-backdrop" id="stage-backdrop" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <defs>
+          <radialGradient id="lab-bg-glow-yt" cx="30%" cy="55%" r="60%">
+            <stop id="lab-glow-stop-yt" offset="0%" stop-color="#ff0000" stop-opacity="0.10"/>
+            <stop offset="70%" stop-color="#ff0000" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="lab-bg-glow-aura" cx="70%" cy="55%" r="60%">
+            <stop id="lab-glow-stop-aura" offset="0%" stop-color="#a855f7" stop-opacity="0.10"/>
+            <stop offset="70%" stop-color="#a855f7" stop-opacity="0"/>
+          </radialGradient>
+          <mask id="lab-backdrop-mask" maskUnits="userSpaceOnUse" x="-50000" y="-50000" width="100000" height="100000">
+            <rect x="-50000" y="-50000" width="100000" height="100000" fill="white"/>
+            <polygon id="portal-triangle" points="0,0 0,0 0,0" fill="black"/>
+          </mask>
+        </defs>
+        <g mask="url(#lab-backdrop-mask)">
+          <rect width="100%" height="100%" fill="#08090f"/>
+          <rect width="100%" height="100%" fill="url(#lab-bg-glow-yt)"/>
+          <rect width="100%" height="100%" fill="url(#lab-bg-glow-aura)"/>
+        </g>
+      </svg>
 
       <div class="intro-stage" id="intro-stage">
 
@@ -713,31 +734,27 @@
                     <stop offset="1" stop-color="#461281"/>
                   </linearGradient>
 
-                  <!-- Máscara de apertura del portal triangular que perfora todo el canvas -->
-                  <mask id="play-aperture" maskUnits="userSpaceOnUse" x="-50000" y="-50000" width="100000" height="100000" style="mask-type:luminance">
-                    <rect x="-50000" y="-50000" width="100000" height="100000" fill="white"/>
+                  <!-- Máscara interna para perforar el triángulo en el disco 50/50 -->
+                  <mask id="lab-disc-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="1600" height="1600">
+                    <rect width="1600" height="1600" fill="white"/>
                     <path id="portal-hole" d="M679 625 L965 789 L679 962 Z" fill="black" opacity="0"/>
                   </mask>
                 </defs>
 
-                <!-- Grupo enmascarado: Todo lo que esté aquí dentro se vuelve 100% transparente en el triángulo -->
-                <g mask="url(#play-aperture)">
-                  <!-- Fondo gigante oscuro que cubre la pantalla durante el vuelo pero se perfora en el triángulo -->
-                  <rect id="portal-bg-canvas" x="-50000" y="-50000" width="100000" height="100000" fill="#08090f" opacity="0"/>
-
-                  <!-- Emblema 50/50 circular -->
-                  <g clip-path="url(#disc-clip)">
-                    <g id="animated-logo" opacity="0">
-                      <g id="brand-halves" transform="rotate(0 800 800)">
-                        <path d="M800 142 A658 658 0 0 0 800 1458 Z" fill="#f10921"/>
-                        <path d="M800 142 A658 658 0 0 1 800 1458 Z" fill="url(#aura-half-gradient)"/>
-                      </g>
-                      <circle cx="800" cy="800" r="331" fill="none" stroke="white" stroke-width="33"/>
-                      <path d="M679 625 L965 789 L679 962 Z" fill="white"/>
+                <!-- Grupo enmascarado del disco circular -->
+                <g mask="url(#lab-disc-mask)" clip-path="url(#disc-clip)">
+                  <g id="animated-logo" opacity="0">
+                    <g id="brand-halves" transform="rotate(0 800 800)">
+                      <path d="M800 142 A658 658 0 0 0 800 1458 Z" fill="#f10921"/>
+                      <path d="M800 142 A658 658 0 0 1 800 1458 Z" fill="url(#aura-half-gradient)"/>
                     </g>
-                    <image id="reference-logo" href="assets/aura_logo_5050.png" width="1316" height="1316" x="142" y="142"/>
+                    <circle cx="800" cy="800" r="331" fill="none" stroke="white" stroke-width="33"/>
                   </g>
+                  <image id="reference-logo" href="assets/aura_logo_5050.png" width="1316" height="1316" x="142" y="142"/>
                 </g>
+
+                <!-- Triángulo central del logo que se desvanece suavemente al abrirse el portal -->
+                <path id="center-triangle" d="M679 625 L965 789 L679 962 Z" fill="white" opacity="0"/>
               </svg>
               <div class="fused-shimmer"></div>
             </div>
@@ -803,7 +820,8 @@
   const emblemBox      = document.querySelector('.fused-emblem-box');
   const emblemGlow     = document.querySelector('.fused-ambient-glow');
   const portalHole     = document.getElementById('portal-hole');
-  const portalBgCanvas = document.getElementById('portal-bg-canvas');
+  const portalTriangle = document.getElementById('portal-triangle');
+  const centerTriangle = document.getElementById('center-triangle');
   const brandHalves    = document.getElementById('brand-halves');
   const referenceLogo  = document.getElementById('reference-logo');
   const animatedLogo   = document.getElementById('animated-logo');
@@ -975,15 +993,11 @@
     finalStage.classList.add('portal-flight');
     skipHint.style.opacity = '0';
 
-    // Activar el fondo oscuro del SVG que tiene el orificio y desvanecer el fondo exterior
-    if (portalBgCanvas) portalBgCanvas.style.opacity = '1';
-    motion(backdrop, [{ opacity: 1 }, { opacity: 0 }], 300, 'ease-out');
-
-    const size = emblemBox.offsetWidth;
+    const size = emblemBox.offsetWidth || 190;
     const unit = size / 1316;
-    const apertureRadius = 90 * unit;
-    const diagonal = Math.hypot(stage.clientWidth, stage.clientHeight);
-    const endScale = Math.max(22, (diagonal / (2 * apertureRadius)) * 1.35);
+    const inRadiusPx = 96 * unit;
+    const screenRadius = Math.hypot(stage.clientWidth / 2, stage.clientHeight / 2);
+    const endScale = Math.max(35, (screenRadius / inRadiusPx) * 1.65);
     const duration = 3400;
     const clamp = n => Math.max(0, Math.min(1, n));
     const smooth = n => { n = clamp(n); return n * n * n * (10 + n * (-15 + 6 * n)); };
@@ -998,16 +1012,15 @@
       const scale = Math.exp(Math.log(endScale) * cameraTravel);
       const align = smooth((u - .28) / .40);
       const radians = angle * Math.PI / 180;
-      const dx = -25.1 * unit;
-      const dy = -7.4 * unit;
+      const dx = -38 * unit;
+      const dy = -10 * unit;
       const tx = -(dx * Math.cos(radians) - dy * Math.sin(radians)) * scale * align;
       const ty = -(dx * Math.sin(radians) + dy * Math.cos(radians)) * scale * align;
       frames.push({
         transform: `translate3d(${tx}px, ${ty}px, 0) rotate(${angle}deg) scale(${scale})`,
         offset: u
       });
-      // El orificio triangular se vuelve transparente temprano para que se vea YouTube Music
-      holeFrames.push({ opacity: smooth((u - .08) / .24), offset: u });
+      holeFrames.push({ opacity: smooth((u - .04) / .18), offset: u });
       glowFrames.push({ opacity: .8 * (1 - smooth(u / .42)), offset: u });
     }
 
@@ -1019,13 +1032,59 @@
     // Cambio suave a los vectores nítidos del logo para la rotación y zoom infinito
     animatedLogo.style.opacity = '1';
     motion(referenceLogo, [{ opacity: 1 }, { opacity: 0 }], 180, 'ease-in-out');
+    if (centerTriangle) {
+      motion(centerTriangle, [{ opacity: 1 }, { opacity: 0 }], 220, 'ease-out');
+    }
 
     const camera = motion(emblemBox, frames, duration);
 
+    const svgCenterX = stage.clientWidth / 2;
+    const svgCenterY = stage.clientHeight / 2;
+
     const syncHalves = () => {
-      const u = clamp((Number(camera.currentTime) || 0) / t(duration));
-      const angle = 180 * smooth((u - .06) / .49);
-      brandHalves.setAttribute('transform', `rotate(${angle} 800 800)`);
+      const curTime = Number(camera.currentTime) || 0;
+      const u = clamp(curTime / t(duration));
+      const angleHalves = 180 * smooth((u - .06) / .49);
+      brandHalves.setAttribute('transform', `rotate(${angleHalves} 800 800)`);
+
+      // Perforación continua del orificio triangular en el fondo
+      if (portalTriangle) {
+        const angle = 360 * smooth((u - .15) / .55);
+        const cameraTravel = .12 * smooth(u / .70) + .88 * smooth((u - .43) / .57);
+        const scale = Math.exp(Math.log(endScale) * cameraTravel);
+        const align = smooth((u - .28) / .40);
+        const rad = angle * Math.PI / 180;
+
+        const dx = -38 * unit;
+        const dy = -10 * unit;
+        const tx = -(dx * Math.cos(rad) - dy * Math.sin(rad)) * scale * align;
+        const ty = -(dx * Math.sin(rad) + dy * Math.cos(rad)) * scale * align;
+
+        const openU = smooth(u / 0.08);
+
+        if (openU > 0) {
+          const cos = Math.cos(rad);
+          const sin = Math.sin(rad);
+
+          const cx_v = -25.67 * unit;
+          const cy_v = -8.0 * unit;
+
+          const calcPt = (vx, vy) => {
+            const lx = cx_v + (vx - cx_v) * openU;
+            const ly = cy_v + (vy - cy_v) * openU;
+            const rx = (lx * cos - ly * sin) * scale;
+            const ry = (lx * sin + ly * cos) * scale;
+            return `${(svgCenterX + tx + rx).toFixed(1)},${(svgCenterY + ty + ry).toFixed(1)}`;
+          };
+
+          const p1 = calcPt(-121 * unit, -175 * unit);
+          const p2 = calcPt(165 * unit, -11 * unit);
+          const p3 = calcPt(-121 * unit, 162 * unit);
+
+          portalTriangle.setAttribute('points', `${p1} ${p2} ${p3}`);
+        }
+      }
+
       if (camera.playState === 'running' || camera.playState === 'pending') {
         portalFrame = requestAnimationFrame(syncHalves);
       } else {
