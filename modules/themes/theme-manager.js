@@ -321,10 +321,10 @@ window.AuraMusic = window.AuraMusic || {};
     switch (theme) {
       case 'aesthetic':
         knobStyles = `
-          width: 18px !important;
-          height: 18px !important;
-          min-width: 18px !important;
-          min-height: 18px !important;
+          width: 20px !important;
+          height: 20px !important;
+          min-width: 20px !important;
+          min-height: 20px !important;
           border-radius: 50% !important;
           background: #ffffff !important;
           border: 3.5px solid #ff8fa3 !important;

@@ -13,6 +13,7 @@ cache/
 *.mp3
 *.mp4
 !assets/startup.mp4
+!media/*.mp4
 *.zip
 *.tar.gz
 *.crx

@@ -458,21 +458,23 @@
           }
 
           // Fallback adicional sobre ytmusic-player-bar
-          try {
-            const playerBar = document.querySelector('ytmusic-player-bar');
-            if (playerBar && typeof playerBar.seekTo === 'function') {
-              playerBar.seekTo(targetSeekTime);
-              sought = true;
-            }
-          } catch (_) {}
+          if (!sought) {
+            try {
+              const playerBar = document.querySelector('ytmusic-player-bar');
+              if (playerBar && typeof playerBar.seekTo === 'function') {
+                playerBar.seekTo(targetSeekTime);
+                sought = true;
+              }
+            } catch (_) {}
+          }
 
-          // Salto directo a través de la barra de progreso nativa de YouTube Music
-          seekNativeProgressBar(targetSeekTime);
-
-          const vids = document.querySelectorAll('video');
-          vids.forEach(vid => {
-            try { vid.currentTime = targetSeekTime; } catch (_) {}
-          });
+          // Fallback directo sobre <video> si no hubo API de reproductor disponible
+          if (!sought) {
+            const vids = document.querySelectorAll('video');
+            vids.forEach(vid => {
+              try { vid.currentTime = targetSeekTime; } catch (_) {}
+            });
+          }
 
           if (autoPlay !== false) {
             for (const p of players) {

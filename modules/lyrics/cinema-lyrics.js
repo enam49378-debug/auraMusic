@@ -290,10 +290,15 @@ window.AuraMusic = window.AuraMusic || {};
       clampedTime = Math.max(0, duration - 0.3);
     }
 
+    cinemaSeekTargetTime = clampedTime;
+    cinemaSeekLockUntil = Date.now() + 1000;
     lastRenderedPlaybackTime = clampedTime;
     lastRenderedDisplayTime = clampedTime;
 
-    // 1. Control directo e instantáneo sobre el elemento <video>
+    // 1. Enviar comando nativo autoritativo al MAIN WORLD (#movie_player.seekTo)
+    sendPlayerCommand({ action: 'seek', time: clampedTime, autoPlay: autoPlay !== false });
+
+    // 2. Control directo sobre el elemento <video>
     const video = getActiveVideo() || document.querySelector('video');
     if (video) {
       try { video.currentTime = clampedTime; } catch (_) {}
@@ -302,23 +307,27 @@ window.AuraMusic = window.AuraMusic || {};
       }
     }
 
-    // 2. Enviar comando nativo al MAIN WORLD (#movie_player.seekTo)
-    sendPlayerCommand({ action: 'seek', time: clampedTime, autoPlay: autoPlay !== false });
-
     // 3. Actualizar inmediatamente la barra y tiempos de la interfaz
     const fill = document.getElementById('cinema-progress-fill');
     const curSpan = document.getElementById('cinema-current-time');
     const waTimePill = document.getElementById('cinema-wa-time');
+    const progInput = document.getElementById('cinema-progress-input');
 
-    if (fill && duration > 0) {
+    if (fill) {
+      fill.classList.add('is-seeking');
       fill.style.setProperty('transition', 'none', 'important');
-      fill.style.width = `${Math.max(0, Math.min(100, (clampedTime / duration) * 100))}%`;
+      if (duration > 0) {
+        fill.style.width = `${Math.max(0, Math.min(100, (clampedTime / duration) * 100))}%`;
+      }
     }
     if (curSpan) {
       curSpan.textContent = formatTime(clampedTime);
     }
     if (waTimePill) {
       waTimePill.textContent = `${formatTime(clampedTime)} / ${duration > 0 ? formatTime(duration) : '0:00'}`;
+    }
+    if (progInput && duration > 0) {
+      progInput.value = String(Math.round((clampedTime / duration) * 1000));
     }
   }
 
@@ -2615,9 +2624,26 @@ window.AuraMusic = window.AuraMusic || {};
           lastRenderedPlaybackTime = 0;
         }
 
-        let displayTime = isUserDraggingProgress ? lastRenderedDisplayTime : currentTime;
-        lastRenderedPlaybackTime = currentTime;
-        if (cachedFill && cachedFill.classList.contains('is-seeking')) cachedFill.classList.remove('is-seeking');
+        const isSeekingLocked = (now < cinemaSeekLockUntil && cinemaSeekTargetTime >= 0);
+
+        let displayTime = currentTime;
+        if (isUserDraggingProgress) {
+          displayTime = lastRenderedDisplayTime;
+        } else if (isSeekingLocked) {
+          if (Math.abs(currentTime - cinemaSeekTargetTime) < 0.6 || now >= cinemaSeekLockUntil) {
+            cinemaSeekLockUntil = 0;
+            cinemaSeekTargetTime = -1;
+            displayTime = currentTime;
+            lastRenderedPlaybackTime = currentTime;
+            if (cachedFill) cachedFill.classList.remove('is-seeking');
+          } else {
+            displayTime = cinemaSeekTargetTime;
+          }
+        } else {
+          lastRenderedPlaybackTime = currentTime;
+          displayTime = currentTime;
+          if (cachedFill && cachedFill.classList.contains('is-seeking')) cachedFill.classList.remove('is-seeking');
+        }
 
         // 4. Actualizar barra de progreso visual solo si el tiempo cambió perceptiblemente
         if (!isUserDraggingProgress) {
