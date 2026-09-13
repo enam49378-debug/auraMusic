@@ -154,11 +154,10 @@ body.auramusic-splash-active::-webkit-scrollbar {
   top: 0;
   left: 0;
   height: 100%;
-  width: 0%;
+  width: 100%;
   background: linear-gradient(90deg, #cc0000, #ff4444);
   border-radius: 6px;
   box-shadow: 0 0 16px rgba(255,0,0,0.9);
-  will-change: width;
 }
 
 .yt-loader-flare {
@@ -171,6 +170,18 @@ body.auramusic-splash-active::-webkit-scrollbar {
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 0 12px #fff, 0 0 22px #ff0000, 0 0 40px rgba(255,0,0,0.5);
+  animation: flareStandbyPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes flareStandbyPulse {
+  0%, 100% {
+    box-shadow: 0 0 10px #fff, 0 0 20px #ff0000, 0 0 35px rgba(255,0,0,0.5);
+    transform: translateY(-50%) scale(0.95);
+  }
+  50% {
+    box-shadow: 0 0 16px #fff, 0 0 30px #ff2222, 0 0 50px rgba(255,0,0,0.8);
+    transform: translateY(-50%) scale(1.08);
+  }
 }
 
 /* ── 2. BLOQUE YOUTUBE MUSIC ──────────────────────────────────── */

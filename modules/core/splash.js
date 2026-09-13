@@ -545,120 +545,138 @@
     }
 
     // ── INICIALIZACIÓN Y FLUJO PRINCIPAL DE TIEMPOS ───────────────────
-    // Forzar renderizado inicial en 0% antes de disparar la transición para evitar saltos
-    loaderFill.style.width = '0%';
-    void loaderFill.offsetWidth;
+    // La barra inicia al 100% fija y luminosa mientras YouTube Music se estabiliza
+    loaderFill.style.width = '100%';
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const frameW = stage.offsetWidth || window.innerWidth;
-        const ytOff  = -Math.round(frameW * 0.20);
-        const auOff  = Math.round(frameW * 0.20);
+    function waitForAppReady(minMs = 800, maxMs = 2500) {
+      return new Promise(resolve => {
+        const start = Date.now();
+        let finished = false;
+        const done = () => {
+          if (finished) return;
+          finished = true;
+          resolve();
+        };
 
-        // Estado inicial de bloques
-        ytBlock.style.transform = `translateX(${ytOff}px) scale(0.85)`;
-        auraBlock.style.transform = `translateX(${auOff}px) translateY(-280px) scale(1.1)`;
+        if (document.readyState === 'complete') {
+          setTimeout(done, minMs);
+        } else {
+          window.addEventListener('load', () => {
+            const elapsed = Date.now() - start;
+            setTimeout(done, Math.max(0, minMs - elapsed));
+          }, { once: true });
+        }
 
-        // PASO 1: Seeker line llena de forma continua y fluida sin frenarse
-        const fillDuration = 1050;
-        loaderFill.style.transition = `width ${fillDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
-        loaderFill.style.width = '100%';
-        playSoundIfAllowed(soundEnabled);
-
-        // PASO 2: Revelar YouTube Music desde el punto exactamente al completar
-        later(() => revealYouTubeFromPoint(ytOff), fillDuration);
-
-        // PASO 3: Caída elástica de AuraMusic al lado derecho (1.53s)
-        const dropAt = fillDuration + 480;
-        later(() => {
-          if (isDismissed) return;
-          divider.style.transition = 'all 320ms ease';
-          divider.style.opacity = '0.55';
-          divider.style.transform = 'scaleY(1)';
-
-          auraBlock.style.transition = 'none';
-          motion(auraBlock, [
-            { transform: `translateX(${auOff}px) translateY(-280px) scale(1.1)`, opacity: 0, offset: 0, easing: 'cubic-bezier(.3,0,.6,1)' },
-            { transform: `translateX(${auOff}px) translateY(7px) scale(1.015,.985)`, opacity: 1, offset: .68, easing: 'cubic-bezier(.16,1,.3,1)' },
-            { transform: `translateX(${auOff}px) translateY(-3px) scale(.998,1.002)`, opacity: 1, offset: .86, easing: 'ease-in-out' },
-            { transform: `translateX(${auOff}px) translateY(0) scale(1)`, opacity: 1, offset: 1 }
-          ], 650);
-        }, dropAt);
-
-        // PASO 4: Carga de poder neón (2.18s)
-        const chargeAt = dropAt + 650;
-        later(() => {
-          if (isDismissed) return;
-          ytBlock.classList.add('charging');
-          auraBlock.classList.add('charging');
-          divider.classList.add('lit');
-          backdrop.classList.add('energized');
-        }, chargeAt);
-
-        // PASO 5: Fusión y colisión magnética hacia el centro (2.98s)
-        const fusionAt = chargeAt + 800;
-        later(() => {
-          if (isDismissed) return;
-          ytBlock.classList.remove('charging');
-          auraBlock.classList.remove('charging');
-
-          [ [ytBlock, ytOff], [auraBlock, auOff] ].forEach(([el, offset]) => {
-            el.style.transition = 'none';
-            motion(el, [
-              { transform: `translateX(${offset}px) scale(1)`, opacity: 1, filter: 'blur(0px)', offset: 0, easing: 'ease-out' },
-              { transform: `translateX(${offset + Math.sign(offset) * 10}px) scale(1.02)`, opacity: 1, filter: 'blur(0px)', offset: .22, easing: 'cubic-bezier(.65,0,.85,.3)' },
-              { transform: 'translateX(0px) scale(.78)', opacity: 0, filter: 'blur(2px)', offset: 1 }
-            ], 500);
-          });
-
-          divider.style.transition = 'all 200ms ease';
-          divider.style.transform = 'scaleY(2)';
-        }, fusionAt);
-
-        // PASO 6: Impacto (flash, anillos, chispas) y nacimiento del logo 50/50 (3.48s)
-        later(() => {
-          if (isDismissed) return;
-          spawnSparks(22);
-          ytBlock.style.opacity = '0';
-          auraBlock.style.opacity = '0';
-          divider.classList.remove('lit');
-          divider.style.opacity = '0';
-          backdrop.classList.remove('energized');
-
-          flashEl.style.transition = 'none';
-          motion(flashEl, [
-            { opacity: 0, offset: 0 },
-            { opacity: .88, offset: .12, easing: 'cubic-bezier(.22,1,.36,1)' },
-            { opacity: 0, offset: 1 }
-          ], 480);
-
-          ringEl.style.transition = 'none';
-          ring2El.style.transition = 'none';
-          motion(ringEl, [
-            { transform: 'scale(.15)', opacity: 0, offset: 0, easing: 'cubic-bezier(.16,1,.3,1)' },
-            { transform: 'scale(5.5)', opacity: .9, offset: .38, easing: 'ease-out' },
-            { transform: 'scale(8.5)', opacity: 0, offset: 1 }
-          ], 690);
-
-          later(() => {
-            if (!isDismissed) {
-              motion(ring2El, [
-                { transform: 'scale(.1)', opacity: 0, offset: 0, easing: 'cubic-bezier(.16,1,.3,1)' },
-                { transform: 'scale(6.5)', opacity: .65, offset: .4, easing: 'ease-out' },
-                { transform: 'scale(11)', opacity: 0, offset: 1 }
-              ], 760);
-            }
-          }, 80);
-
-          later(() => {
-            if (!isDismissed) finalStage.classList.add('active');
-          }, 60);
-
-        }, fusionAt + 500);
-
-        // PASO 7: Vuelo hacia el interior del triángulo ▶ (portal transparente a YouTube Music, 4.68s)
-        later(flyThroughEmblem, fusionAt + 500 + 1200);
+        // Límite máximo de seguridad para garantizar que jamás se quede esperando
+        setTimeout(done, maxMs);
       });
+    }
+
+    waitForAppReady(800, 2500).then(() => {
+      if (isDismissed) return;
+
+      const frameW = stage.offsetWidth || window.innerWidth;
+      const ytOff  = -Math.round(frameW * 0.20);
+      const auOff  = Math.round(frameW * 0.20);
+
+      // Estado inicial de bloques
+      ytBlock.style.transform = `translateX(${ytOff}px) scale(0.85)`;
+      auraBlock.style.transform = `translateX(${auOff}px) translateY(-280px) scale(1.1)`;
+
+      // PASO 1: Inicio cinemático directo desde el punto (morphing a YouTube Music)
+      playSoundIfAllowed(soundEnabled);
+      revealYouTubeFromPoint(ytOff);
+
+      // PASO 2: Caída elástica de AuraMusic al lado derecho (0.48s)
+      const dropAt = 480;
+      later(() => {
+        if (isDismissed) return;
+        divider.style.transition = 'all 320ms ease';
+        divider.style.opacity = '0.55';
+        divider.style.transform = 'scaleY(1)';
+
+        auraBlock.style.transition = 'none';
+        motion(auraBlock, [
+          { transform: `translateX(${auOff}px) translateY(-280px) scale(1.1)`, opacity: 0, offset: 0, easing: 'cubic-bezier(.3,0,.6,1)' },
+          { transform: `translateX(${auOff}px) translateY(7px) scale(1.015,.985)`, opacity: 1, offset: .68, easing: 'cubic-bezier(.16,1,.3,1)' },
+          { transform: `translateX(${auOff}px) translateY(-3px) scale(.998,1.002)`, opacity: 1, offset: .86, easing: 'ease-in-out' },
+          { transform: `translateX(${auOff}px) translateY(0) scale(1)`, opacity: 1, offset: 1 }
+        ], 650);
+      }, dropAt);
+
+      // PASO 3: Carga de poder neón (1.13s)
+      const chargeAt = dropAt + 650;
+      later(() => {
+        if (isDismissed) return;
+        ytBlock.classList.add('charging');
+        auraBlock.classList.add('charging');
+        divider.classList.add('lit');
+        backdrop.classList.add('energized');
+      }, chargeAt);
+
+      // PASO 4: Fusión y colisión magnética hacia el centro (1.93s)
+      const fusionAt = chargeAt + 800;
+      later(() => {
+        if (isDismissed) return;
+        ytBlock.classList.remove('charging');
+        auraBlock.classList.remove('charging');
+
+        [ [ytBlock, ytOff], [auraBlock, auOff] ].forEach(([el, offset]) => {
+          el.style.transition = 'none';
+          motion(el, [
+            { transform: `translateX(${offset}px) scale(1)`, opacity: 1, filter: 'blur(0px)', offset: 0, easing: 'ease-out' },
+            { transform: `translateX(${offset + Math.sign(offset) * 10}px) scale(1.02)`, opacity: 1, filter: 'blur(0px)', offset: .22, easing: 'cubic-bezier(.65,0,.85,.3)' },
+            { transform: 'translateX(0px) scale(.78)', opacity: 0, filter: 'blur(2px)', offset: 1 }
+          ], 500);
+        });
+
+        divider.style.transition = 'all 200ms ease';
+        divider.style.transform = 'scaleY(2)';
+      }, fusionAt);
+
+      // PASO 5: Impacto (flash, anillos, chispas) y nacimiento del logo 50/50 (2.43s)
+      later(() => {
+        if (isDismissed) return;
+        spawnSparks(22);
+        ytBlock.style.opacity = '0';
+        auraBlock.style.opacity = '0';
+        divider.classList.remove('lit');
+        divider.style.opacity = '0';
+        backdrop.classList.remove('energized');
+
+        flashEl.style.transition = 'none';
+        motion(flashEl, [
+          { opacity: 0, offset: 0 },
+          { opacity: .88, offset: .12, easing: 'cubic-bezier(.22,1,.36,1)' },
+          { opacity: 0, offset: 1 }
+        ], 480);
+
+        ringEl.style.transition = 'none';
+        ring2El.style.transition = 'none';
+        motion(ringEl, [
+          { transform: 'scale(.15)', opacity: 0, offset: 0, easing: 'cubic-bezier(.16,1,.3,1)' },
+          { transform: 'scale(5.5)', opacity: .9, offset: .38, easing: 'ease-out' },
+          { transform: 'scale(8.5)', opacity: 0, offset: 1 }
+        ], 690);
+
+        later(() => {
+          if (!isDismissed) {
+            motion(ring2El, [
+              { transform: 'scale(.1)', opacity: 0, offset: 0, easing: 'cubic-bezier(.16,1,.3,1)' },
+              { transform: 'scale(6.5)', opacity: .65, offset: .4, easing: 'ease-out' },
+              { transform: 'scale(11)', opacity: 0, offset: 1 }
+            ], 760);
+          }
+        }, 80);
+
+        later(() => {
+          if (!isDismissed) finalStage.classList.add('active');
+        }, 60);
+
+      }, fusionAt + 500);
+
+      // PASO 6: Vuelo hacia el interior del triángulo ▶ (portal transparente a YouTube Music, 3.63s)
+      later(flyThroughEmblem, fusionAt + 500 + 1200);
     });
 
     // Temporizador de seguridad máximo (garantiza que jamás se bloquee la pantalla ante cualquier imprevisto)
