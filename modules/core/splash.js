@@ -150,9 +150,9 @@
           </mask>
         </defs>
         <g mask="url(#splash-backdrop-mask)">
-          <rect width="100%" height="100%" fill="#08090f"/>
-          <rect width="100%" height="100%" fill="url(#splash-bg-glow-yt)"/>
-          <rect width="100%" height="100%" fill="url(#splash-bg-glow-aura)"/>
+          <rect x="-20%" y="-20%" width="140%" height="140%" fill="#08090f"/>
+          <rect x="-20%" y="-20%" width="140%" height="140%" fill="url(#splash-bg-glow-yt)"/>
+          <rect x="-20%" y="-20%" width="140%" height="140%" fill="url(#splash-bg-glow-aura)"/>
         </g>
       </svg>
 
@@ -349,8 +349,9 @@
       const smooth = n => { n = clamp(n); return n * n * n * (10 + n * (-15 + 6 * n)); };
       const frames = [];
 
-      for (let i = 0; i <= 90; i++) {
-        const u = i / 90;
+      // 30 frames optimizados 100% para GPU compositor (cero recálculo de diseño o rasterización en CPU)
+      for (let i = 0; i <= 30; i++) {
+        const u = i / 30;
         const grow = smooth(u / .27);
         const travel = smooth((u - .16) / .84);
         const lift = Math.min(32, stage.offsetHeight * .07);
@@ -360,7 +361,6 @@
         const scaleY = fromY + (1 - fromY) * grow;
         frames.push({
           transform: `translate3d(${x}px, ${y}px, 0) scale(${scaleX}, ${scaleY})`,
-          borderRadius: `calc(${50 * (1 - grow)}% + ${14 * grow}px)`,
           offset: u
         });
       }
@@ -368,7 +368,7 @@
       ytPill.style.transform = frames[0].transform;
       loaderFlare.style.opacity = '0';
       motion(ytPill, frames, 880);
-      motion(pointSkin, [{ opacity: 1 }, { opacity: 0 }], 200, 'ease-in-out');
+      motion(pointSkin, [{ opacity: 1 }, { opacity: 0 }], 180, 'ease-out');
       motion(ytArrow, [
         { opacity: 0, offset: 0 },
         { opacity: 0, offset: .35 },
@@ -559,17 +559,17 @@
         ytBlock.style.transform = `translateX(${ytOff}px) scale(0.85)`;
         auraBlock.style.transform = `translateX(${auOff}px) translateY(-280px) scale(1.1)`;
 
-        // PASO 1: Seeker line llena de forma continua y limpia
-        const fillDuration = 1420;
-        loaderFill.style.transition = `width ${fillDuration}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+        // PASO 1: Seeker line llena de forma continua y fluida sin frenarse
+        const fillDuration = 1050;
+        loaderFill.style.transition = `width ${fillDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
         loaderFill.style.width = '100%';
         playSoundIfAllowed(soundEnabled);
 
-        // PASO 2: Revelar YouTube Music desde el punto
-        later(() => revealYouTubeFromPoint(ytOff), fillDuration + 40);
+        // PASO 2: Revelar YouTube Music desde el punto exactamente al completar
+        later(() => revealYouTubeFromPoint(ytOff), fillDuration);
 
-        // PASO 3: Caída elástica de AuraMusic al lado derecho
-        const dropAt = fillDuration + 560;
+        // PASO 3: Caída elástica de AuraMusic al lado derecho (1.53s)
+        const dropAt = fillDuration + 480;
         later(() => {
           if (isDismissed) return;
           divider.style.transition = 'all 320ms ease';
@@ -585,8 +585,8 @@
           ], 650);
         }, dropAt);
 
-        // PASO 4: Carga de poder neón
-        const chargeAt = dropAt + 700;
+        // PASO 4: Carga de poder neón (2.18s)
+        const chargeAt = dropAt + 650;
         later(() => {
           if (isDismissed) return;
           ytBlock.classList.add('charging');
@@ -595,8 +595,8 @@
           backdrop.classList.add('energized');
         }, chargeAt);
 
-        // PASO 5: Fusión y colisión magnética hacia el centro
-        const fusionAt = chargeAt + 850;
+        // PASO 5: Fusión y colisión magnética hacia el centro (2.98s)
+        const fusionAt = chargeAt + 800;
         later(() => {
           if (isDismissed) return;
           ytBlock.classList.remove('charging');
@@ -615,7 +615,7 @@
           divider.style.transform = 'scaleY(2)';
         }, fusionAt);
 
-        // PASO 6: Impacto (flash, anillos, chispas) y nacimiento del logo 50/50
+        // PASO 6: Impacto (flash, anillos, chispas) y nacimiento del logo 50/50 (3.48s)
         later(() => {
           if (isDismissed) return;
           spawnSparks(22);
@@ -656,8 +656,8 @@
 
         }, fusionAt + 500);
 
-        // PASO 7: Vuelo hacia el interior del triángulo ▶ (portal transparente a YouTube Music)
-        later(flyThroughEmblem, fusionAt + 500 + 1300);
+        // PASO 7: Vuelo hacia el interior del triángulo ▶ (portal transparente a YouTube Music, 4.68s)
+        later(flyThroughEmblem, fusionAt + 500 + 1200);
       });
     });
 

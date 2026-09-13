@@ -30,13 +30,15 @@ body.auramusic-splash-active::-webkit-scrollbar {
 
 #auramusic-splash-screen {
   position: fixed !important;
-  inset: 0 !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  /* Fondo transparente: el SVG backdrop continuo cubre 100% de la pantalla hasta el portal */
-  background: transparent !important;
+  inset: -20px !important;
+  top: -20px !important;
+  left: -20px !important;
+  right: -20px !important;
+  bottom: -20px !important;
+  width: calc(100vw + 40px) !important;
+  height: calc(100vh + 40px) !important;
+  /* Fondo sólido inicial: cubre 100% de la pantalla sin cortes ni bordes de escritorio */
+  background: #08090f !important;
   z-index: 2147483647 !important;
   display: flex !important;
   align-items: center !important;
@@ -49,6 +51,11 @@ body.auramusic-splash-active::-webkit-scrollbar {
   cursor: default !important; /* No pointer: no se omite con clic */
   pointer-events: auto !important;
   box-sizing: border-box !important;
+}
+
+#auramusic-splash-screen.portal-active {
+  /* Modo portal: ahora sí se vuelve transparente para penetrar a YouTube Music cargado al fondo */
+  background: transparent !important;
 }
 
 #auramusic-splash-screen * {
@@ -64,9 +71,12 @@ body.auramusic-splash-active::-webkit-scrollbar {
 /* Fondo continuo SVG durante toda la intro con perforación de portal */
 .splash-stage-backdrop {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  top: -20px;
+  left: -20px;
+  right: -20px;
+  bottom: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
   pointer-events: none;
   z-index: 1;
 }
@@ -186,6 +196,8 @@ body.auramusic-splash-active::-webkit-scrollbar {
   flex-shrink: 0;
   position: relative;
   transform-origin: 50% 50%;
+  overflow: hidden;
+  will-change: transform;
 }
 
 .yt-play-arrow {
@@ -195,15 +207,17 @@ body.auramusic-splash-active::-webkit-scrollbar {
   border-bottom: 8px solid transparent;
   border-left: 15px solid #fff;
   margin-left: 3px;
+  z-index: 2;
 }
 
 .yt-point-skin {
   position: absolute;
   inset: 0;
-  border-radius: inherit;
+  border-radius: 50%;
   background: #fff;
-  opacity: 0;
+  opacity: 1;
   pointer-events: none;
+  z-index: 1;
 }
 
 .yt-text-wrap {

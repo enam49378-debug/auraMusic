@@ -303,6 +303,8 @@
       flex-shrink: 0;
       position: relative;
       transform-origin: 50% 50%;
+      overflow: hidden;
+      will-change: transform;
     }
     .yt-play-arrow {
       width: 0; height: 0;
@@ -310,14 +312,16 @@
       border-bottom: 8px solid transparent;
       border-left: 15px solid #fff;
       margin-left: 3px;
+      z-index: 2;
     }
     .yt-point-skin {
       position: absolute;
       inset: 0;
-      border-radius: inherit;
+      border-radius: 50%;
       background: #fff;
-      opacity: 0;
+      opacity: 1;
       pointer-events: none;
+      z-index: 1;
     }
     .yt-text-wrap { display: flex; align-items: baseline; gap: 8px; }
     .yt-txt-youtube {
@@ -1135,8 +1139,8 @@
     const smooth = n => { n = clamp(n); return n*n*n*(10+n*(-15+6*n)); };
     const frames = [];
 
-    for (let i = 0; i <= 90; i++) {
-      const u = i / 90;
+    for (let i = 0; i <= 30; i++) {
+      const u = i / 30;
       const grow = smooth(u / .27);
       const travel = smooth((u - .16) / .84);
       const lift = Math.min(32, stage.offsetHeight * .07);
@@ -1146,7 +1150,6 @@
       const scaleY = fromY + (1 - fromY) * grow;
       frames.push({
         transform: `translate3d(${x}px, ${y}px, 0) scale(${scaleX}, ${scaleY})`,
-        borderRadius: `calc(${50*(1-grow)}% + ${14*grow}px)`,
         offset: u
       });
     }
@@ -1154,7 +1157,7 @@
     ytPill.style.transform = frames[0].transform;
     loaderFlare.style.opacity = '0';
     motion(ytPill, frames, 880);
-    motion(pointSkin, [{ opacity: 1 }, { opacity: 0 }], 200, 'ease-in-out');
+    motion(pointSkin, [{ opacity: 1 }, { opacity: 0 }], 180, 'ease-out');
     motion(ytArrow, [
       { opacity: 0, offset: 0 },
       { opacity: 0, offset: .35 },
@@ -1189,17 +1192,17 @@
     const ytOff  = -Math.round(frameW * 0.20);
     const auOff  = Math.round(frameW * 0.20);
 
-    // PASO 1 ─ Seeker line
-    const fill = t(1420);
-    loaderFill.style.transition = `width ${fill}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+    // PASO 1 ─ Seeker line fluida sin frenarse
+    const fill = t(1050);
+    loaderFill.style.transition = `width ${fill}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
     loaderFill.style.width = '100%';
     playSound();
 
-    // PASO 2 ─ Revelar YouTube Music desde el punto
-    later(() => revealYouTubeFromPoint(ytOff), fill + t(40));
+    // PASO 2 ─ Revelar YouTube Music desde el punto exactamente al completar
+    later(() => revealYouTubeFromPoint(ytOff), fill);
 
-    // PASO 3 ─ Caída de AuraMusic
-    const dropAt = fill + t(560);
+    // PASO 3 ─ Caída de AuraMusic (1.53s)
+    const dropAt = fill + t(480);
     later(() => {
       divider.style.transition = `all ${t(320)}ms ease`;
       divider.style.opacity = '0.55';
@@ -1214,8 +1217,8 @@
       ], 650);
     }, dropAt);
 
-    // PASO 4 ─ Carga de poder y brillo neón
-    const chargeAt = dropAt + t(700);
+    // PASO 4 ─ Carga de poder y brillo neón (2.18s)
+    const chargeAt = dropAt + t(650);
     later(() => {
       ytBlock.classList.add('charging');
       auraBlock.classList.add('charging');
@@ -1223,8 +1226,8 @@
       backdrop.classList.add('energized');
     }, chargeAt);
 
-    // PASO 5 ─ Colisión al centro
-    const fusionAt = chargeAt + t(850);
+    // PASO 5 ─ Colisión al centro (2.98s)
+    const fusionAt = chargeAt + t(800);
     later(() => {
       ytBlock.classList.remove('charging');
       auraBlock.classList.remove('charging');
@@ -1242,7 +1245,7 @@
       divider.style.transform = 'scaleY(2)';
     }, fusionAt);
 
-    // PASO 6 ─ Impacto: flash + anillos + chispas + logo 50/50
+    // PASO 6 ─ Impacto: flash + anillos + chispas + logo 50/50 (3.48s)
     later(() => {
       spawnSparks(22);
       ytBlock.style.opacity = '0';
@@ -1276,8 +1279,8 @@
 
     }, fusionAt + t(500));
 
-    // PASO 7 ─ Pausa de admiración del emblema, y vuelo hacia el triángulo ▶
-    later(flyThroughEmblem, fusionAt + t(500) + t(1300));
+    // PASO 7 ─ Pausa de admiración del emblema, y vuelo hacia el triángulo ▶ (4.68s)
+    later(flyThroughEmblem, fusionAt + t(500) + t(1200));
   }
 
   // ── EVENTS ────────────────────────────────────────────────────────────
