@@ -11,6 +11,7 @@ window.AuraMusic = window.AuraMusic || {};
   }
 
   let animFrameId = null;
+  let resizeHandler = null;
 
   // --- VISUALIZADOR DE AUDIO INTEGRADO ---
   function initVisualizer() {
@@ -18,6 +19,8 @@ window.AuraMusic = window.AuraMusic || {};
 
     const playerBar = document.querySelector('ytmusic-player-bar');
     if (!playerBar) return;
+    stopVisualizerLoop();
+    if (resizeHandler) window.removeEventListener('resize', resizeHandler);
 
     const container = document.createElement('div');
     container.id = 'auramusic-visualizer-container';
@@ -32,7 +35,8 @@ window.AuraMusic = window.AuraMusic || {};
       canvas.width = window.innerWidth;
       canvas.height = 28;
     }
-    window.addEventListener('resize', resizeCanvas);
+    resizeHandler = resizeCanvas;
+    window.addEventListener('resize', resizeHandler);
     resizeCanvas();
 
     startVisualizerLoop(canvas);
@@ -59,7 +63,7 @@ window.AuraMusic = window.AuraMusic || {};
 
     function render(now) {
       const curState = getState();
-      if (curState.visualizer === 'off' || document.hidden) {
+      if (curState.visualizer === 'off' || document.hidden || !canvas.isConnected) {
         stopVisualizerLoop(ctx, canvas);
         return;
       }
@@ -129,7 +133,7 @@ window.AuraMusic = window.AuraMusic || {};
         }
       } else if (curState.visualizer === 'wave') {
         ctx.beginPath();
-        ctx.strokeStyle = activeColor;
+        ctx.strokeStyle = cachedActiveColor;
         ctx.lineWidth = 2.5;
 
         for (let i = 0; i < barCount; i++) {

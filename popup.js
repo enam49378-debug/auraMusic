@@ -1,20 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
   const themeBtns = document.querySelectorAll('.theme-btn');
-  const allThemes = [
-    'auramusic-theme-auramusic',
-    'auramusic-theme-jesuluto',
-    'auramusic-theme-komi',
-    'auramusic-theme-apple',
-    'auramusic-theme-spotify',
-    'auramusic-theme-whatsapp',
-    'auramusic-theme-oled',
-    'auramusic-theme-cyberpunk',
-    'auramusic-theme-glass',
-    'auramusic-theme-dynamic',
-    'auramusic-theme-youtube',
-    'auramusic-theme-aesthetic',
-    'auramusic-theme-minecraft'
-  ];
 
   // 1. Mostrar versión actual
   const versionBadge = document.getElementById('popup-version-badge');
@@ -121,8 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // 5. Cargar estado de temas
   if (chrome.storage && chrome.storage.local) {
     chrome.storage.local.get(['auramusic_settings'], (result) => {
-      if (result && result.auramusic_settings) {
-        const theme = result.auramusic_settings.theme || 'apple';
+      if (!chrome.runtime.lastError) {
+        const theme = result?.auramusic_settings?.theme || 'auramusic';
         themeBtns.forEach(btn => {
           btn.classList.toggle('active', btn.dataset.theme === theme);
         });
@@ -141,19 +126,11 @@ document.addEventListener('DOMContentLoaded', () => {
         chrome.storage.local.get(['auramusic_settings'], (res) => {
           const current = (res && res.auramusic_settings) || {};
           current.theme = selected;
+          // state.js aplica el cambio completo mediante storage.onChanged.
           chrome.storage.local.set({ auramusic_settings: current }, () => {
-            chrome.tabs.query({ url: '*://music.youtube.com/*' }, (tabs) => {
-              tabs.forEach(tab => {
-                chrome.scripting?.executeScript({
-                  target: { tabId: tab.id },
-                  func: (th, themes) => {
-                    document.body.classList.remove(...themes);
-                    if (th !== 'default') document.body.classList.add(`auramusic-theme-${th}`);
-                  },
-                  args: [selected, allThemes]
-                }).catch(() => {});
-              });
-            });
+            if (chrome.runtime.lastError && updateMsg) {
+              updateMsg.textContent = 'No se pudo guardar el tema. Inténtalo de nuevo.';
+            }
           });
         });
       }

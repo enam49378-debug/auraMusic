@@ -23,7 +23,14 @@ var defaultSettings = window.defaultSettings = AuraMusic.defaultSettings = {
   }
 };
 
-var state = window.state = AuraMusic.state = { ...defaultSettings };
+var state = window.state = AuraMusic.state = { ...defaultSettings, eq: { ...defaultSettings.eq } };
+
+function mergeSettings(saved) {
+  const settings = saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {};
+  Object.assign(state, defaultSettings, settings, {
+    eq: { ...defaultSettings.eq, ...(settings.eq || {}) }
+  });
+}
 
 function isExtensionContextValid() {
   try {
@@ -37,7 +44,7 @@ function fallbackLoadSettings() {
   try {
     const saved = localStorage.getItem('auramusic_settings');
     if (saved) {
-      Object.assign(state, defaultSettings, JSON.parse(saved));
+      mergeSettings(JSON.parse(saved));
     }
   } catch (e) {}
   applyAllSettings();
@@ -53,7 +60,7 @@ function loadSettings() {
             return;
           }
           if (result && result.auramusic_settings) {
-            Object.assign(state, defaultSettings, result.auramusic_settings);
+            mergeSettings(result.auramusic_settings);
           }
           applyAllSettings();
         } catch (e) {
@@ -72,7 +79,9 @@ function loadSettings() {
 function saveSettings() {
   if (isExtensionContextValid() && chrome.storage && chrome.storage.local) {
     try {
-      chrome.storage.local.set({ auramusic_settings: state }, () => {});
+      chrome.storage.local.set({ auramusic_settings: state }, () => {
+        void chrome.runtime.lastError;
+      });
     } catch (e) {}
   }
   try {
@@ -87,7 +96,21 @@ function applyAllSettings() {
   applyPlaybackSpeed(state.playbackSpeed);
   applyVolumeBoost(state.volumeBoost);
   applyEQ();
+  applyVisualizerMode(state.visualizer);
   updateUIControls();
+}
+
+// El popup y las demás pestañas comparten los mismos ajustes.
+if (isExtensionContextValid() && chrome.storage?.onChanged) {
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== 'local' || !changes.auramusic_settings) return;
+    const previousSettings = JSON.stringify(state);
+    mergeSettings(changes.auramusic_settings.newValue);
+    try {
+      localStorage.setItem('auramusic_settings', JSON.stringify(state));
+    } catch (_) {}
+    if (JSON.stringify(state) !== previousSettings) applyAllSettings();
+  });
 }
 
 // Puentes globales para todos los módulos
@@ -96,6 +119,7 @@ function applyTheme(themeName) {
   
   // 1. Remover todas las clases de tema del body
   const allThemes = [
+    'auramusic-theme-auramusic',
     'auramusic-theme-jesuluto', 'auramusic-theme-komi', 'auramusic-theme-apple',
     'auramusic-theme-spotify', 'auramusic-theme-whatsapp', 'auramusic-theme-oled',
     'auramusic-theme-cyberpunk', 'auramusic-theme-glass', 'auramusic-theme-dynamic',

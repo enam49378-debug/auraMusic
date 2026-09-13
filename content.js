@@ -29,6 +29,7 @@
     }
   }
   injectPlayerBridge();
+  injectGoogleFonts();
 
 
   console.log('%c✨ AuraMusic: Inicializando suite modular...', 'color: #00e5ff; font-weight: bold; font-size: 14px;');
@@ -132,6 +133,9 @@
       }
 
       runCleanWatchdog();
+      if (window.AuraMusic?.state?.visualizer !== 'off') {
+        window.AuraMusic?.Visualizer?.initVisualizer();
+      }
 
       if (window.AuraMusic?.Lyrics?.checkAndInjectLyricsButton) {
         window.AuraMusic.Lyrics.checkAndInjectLyricsButton();

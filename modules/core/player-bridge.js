@@ -129,7 +129,9 @@
 
   function getPlayer() {
     const all = findEveryPlayerApi();
-    return all.length > 0 ? all[0] : null;
+    if (all.length === 0) return null;
+    const withGetTime = all.find(p => typeof p.getCurrentTime === 'function');
+    return withGetTime || all[0];
   }
 
   function findProgressBar() {
@@ -175,7 +177,7 @@
 
     const ariaMax = parseFloat(slider.getAttribute('aria-valuemax'));
     const rawSliderMax = typeof slider.max === 'number' ? slider.max : parseFloat(slider.max);
-    const max = (!isNaN(ariaMax) && ariaMax > 5) ? ariaMax : (!isNaN(rawSliderMax) && rawSliderMax > 0 ? rawSliderMax : (cachedDuration > 0 ? cachedDuration : 0));
+    const max = (cachedDuration > 1) ? cachedDuration : ((!isNaN(ariaMax) && ariaMax > 5 && ariaMax !== 100) ? ariaMax : (!isNaN(rawSliderMax) && rawSliderMax > 0 ? rawSliderMax : 0));
     const min = parseFloat(slider.getAttribute('aria-valuemin')) || parseFloat(slider.min) || 0;
     const dur = max > min ? (max - min) : (max || 1);
     const pct = Math.max(0, Math.min(1, targetSeconds / dur));
@@ -322,6 +324,17 @@
         return { curSec, durSec };
       }
     }
+    // Fallback universal para cualquier idioma o separador
+    const timeMatches = [...clean.matchAll(/(-)?\s*(\d+(?::\d+)+)/g)];
+    if (timeMatches.length >= 2) {
+      const curSec = parseTimeStr(timeMatches[0][2]);
+      const isNegativeRemaining = Boolean(timeMatches[1][1]);
+      const secondSec = parseTimeStr(timeMatches[1][2]);
+      if (curSec !== null && secondSec !== null) {
+        const durSec = isNegativeRemaining ? (curSec + secondSec) : secondSec;
+        return { curSec, durSec };
+      }
+    }
     return null;
   }
 
@@ -335,7 +348,7 @@
 
     // 2. Elemento slider de progreso (#progress-bar o #slider)
     const slider = document.querySelector('ytmusic-player-bar #progress-bar, ytmusic-player-bar #slider, tp-yt-paper-slider#slider, #progress-bar');
-    if (slider) {
+    if (slider && typeof slider.getAttribute === 'function') {
       const valText = slider.getAttribute('aria-valuetext');
       if (valText) {
         const res = parseYtMusicTimeText(valText);
@@ -343,7 +356,7 @@
       }
       const valMax = parseFloat(slider.getAttribute('aria-valuemax'));
       const valNow = parseFloat(slider.getAttribute('aria-valuenow'));
-      if (!isNaN(valMax) && valMax > 5) {
+      if (!isNaN(valMax) && valMax > 5 && valMax !== 100) {
         return {
           curSec: !isNaN(valNow) && valNow >= 0 ? valNow : 0,
           durSec: valMax
@@ -363,9 +376,15 @@
   let trackTransitionTimestamp = 0;
   let lastReportedCurrentTime = -1;
 
+  // Seek inhibit: while seeking, syncFromAPI() will push the target time
+  // instead of reading the (stale) player time. Prevents YTM snapping back.
+  let seekInhibitUntil = 0;
+  let seekInhibitTime = -1;
+
   function syncFromAPI() {
     const player = getPlayer();
-    if (!player) return;
+    const vid = document.querySelector('video');
+    if (!player && !vid) return;
 
     try {
       const now = Date.now();
@@ -385,11 +404,19 @@
         cachedArtwork = getBestArtwork(cachedVideoId);
 
         let dur = (typeof player.getDuration === 'function') ? player.getDuration() : -1;
-        const barTimes = getNativeBarTimes();
-        if (barTimes && barTimes.durSec > 0) {
-          dur = barTimes.durSec;
+        if (dur <= 0) {
+          const barTimes = getNativeBarTimes();
+          if (barTimes && barTimes.durSec > 0) {
+            dur = barTimes.durSec;
+          }
         }
-        cachedDuration = dur;
+        if (dur <= 0) {
+          const vid = document.querySelector('video');
+          if (vid && !isNaN(vid.duration) && vid.duration > 0) {
+            dur = vid.duration;
+          }
+        }
+        cachedDuration = dur > 0 ? dur : 0;
 
         // Detectar cambio de canción automático o manual al instante
         const trackKey = `${cachedTitle.toLowerCase().trim()}:::${cachedArtist.toLowerCase().trim()}${cachedVideoId ? ':::' + cachedVideoId : ''}`;
@@ -409,23 +436,59 @@
 
       // 2. Tiempo flotante en vivo (lectura ultra-rápida en memoria sin tocar el DOM)
       let currentTime = -1;
-      if (typeof player.getCurrentTime === 'function') {
-        const t = player.getCurrentTime();
-        if (typeof t === 'number' && !isNaN(t) && isFinite(t) && t >= 0) {
-          currentTime = t;
-        }
-      }
-      if (currentTime < 0) {
-        const vid = document.querySelector('video');
-        if (vid && !isNaN(vid.currentTime) && isFinite(vid.currentTime) && vid.currentTime >= 0) {
-          currentTime = vid.currentTime;
+
+      // SEEK INHIBIT: también leer señal del Isolated World (escrita en dataset antes del postMessage)
+      if (bridgeEl) {
+        const dsInhibitUntil = parseFloat(bridgeEl.dataset.seekInhibitUntil || '0');
+        const dsInhibitTime = parseFloat(bridgeEl.dataset.seekInhibitTime || '-1');
+        if (dsInhibitUntil > now && dsInhibitTime >= 0) {
+          if (seekInhibitUntil < dsInhibitUntil) {
+            seekInhibitUntil = dsInhibitUntil;
+            seekInhibitTime = dsInhibitTime;
+          }
         }
       }
 
-      // BLINDAJE: Si acabamos de cambiar de canción en los últimos 2500ms y el reproductor aún tiene
-      // el tiempo residual de la canción previa (> 2.0s), forzar 0 absoluto para que no muestre 2:12
-      if (now - trackTransitionTimestamp < 2500 && currentTime > 2.0) {
-        currentTime = 0;
+      // Leer tiempo real del reproductor nativo
+      let realTime = -1;
+      if (typeof player.getCurrentTime === 'function') {
+        const t = player.getCurrentTime();
+        if (typeof t === 'number' && !isNaN(t) && isFinite(t) && t >= 0) {
+          realTime = t;
+        }
+      }
+      if (realTime < 0) {
+        const vid = document.querySelector('video');
+        if (vid && !isNaN(vid.currentTime) && isFinite(vid.currentTime) && vid.currentTime >= 0) {
+          realTime = vid.currentTime;
+        }
+      }
+
+      // SEEK INHIBIT INTELIGENTE:
+      // Si estamos en ventana de seek, comprobar si el reproductor ya procesó el salto
+      if (seekInhibitUntil > now && seekInhibitTime >= 0) {
+        // Si el tiempo real ya está cerca del objetivo (< 1s) o ya avanzó, el seek terminó con éxito
+        if (realTime >= 0 && (Math.abs(realTime - seekInhibitTime) < 1.0 || realTime >= seekInhibitTime - 0.2)) {
+          seekInhibitUntil = 0;
+          seekInhibitTime = -1;
+          currentTime = realTime;
+          if (bridgeEl) {
+            delete bridgeEl.dataset.seekInhibitUntil;
+            delete bridgeEl.dataset.seekInhibitTime;
+          }
+        } else {
+          // Aún reporta el tiempo viejo anterior al seek; mantener el tiempo objetivo temporalmente
+          currentTime = seekInhibitTime;
+        }
+      } else {
+        seekInhibitTime = -1;
+        currentTime = realTime;
+
+        // BLINDAJE: Si acabamos de cambiar de canción en los últimos 2500ms y el reproductor aún tiene
+        // el tiempo residual de la canción previa (> 2.0s), forzar 0 absoluto para que no muestre 2:12
+        if (now - trackTransitionTimestamp < 2500 && currentTime > 2.0) {
+          currentTime = 0;
+        }
       }
 
       const playerState = (typeof player.getPlayerState === 'function') ? player.getPlayerState() : -1;
@@ -464,7 +527,7 @@
     const now = timestamp || performance.now();
     const isCinemaActive = !!(document.getElementById('auramusic-cinema-overlay')?.classList.contains('active') || document.body.classList.contains('auramusic-cinema-active'));
 
-    const minInterval = isCinemaActive ? 200 : 1000;
+    const minInterval = isCinemaActive ? 40 : 500;
     if (now - lastBridgeRafTime < minInterval) {
       requestAnimationFrame(rafLoop);
       return;
@@ -528,61 +591,94 @@
         const targetSeekTime = Math.max(0, Number(rawTime));
 
         if (!isNaN(targetSeekTime) && isFinite(targetSeekTime)) {
-          let sought = false;
           const vids = Array.from(document.querySelectorAll('video'));
 
-          // Capa A: MediaSession oficial de YouTube Music (Handler nativo capturado)
+          // ─── SEEK INHIBIT INTELIGENTE: prevenir parpadeos iniciales ────
+          seekInhibitTime = targetSeekTime;
+          seekInhibitUntil = Date.now() + 800;
+
+          // Actualizar el bridge DE INMEDIATO con el tiempo objetivo
+          if (bridgeEl) {
+            bridgeEl.dataset.currentTime = String(targetSeekTime);
+            bridgeEl.dataset.updatedAt = String(Date.now());
+          }
+
+          // Capa A: ytmusic-player-bar — vía Polymer nativo (el camino que YTM usa internamente)
+          try {
+            const ytBar = document.querySelector('ytmusic-player-bar');
+            if (ytBar) {
+              const dur = cachedDuration > 0 ? cachedDuration : (typeof getPlayer()?.getDuration === 'function' ? getPlayer().getDuration() : 0);
+              const pct = dur > 0 ? targetSeekTime / dur : 0;
+              // Intentar métodos internos de Polymer en orden de confiabilidad
+              if (typeof ytBar.seekTo_ === 'function') {
+                ytBar.seekTo_(targetSeekTime);
+                console.log('⚡ AuraMusic: seekTo_ (Polymer nativo) ejecutado!');
+              } else if (typeof ytBar.seek === 'function') {
+                ytBar.seek(targetSeekTime);
+              }
+              // Disparar el evento que maneja la barra de progreso de YTM
+              if (typeof ytBar.onProgressBarChange_ === 'function') {
+                try { ytBar.onProgressBarChange_({ target: { value: pct * 1000 }, detail: { value: pct * 1000 } }); } catch (_) {}
+              }
+              if (typeof ytBar.onProgressBarChangeEnd_ === 'function') {
+                try { ytBar.onProgressBarChangeEnd_(); } catch (_) {}
+              }
+              // Probar propiedades Polymer __data
+              if (ytBar.__data) {
+                try {
+                  if ('currentTime' in ytBar.__data) {
+                    ytBar.__data.currentTime = targetSeekTime;
+                    if (typeof ytBar.notifyPath === 'function') ytBar.notifyPath('currentTime', targetSeekTime);
+                  }
+                  if ('progressPercent' in ytBar.__data) {
+                    ytBar.__data.progressPercent = pct * 100;
+                    if (typeof ytBar.notifyPath === 'function') ytBar.notifyPath('progressPercent', pct * 100);
+                  }
+                } catch (_) {}
+              }
+            }
+          } catch (e) {
+            console.warn('AuraMusic: ytmusic-player-bar Polymer seek error:', e);
+          }
+
+          // Capa B: MediaSession oficial de YouTube Music (Handler nativo capturado)
           if (typeof window.__auramusic_media_handlers?.['seekto'] === 'function') {
             try {
               window.__auramusic_media_handlers['seekto']({ seekTime: targetSeekTime, fastSeek: false });
               console.log('⚡ AuraMusic: seekTo ejecutado vía MediaSession oficial!');
-              sought = true;
             } catch (e) {
               console.warn('AuraMusic: MediaSession seekto error:', e);
             }
           }
 
-          // Capa B: Búsqueda y ejecución exhaustiva sobre todos los reproductores descubiertos (sin break)
+          // Capa C: Todos los reproductores descubiertos por findEveryPlayerApi()
           const allPlayers = findEveryPlayerApi();
           allPlayers.forEach(p => {
-            try {
-              p.seekTo(targetSeekTime, true);
-              sought = true;
-            } catch (e) {
+            try { p.seekTo(targetSeekTime, true); } catch (e) {
               console.warn('player.seekTo error:', e);
             }
           });
 
-          // Capa C: Ejecutar seek en la barra de progreso nativa (Polymer tp-yt-paper-slider)
-          try {
-            seekNativeProgressBar(targetSeekTime);
-          } catch (e) {
-            console.warn('seekNativeProgressBar error:', e);
+          // Capa D: Barra de progreso nativa (Polymer tp-yt-paper-slider)
+          try { seekNativeProgressBar(targetSeekTime); } catch (_) {}
+
+          // Capa E: Sincronización directa sobre <video> únicamente como respaldo si no hay APIs
+          if (allPlayers.length === 0) {
+            vids.forEach(vid => {
+              try { vid.currentTime = targetSeekTime; } catch (_) {}
+            });
           }
 
-          // Capa D: Fallback / sincronización directa sobre todos los elementos <video>
-          vids.forEach(vid => {
-            try { vid.currentTime = targetSeekTime; } catch (_) {}
-          });
-
-          // Capa E: Asegurar reproducción continua si correspondía (autoPlay)
+          // Capa F: Reproducción continua si corresponde
           if (autoPlay !== false) {
             allPlayers.forEach(p => {
-              if (typeof p.playVideo === 'function') {
-                try { p.playVideo(); } catch (_) {}
-              }
+              if (typeof p.playVideo === 'function') try { p.playVideo(); } catch (_) {}
             });
             vids.forEach(vid => {
-              if (vid.paused) {
-                try { vid.play().catch(() => {}); } catch (_) {}
-              }
+              if (vid.paused) try { vid.play().catch(() => {}); } catch (_) {}
             });
           }
 
-          if (bridgeEl) {
-            bridgeEl.dataset.currentTime = String(targetSeekTime);
-            bridgeEl.dataset.updatedAt = String(Date.now());
-          }
           syncFromAPI();
         }
       } else if (action === 'play') {

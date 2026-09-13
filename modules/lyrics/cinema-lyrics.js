@@ -19,6 +19,15 @@ window.AuraMusic = window.AuraMusic || {};
   // ==========================================================
   let currentLyrics = [];
   let isCinemaActive = false;
+  let cinemaSeekLockUntil = 0;
+  let cinemaSeekTargetTime = -1;
+  let cinemaSeekStartTime = 0;
+  let isUserDraggingProgress = false;
+  let lastRenderedPlaybackTime = 0;
+  let lastRenderedDisplayTime = -1;
+  let cachedActiveLineEl = null;
+  let cachedWordEls = [];
+  let lastSingingWordIdx = -1;
 
     // Obtener carátula en Ultra HD (1200x1200px)
   function getHighResCoverUrl(hintUrl) {
@@ -131,6 +140,7 @@ window.AuraMusic = window.AuraMusic || {};
   });
 
   function onBridgeTrackChange(e) {
+    if (!isCinemaActive) return;
     const { title, artist, videoId, artwork } = e.detail || {};
     if (!title) return;
     handleTrackChangeDetected(title, artist, videoId, artwork);
@@ -150,8 +160,27 @@ window.AuraMusic = window.AuraMusic || {};
   document.addEventListener('auramusic-state-change', onBridgeStateChange);
   window.addEventListener('auramusic-state-change', onBridgeStateChange);
 
+  function findAllVideos(root = document) {
+    let videos = [];
+    try {
+      videos.push(...Array.from(root.querySelectorAll('video')));
+    } catch (_) {}
+    try {
+      const allEls = root.querySelectorAll('*');
+      for (const el of allEls) {
+        if (el.shadowRoot) {
+          videos.push(...findAllVideos(el.shadowRoot));
+        }
+      }
+    } catch (_) {}
+    return videos;
+  }
+
   function getActiveVideo() {
-    const all = Array.from(document.querySelectorAll('video'));
+    let all = Array.from(document.querySelectorAll('video'));
+    if (all.length === 0) {
+      all = findAllVideos();
+    }
     if (all.length === 0) return null;
 
     // 1. Priorizar el video que esté activamente reproduciendo y no haya finalizado
@@ -248,7 +277,7 @@ window.AuraMusic = window.AuraMusic || {};
     const ariaMax = parseFloat(slider.getAttribute('aria-valuemax'));
     const rawSliderMax = typeof slider.max === 'number' ? slider.max : parseFloat(slider.max);
     const trackDur = getYtMusicTrackDuration();
-    const max = (trackDur > 1) ? trackDur : ((!isNaN(ariaMax) && ariaMax > 5) ? ariaMax : (!isNaN(rawSliderMax) && rawSliderMax > 0 ? rawSliderMax : 0));
+    const max = (trackDur > 1) ? trackDur : ((!isNaN(ariaMax) && ariaMax > 5 && ariaMax !== 100) ? ariaMax : (!isNaN(rawSliderMax) && rawSliderMax > 0 ? rawSliderMax : 0));
     const min = parseFloat(slider.getAttribute('aria-valuemin')) || parseFloat(slider.min) || 0;
     const dur = max > min ? (max - min) : (max || 1);
     const pct = Math.max(0, Math.min(1, targetSeconds / dur));
@@ -341,6 +370,8 @@ window.AuraMusic = window.AuraMusic || {};
   }
 
   function seekTrack(targetTime, autoPlay = true) {
+    targetTime = Number(targetTime);
+    if (!Number.isFinite(targetTime)) return;
     const duration = getYtMusicTrackDuration();
     let clampedTime = Math.max(0, targetTime);
     if (duration > 1 && clampedTime > duration - 0.2) {
@@ -348,77 +379,31 @@ window.AuraMusic = window.AuraMusic || {};
     }
 
     cinemaSeekTargetTime = clampedTime;
-    cinemaSeekLockUntil = Date.now() + 3000;
+    cinemaSeekLockUntil = Date.now() + 800;
+    cinemaSeekStartTime = Date.now();
     lastRenderedPlaybackTime = clampedTime;
     lastRenderedDisplayTime = clampedTime;
 
-    // 0. Ejecución síncrona inmediata en MAIN WORLD (MediaSession + Todos los Player APIs descubiertos)
-    executeInPage(`
-      const t = ${clampedTime};
-      if (typeof window.__auramusic_media_handlers?.['seekto'] === 'function') {
-        try { window.__auramusic_media_handlers['seekto']({ seekTime: t, fastSeek: false }); } catch (_) {}
-      }
-      const apis = [];
-      if (window.movie_player && typeof window.movie_player.seekTo === 'function') apis.push(window.movie_player);
-      if (window.ytplayer && typeof window.ytplayer.seekTo === 'function') apis.push(window.ytplayer);
-      const sel = ['#movie_player', '.html5-video-player', 'ytmusic-player-bar', 'ytmusic-player', 'ytmusic-app', 'ytmusic-player-page'];
-      for (const s of sel) {
-        try {
-          const els = document.querySelectorAll(s);
-          for (const el of els) {
-            if (typeof el.seekTo === 'function') apis.push(el);
-            if (el.playerApi_ && typeof el.playerApi_.seekTo === 'function') apis.push(el.playerApi_);
-            if (el.shadowRoot) {
-              const inside = el.shadowRoot.querySelectorAll('#movie_player, .html5-video-player');
-              for (const i of inside) {
-                if (typeof i.seekTo === 'function') apis.push(i);
-                if (i.playerApi_ && typeof i.playerApi_.seekTo === 'function') apis.push(i.playerApi_);
-              }
-            }
-          }
-        } catch (_) {}
-      }
-      for (const api of apis) {
-        try { api.seekTo(t, true); } catch (_) {}
-      }
-      const slider = document.querySelector('ytmusic-player-bar #progress-bar, tp-yt-paper-slider#progress-bar, #progress-bar');
-      if (slider) {
-        try {
-          const max = slider.max || parseFloat(slider.getAttribute('aria-valuemax')) || 0;
-          if (max > 0) {
-            slider.value = (max <= 100 || Math.abs(max - 1000) < 50) ? (t / (max > 1 ? max : 1)) * max : t;
-          } else {
-            slider.value = t;
-          }
-          slider.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
-          slider.dispatchEvent(new CustomEvent('change', { bubbles: true, composed: true }));
-        } catch (_) {}
-      }
-      if (${autoPlay !== false}) {
-        for (const api of apis) {
-          if (typeof api.playVideo === 'function') {
-            try { api.playVideo(); break; } catch (_) {}
-          }
+    // Señalizar al MAIN WORLD (player-bridge.js) que estamos buscando,
+    // para que active seekInhibitUntil antes de recibir el postMessage
+    const bridgeElForSeek = document.getElementById('auramusic-bridge-data');
+    if (bridgeElForSeek) {
+      bridgeElForSeek.dataset.currentTime = String(clampedTime);
+      bridgeElForSeek.dataset.seekInhibitUntil = String(Date.now() + 800);
+      bridgeElForSeek.dataset.seekInhibitTime = String(clampedTime);
+      bridgeElForSeek.dataset.updatedAt = String(Date.now());
+    }
+
+    sendPlayerCommand({ action: 'seek', time: clampedTime, autoPlay: autoPlay !== false });
+    if (!bridgeElForSeek || bridgeElForSeek.dataset.ready !== '1') {
+      const video = getActiveVideo();
+      if (video) {
+        try { video.currentTime = clampedTime; } catch (_) {}
+        if (autoPlay !== false && video.paused) {
+          try { video.play().catch(() => {}); } catch (_) {}
         }
       }
-    `);
-
-    // 1. Enviar comando nativo autoritativo al MAIN WORLD (#movie_player.seekTo)
-    sendPlayerCommand({ action: 'seek', time: clampedTime, autoPlay: autoPlay !== false });
-
-    // 2. Ejecutar seek directamente en la barra nativa (Polymer tp-yt-paper-slider)
-    try {
-      seekNativeProgressBar(clampedTime);
-    } catch (_) {}
-
-    // 3. Control directo sobre todos los elementos <video>
-    const videos = Array.from(document.querySelectorAll('video'));
-    videos.forEach(v => {
-      try { v.currentTime = clampedTime; } catch (_) {}
-      if (autoPlay !== false && v.paused) {
-        try { v.play().catch(() => {}); } catch (_) {}
-      }
-    });
+    }
 
     // 4. Actualizar inmediatamente la barra y tiempos de la interfaz
     const fill = document.getElementById('cinema-progress-fill');
@@ -466,6 +451,17 @@ window.AuraMusic = window.AuraMusic || {};
         return { curSec, durSec };
       }
     }
+    // Fallback universal: buscar cualquier par de marcas de tiempo separadas en el texto (cualquier idioma o símbolo)
+    const timeMatches = [...clean.matchAll(/(-)?\s*(\d+(?::\d+)+)/g)];
+    if (timeMatches.length >= 2) {
+      const curSec = parseTimeStr(timeMatches[0][2]);
+      const isNegativeRemaining = Boolean(timeMatches[1][1]);
+      const secondSec = parseTimeStr(timeMatches[1][2]);
+      if (curSec !== null && secondSec !== null) {
+        const durSec = isNegativeRemaining ? (curSec + secondSec) : secondSec;
+        return { curSec, durSec };
+      }
+    }
     return null;
   }
 
@@ -479,7 +475,7 @@ window.AuraMusic = window.AuraMusic || {};
 
     // 2. Elemento slider de progreso (#progress-bar o #slider)
     const slider = document.querySelector('ytmusic-player-bar #progress-bar, ytmusic-player-bar #slider, tp-yt-paper-slider#slider, #progress-bar');
-    if (slider) {
+    if (slider && typeof slider.getAttribute === 'function') {
       const valText = slider.getAttribute('aria-valuetext');
       if (valText) {
         const res = parseYtMusicTimeText(valText);
@@ -487,7 +483,7 @@ window.AuraMusic = window.AuraMusic || {};
       }
       const valMax = parseFloat(slider.getAttribute('aria-valuemax'));
       const valNow = parseFloat(slider.getAttribute('aria-valuenow'));
-      if (!isNaN(valMax) && valMax > 5) {
+      if (!isNaN(valMax) && valMax > 5 && valMax !== 100) {
         return {
           curSec: !isNaN(valNow) && valNow >= 0 ? valNow : 0,
           durSec: valMax
@@ -521,7 +517,7 @@ window.AuraMusic = window.AuraMusic || {};
     // 3. Duración de la barra nativa (evita capítulos inflados) y fallback de tiempo actual como último recurso
     const barTimes = getNativeBarTimes();
     if (barTimes && barTimes.durSec > 0) {
-      domDuration = barTimes.durSec;
+      if (domDuration <= 0) domDuration = barTimes.durSec;
       if (domCurrent < 0 && barTimes.curSec >= 0) domCurrent = barTimes.curSec;
     }
 
@@ -544,61 +540,47 @@ window.AuraMusic = window.AuraMusic || {};
     if (video && !isNaN(video.duration) && isFinite(video.duration) && video.duration > 3) {
       return video.duration;
     }
+
     return 0;
   }
 
   function parseLrc(lrcString, realDuration = 0) {
+    if (typeof lrcString !== 'string') return [];
     const lines = lrcString.split('\n');
     const result = [];
-    const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/;
-    let offsetMs = 0;
+    const timeTagRegex = /\[(\d+):(\d{2})(?:[.:](\d{1,3}))?\]/g;
+    const wordTagRegex = /<(\d+):(\d{2})(?:[.:](\d{1,3}))?>/g;
+    const offsets = [...lrcString.matchAll(/\[offset:\s*([+-]?\d+)\s*\]/gi)];
+    const offset = offsets.length ? Number(offsets[offsets.length - 1][1]) / 1000 : 0;
+    const seconds = match => Number(match[1]) * 60 + Number(match[2]) + (match[3] ? Number('0.' + match[3]) : 0);
 
-    const offsetRegex = /\[offset:\s*([+-]?\d+)\s*\]/i;
-    lines.forEach(line => {
-      const offMatch = offsetRegex.exec(line);
-      if (offMatch) {
-        offsetMs = parseInt(offMatch[1], 10) || 0;
-      }
-    });
-
-    lines.forEach(line => {
-      const match = timeRegex.exec(line);
-      if (match) {
-        const min = parseInt(match[1], 10);
-        const sec = parseInt(match[2], 10);
-        const ms = parseFloat('0.' + match[3]);
-        let time = min * 60 + sec + ms + (offsetMs / 1000);
-        const text = line.replace(/\[\d{2}:\d{2}\.\d{2,3}\]/g, '').trim();
-        if (text && time >= 0) {
-          result.push({ time, text });
+    for (const line of lines) {
+      const tags = [...line.matchAll(timeTagRegex)].filter(tag => Number(tag[2]) < 60);
+      if (!tags.length) continue;
+      const body = line.replace(timeTagRegex, '').trim();
+      const wordTags = [...body.matchAll(wordTagRegex)];
+      const text = body.replace(wordTagRegex, '').trim();
+      for (const tag of tags) {
+        const time = Math.max(0, seconds(tag) + offset);
+        if (!text) {
+          result.push({ time, text: '🎵 [Instrumental]', isInstrumental: true });
+          continue;
         }
+        const shift = seconds(tag) - seconds(tags[0]) + offset;
+        const words = wordTags.map((wordTag, index) => {
+          const next = wordTags[index + 1];
+          const wordText = body.slice(wordTag.index + wordTag[0].length, next ? next.index : body.length).trim();
+          return { text: wordText, time: Math.max(time, seconds(wordTag) + shift),
+            ...(next ? { end: Math.max(time, seconds(next) + shift) } : {}) };
+        }).filter(word => word.text);
+        result.push({ time, text, ...(words.length ? { words } : {}) });
       }
-    });
-
+    }
     result.sort((a, b) => a.time - b.time);
-
-    // Si la primera línea empieza tras un intro instrumental largo (> 4s), insertar indicador de intro
-    if (result.length > 0 && result[0].time > 4.0) {
-      result.unshift({
-        time: 0,
-        text: '🎵 [Intro Instrumental]',
-        isIntro: true
-      });
+    if (result.length && result[0].time > 4) {
+      result.unshift({ time: 0, text: '🎵 [Intro Instrumental]', isIntro: true });
     }
-
-    // Si la canción dura más que la última frase cantada (Outro instrumental), añadir bloque de Outro
-    if (result.length > 0 && realDuration > 15) {
-      const lastLyricTime = result[result.length - 1].time;
-      if (realDuration - lastLyricTime > 6.0) {
-        const outroTime = Math.max(lastLyricTime + 1.5, realDuration - 8.0);
-        result.push({
-          time: outroTime,
-          text: '🎵 [Final / Outro Instrumental]',
-          isOutro: true
-        });
-      }
-    }
-
+    // The last timestamp marks a verse start, not the start of an outro.
     autoPopulateWordsForLines(result, realDuration);
     return result;
   }
@@ -651,13 +633,9 @@ window.AuraMusic = window.AuraMusic || {};
       : Math.max(2.5, tokens.length * 0.55);
 
     const windowRatio = 0.84;
-    const minWordDur = 0.18;
     const holdMultiplier = 1.25;
 
-    const naturalSingingDuration = Math.min(
-      Math.max(tokens.length * minWordDur, availableWindow * windowRatio),
-      tokens.length * 0.82
-    );
+    const naturalSingingDuration = Math.min(availableWindow * windowRatio, tokens.length * 0.82);
 
     const weights = tokens.map((token, idx) => {
       const clean = token.toLowerCase().replace(/[^a-záéíóúüñ]/g, '');
@@ -683,9 +661,9 @@ window.AuraMusic = window.AuraMusic || {};
 
     let curT = startT;
     line.words = tokens.map((w, idx) => {
-      const wordTime = Math.round(curT * 100) / 100;
+      const wordTime = curT;
       const dur = (weights[idx] / totalWeight) * naturalSingingDuration;
-      curT += Math.max(minWordDur, dur);
+      curT += dur;
       return {
         text: w,
         time: wordTime
@@ -699,7 +677,7 @@ window.AuraMusic = window.AuraMusic || {};
     if (!Array.isArray(lines) || lines.length === 0) return lines;
     lines.forEach((line, i) => {
       if (Array.isArray(line.words) && line.words.length > 0) return;
-      if (line.isIntro || line.isOutro) return;
+      if (line.isIntro || line.isOutro || line.isInstrumental) return;
 
       const nextLineTime = (i < lines.length - 1)
         ? lines[i + 1].time
@@ -806,8 +784,9 @@ window.AuraMusic = window.AuraMusic || {};
   }
 
   async function fetchSyncedLyrics(title, artist, duration, videoId) {
-    const cleanTitle = (title || '').replace(/\(.*?\)|\[.*?\]/g, '').replace(/\s+/g, ' ').trim();
+    const cleanTitle = (title || '').replace(/\s*(?:official\s*(?:video|audio|music\s*video|lyric\s*video)|video\s*oficial|audio\s*oficial|visualizer|letra|lyrics)\b.*$/i, '').replace(/\(.*?\)|\[.*?\]/g, '').replace(/\s+/g, ' ').trim() || (title || '').trim();
     const cleanArtist = (artist || '').split(/[•·,\/]/)[0].replace(/\s+/g, ' ').trim();
+    const primaryArtist = cleanArtist.split(/\s+(?:y|&|feat\.?|ft\.?|x)\s+/i)[0].trim();
     const serverMode = getLyricsServerMode();
 
     // 0. Si el modo es 'personal' (Recomendado): Consultar Servidor Personal de Letras (AuraLyrics Studio en localhost:3000)
@@ -891,6 +870,31 @@ window.AuraMusic = window.AuraMusic || {};
       }
     } catch (e) {}
 
+    // 2b. Búsqueda con artista principal si es colaboración (ej. "DUKI y Milo j" -> "DUKI")
+    if (primaryArtist && primaryArtist !== cleanArtist) {
+      try {
+        const queryUrl = `https://lrclib.net/api/search?q=${encodeURIComponent(cleanTitle + ' ' + primaryArtist)}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const res = await fetch(queryUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const list = await res.json();
+          if (Array.isArray(list) && list.length > 0) {
+            const withSynced = list.filter(item => item.syncedLyrics);
+            if (withSynced.length > 0) {
+              if (duration > 0) {
+                withSynced.sort((a, b) => Math.abs(a.duration - duration) - Math.abs(b.duration - duration));
+              }
+              console.log('✨ AuraMusic: ¡Letras sincronizadas vía artista principal (' + primaryArtist + '):', withSynced[0].trackName, '!');
+              return parseLrc(withSynced[0].syncedLyrics, duration);
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
     // 3. Intento directo con /api/get
     try {
       const getUrl = `https://lrclib.net/api/get?track_name=${encodeURIComponent(cleanTitle)}&artist_name=${encodeURIComponent(cleanArtist)}&duration=${Math.round(duration || 180)}`;
@@ -932,6 +936,7 @@ window.AuraMusic = window.AuraMusic || {};
 
   // --- SISTEMA DE TRADUCCIÓN SIMULTÁNEA INTELIGENTE ---
   let isTranslationActive = false;
+  let translationRequestId = 0;
   let lyricsTranslationCache = {};
 
   function isValidTranslationText(text) {
@@ -948,7 +953,7 @@ window.AuraMusic = window.AuraMusic || {};
   async function translateSingleLine(text, targetLang = 'es') {
     try {
       const url = `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=${targetLang}&q=${encodeURIComponent(text)}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
       if (!res.ok) return { text, isDifferent: false };
       const data = await res.json();
       const trans = data[0][0];
@@ -963,7 +968,7 @@ window.AuraMusic = window.AuraMusic || {};
   // MOTOR INTELIGENTE DE DOS PASOS: Traduce en bloque y aísla frases en otro idioma (ej. "We're just having fun")
   async function translateLyrics(lyrics, targetLang = 'es') {
     if (!lyrics || lyrics.length === 0) return lyrics;
-    const cacheKey = `${lastCinemaTrackId}:::${targetLang}`;
+    const cacheKey = JSON.stringify([targetLang, lyrics]);
     if (lyricsTranslationCache[cacheKey]) {
       return lyricsTranslationCache[cacheKey];
     }
@@ -974,7 +979,7 @@ window.AuraMusic = window.AuraMusic || {};
 
       let batchLines = [];
       try {
-        const res = await fetch(googleUrl);
+        const res = await fetch(googleUrl, { signal: AbortSignal.timeout(5000) });
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data) && data[0] && typeof data[0][0] === 'string') {
@@ -985,7 +990,7 @@ window.AuraMusic = window.AuraMusic || {};
 
       // Paso 2: Verificar líneas individualmente si la canción es mixta (frases en inglés dentro de temas en español)
       const translatedList = await Promise.all(lyrics.map(async (item, idx) => {
-        const batchTrans = (batchLines[idx] || '').trim();
+        const batchTrans = batchLines.length === lyrics.length ? (batchLines[idx] || '').trim() : '';
         const isBatchDiff = isValidTranslationText(batchTrans) && batchTrans.toLowerCase() !== item.text.toLowerCase();
 
         if (isBatchDiff) {
@@ -1039,7 +1044,7 @@ window.AuraMusic = window.AuraMusic || {};
         const textToTranslate = chunk.map(l => l.text).join('\n');
         const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(textToTranslate)}&langpair=autodetect|${targetLang}`;
         try {
-          const res = await fetch(url);
+          const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
           if (!res.ok) throw new Error('Fetch error');
           const data = await res.json();
           const rawTrans = data.responseData?.translatedText || '';
@@ -1047,7 +1052,7 @@ window.AuraMusic = window.AuraMusic || {};
           if (isValidTranslationText(rawTrans)) {
             const transLines = rawTrans.split('\n');
             chunk.forEach((item, cIdx) => {
-              const trans = (transLines[cIdx] || '').trim();
+              const trans = transLines.length === chunk.length ? (transLines[cIdx] || '').trim() : '';
               const isDiff = isValidTranslationText(trans) && trans.toLowerCase() !== item.text.toLowerCase();
               translatedList.push({
                 ...item,
@@ -1069,10 +1074,37 @@ window.AuraMusic = window.AuraMusic || {};
     }
   }
 
+  async function toggleLyricsTranslation() {
+    const requestId = ++translationRequestId;
+    const trackGen = cinemaTrackGen;
+    const source = currentLyrics;
+    isTranslationActive = !isTranslationActive;
+    const button = document.getElementById('cinema-translate-btn');
+    if (button) {
+      button.classList.toggle('active', isTranslationActive);
+      button.style.opacity = isTranslationActive ? '0.5' : '1';
+    }
+    if (isTranslationActive) {
+      try {
+        const targetLang = (navigator.language || 'es').split('-')[0].toLowerCase();
+        const translated = await translateLyrics(source, targetLang);
+        if (requestId !== translationRequestId || trackGen !== cinemaTrackGen || !isCinemaActive) return;
+        currentLyrics = translated;
+      } finally {
+        if (requestId === translationRequestId && button) button.style.opacity = '1';
+      }
+    }
+    if (requestId === translationRequestId && trackGen === cinemaTrackGen) renderCinemaLyricsDOM();
+  }
+
   function renderCinemaLyricsDOM() {
     const wrapper = document.getElementById('cinema-lyrics-wrapper');
     if (!wrapper) return;
 
+    lastCinemaActiveIdx = -1;
+    lastSingingWordIdx = -1;
+    cachedActiveLineEl = null;
+    cachedWordEls = [];
     wrapper.innerHTML = '';
 
     if (!currentLyrics || currentLyrics.length === 0) {
@@ -1138,7 +1170,9 @@ window.AuraMusic = window.AuraMusic || {};
 
       // Renderizar palabras con ritmos silábicos naturales (Modo Frases y Palabras Automáticas)
       let lineWords = Array.isArray(item.words) && item.words.length > 0 ? item.words : null;
-      if (hasTranslation || !lineWords) {
+      if (item.isIntro || item.isOutro || item.isInstrumental) {
+        lineWords = [{ text: displayText, time: item.time }];
+      } else if (hasTranslation || !lineWords) {
         lineWords = smartDistributeWords({ text: displayText, time: item.time }, nextItem ? nextItem.time : (item.time + 3.5));
       }
 
@@ -1152,13 +1186,16 @@ window.AuraMusic = window.AuraMusic || {};
           } else {
             wEnd = nextItem ? nextItem.time : (wStart + 2.5);
           }
+          if (Number.isFinite(Number(wObj.end)) && Number(wObj.end) > wStart) {
+            wEnd = Math.min(wEnd, Number(wObj.end));
+          }
           if (isNaN(wEnd) || wEnd <= wStart) wEnd = wStart + 0.35;
 
           const span = document.createElement('span');
           span.className = 'k-word';
           span.textContent = (wObj.text || '').trim();
-          span.dataset.start = wStart.toFixed(2);
-          span.dataset.end = wEnd.toFixed(2);
+          span.dataset.start = String(wStart);
+          span.dataset.end = String(wEnd);
           span.dataset.widx = String(i);
           mainLineSpan.appendChild(span);
           if (i < lineWords.length - 1) {
@@ -1229,11 +1266,11 @@ window.AuraMusic = window.AuraMusic || {};
 
       lineDiv.style.cursor = 'pointer';
 
-      function executeLineJump(targetItem, lineIndex, lineEl) {
+      function executeLineJump(targetItem, lineIndex, lineEl, wordTime) {
         const duration = getYtMusicTrackDuration();
 
-        // 1. Salto autoritativo por verso completo (inicio exacto de la línea)
-        let seekTime = targetItem.time;
+        // 1. Usar la palabra pulsada o el inicio del verso.
+        let seekTime = Number.isFinite(wordTime) ? wordTime : targetItem.time;
         if (targetItem.isOutro && duration > 10) {
           seekTime = Math.max(0, duration - 6);
         }
@@ -1274,15 +1311,16 @@ window.AuraMusic = window.AuraMusic || {};
         cachedActiveLineEl = lineEl;
         cachedWordEls = Array.from(lineEl.querySelectorAll('.k-word'));
         lastSingingWordIdx = 0;
-        lastCinemaActiveIdx = lineIndex;
+        lastCinemaActiveIdx = -1;
 
         // 5. Saltar y reproducir inmediatamente desde ese verso vía API oficial y control directo
-        seekTrack(seekTime, true);
+        seekTrack(seekTime + getEffectiveLyricsOffset(), true);
       }
 
       lineDiv.addEventListener('click', (e) => {
         e.stopPropagation();
-        executeLineJump(item, index, lineDiv);
+        const word = e.target.closest?.('.k-word');
+        executeLineJump(item, index, lineDiv, word ? Number(word.dataset.start) : undefined);
       });
 
       wrapper.appendChild(lineDiv);
@@ -1597,19 +1635,7 @@ window.AuraMusic = window.AuraMusic || {};
 
     const translateBtn = document.getElementById('cinema-translate-btn');
 
-    translateBtn.addEventListener('click', async () => {
-      isTranslationActive = !isTranslationActive;
-      translateBtn.classList.toggle('active', isTranslationActive);
-
-      if (isTranslationActive) {
-        translateBtn.style.opacity = '0.5';
-        const targetLang = (navigator.language || 'es').split('-')[0].toLowerCase();
-        currentLyrics = await translateLyrics(currentLyrics, targetLang);
-        translateBtn.style.opacity = '1';
-      }
-
-      renderCinemaLyricsDOM();
-    });
+    translateBtn.addEventListener('click', toggleLyricsTranslation);
 
     // Calibración milimétrica de sincronización de letra (+/- 0.1s y +/- 0.5s) con memoria persistente y Auto-Sync
     const nudgeAutoBtn = document.getElementById('cinema-nudge-auto');
@@ -1798,7 +1824,7 @@ window.AuraMusic = window.AuraMusic || {};
       lastCinemaTrackId = '';
       const { title, artist, coverUrl, videoId } = getCurrentTrackInfo();
       if (title) {
-        updateCinemaTrack(title, artist, coverUrl, videoId);
+        handleTrackChangeDetected(title, artist, videoId, coverUrl);
       }
     }
 
@@ -1994,10 +2020,13 @@ window.AuraMusic = window.AuraMusic || {};
         const targetTime = Math.min(Math.max(0, pct * dur), dur > 1 ? dur - 0.3 : dur);
         const fill = document.getElementById('cinema-progress-fill');
         if (fill) { fill.classList.add('is-seeking'); }
+        lastRenderedDisplayTime = targetTime;
         updateProgressVisual(targetTime, dur);
       });
 
       const executeSeekFromInput = () => {
+        if (!isUserDraggingProgress) return;
+        isUserDraggingProgress = false;
         const dur = getYtMusicTrackDuration() || (getActiveVideo()?.duration || 0);
         if (dur <= 0) return;
         const pct = Number(progressInput.value) / 1000;
@@ -2014,6 +2043,12 @@ window.AuraMusic = window.AuraMusic || {};
       progressInput.addEventListener('pointerup', executeSeekFromInput);
       progressInput.addEventListener('mouseup', executeSeekFromInput);
       progressInput.addEventListener('touchend', executeSeekFromInput);
+      progressInput.addEventListener('pointercancel', () => {
+        isUserDraggingProgress = false;
+        lastRenderedDisplayTime = -1;
+        document.getElementById('cinema-progress-fill')?.classList.remove('is-seeking');
+      });
+      progressInput.addEventListener('blur', executeSeekFromInput);
     }
 
     if (progressBg) {
@@ -2040,10 +2075,6 @@ window.AuraMusic = window.AuraMusic || {};
   let lastCinemaActiveIdx = -1;
   let pendingCinemaTrackUpdate = null;
   let cinemaGraceUntil = 0;
-  let cinemaSeekLockUntil = 0;
-  let cinemaSeekTargetTime = -1;
-  let isUserDraggingProgress = false;
-  let lastRenderedPlaybackTime = 0;
   let cinemaTrackChangeTime = 0;
   let preloadLyricsCache = {};
   let preloadTriggeredForTrackId = '';
@@ -2075,11 +2106,17 @@ window.AuraMusic = window.AuraMusic || {};
       resetCinemaProgressImmediate();
     });
     video.addEventListener('seeked', () => {
+      if (video !== getActiveVideo()) return;
       cinemaSeekLockUntil = 0;
       cinemaSeekTargetTime = -1;
       if (video) lastRenderedPlaybackTime = video.currentTime;
       const fill = document.getElementById('cinema-progress-fill');
       if (fill) fill.classList.remove('is-seeking');
+      const bridgeEl = document.getElementById('auramusic-bridge-data');
+      if (bridgeEl) {
+        delete bridgeEl.dataset.seekInhibitUntil;
+        delete bridgeEl.dataset.seekInhibitTime;
+      }
     });
   }
 
@@ -2092,10 +2129,9 @@ window.AuraMusic = window.AuraMusic || {};
     }
   });
 
-  function makeLyricsCacheKey(title, artist) {
-    const t = (title || '').replace(/\(.*?\)|\[.*?\]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
-    const a = (artist || '').split(/[•·,\/]/)[0].replace(/\s+/g, ' ').trim().toLowerCase();
-    return `${t}:::${a}`;
+  function makeLyricsCacheKey(title, artist, videoId = '') {
+    const normalize = value => (value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    return JSON.stringify([getLyricsServerMode(), videoId, normalize(title), normalize(artist)]);
   }
 
   function getPredictedNextTrack() {
@@ -2124,7 +2160,10 @@ window.AuraMusic = window.AuraMusic || {};
                   if (splitIdx > 0) at = at.slice(0, splitIdx).trim();
                   nextArtist = at;
                 }
-                return { title: nextTitle, artist: nextArtist };
+                const link = el.querySelector('a[href*="watch?v="]');
+                let videoId = '';
+                try { videoId = new URL(link?.href || '', location.href).searchParams.get('v') || ''; } catch (_) {}
+                return { title: nextTitle, artist: nextArtist, videoId };
               }
             }
           }
@@ -2146,13 +2185,13 @@ window.AuraMusic = window.AuraMusic || {};
       const pred = getPredictedNextTrack();
       if (!pred || !pred.title) return;
       preloadTriggeredForTrackId = curTrackKey;
-      const nextCacheKey = makeLyricsCacheKey(pred.title, pred.artist || '');
+      if (!pred.videoId) return;
+      const nextCacheKey = makeLyricsCacheKey(pred.title, pred.artist || '', pred.videoId);
       if (preloadLyricsCache[nextCacheKey]) return;
 
       console.log('🔮 AuraMusic: Precargando letra de la siguiente canción:', pred.title);
       try {
-        const estDuration = Math.max(120, Math.round(video.duration));
-        const lyr = await fetchSyncedLyrics(pred.title, pred.artist || '', estDuration);
+        const lyr = await fetchSyncedLyrics(pred.title, pred.artist || '', 0, pred.videoId);
         if (lyr && lyr.length > 0 && !lyr.some(l => l.isFallback)) {
           preloadLyricsCache[nextCacheKey] = { lyrics: lyr, fetchedAt: Date.now() };
           console.log('✅ AuraMusic: Letra precargada con éxito para:', pred.title);
@@ -2173,6 +2212,7 @@ window.AuraMusic = window.AuraMusic || {};
     cinemaSeekTargetTime = -1;
     cinemaSeekLockUntil = 0;
     lastRenderedPlaybackTime = 0;
+    lastRenderedDisplayTime = -1;
 
     if (fill) {
       fill.classList.remove('is-seeking');
@@ -2374,10 +2414,8 @@ window.AuraMusic = window.AuraMusic || {};
     });
   }
 
-  let activeTransitionFromTrackId = '';
-  let activeTransitionTimestamp = 0;
-
   function handleTrackChangeDetected(newTitle, newArtist, newVideoId, newCover) {
+    if (!isCinemaActive) return;
     if (!newTitle || newTitle === 'Cargando...' || newTitle === 'YouTube Music') return;
 
     const cleanTitle = newTitle.replace(/\(.*?\)|\[.*?\]/g, '').replace(/\s+/g, ' ').trim();
@@ -2394,18 +2432,9 @@ window.AuraMusic = window.AuraMusic || {};
       }
     }
 
-    // Filtro anti-rebote (Stale Bounce-Back Rejection):
-    // Si acabamos de cambiar a otra canción hace menos de 2500ms, y nos llega un evento
-    // rezagado de la canción previa que dejamos atrás, lo ignoramos.
     const now = Date.now();
-    if (activeTransitionFromTrackId && trackId === activeTransitionFromTrackId && (now - activeTransitionTimestamp < 2500)) {
-      console.log('🛡️ AuraMusic: Descartando rebote rezagado de canción previa:', cleanTitle);
-      return;
-    }
 
     console.log('🔄 AuraMusic: Cambio de canción confirmado:', trackId);
-    activeTransitionFromTrackId = currentTrackKey;
-    activeTransitionTimestamp = now;
     currentTrackKey = trackId;
     lastCinemaTrackId = trackId;
     cinemaTrackChangeTime = now;
@@ -2422,6 +2451,13 @@ window.AuraMusic = window.AuraMusic || {};
 
   async function updateCinemaTrack(title, artist, hintCover, videoId) {
     const curGen = ++cinemaTrackGen;
+    ++translationRequestId;
+    currentLyrics = [];
+    lastCinemaActiveIdx = -1;
+    cachedActiveLineEl = null;
+    cachedWordEls = [];
+    const translationButton = document.getElementById('cinema-translate-btn');
+    if (translationButton) translationButton.style.opacity = '1';
     isFetchingLyrics = true;
 
     const cleanTitle = (title || '').replace(/\(.*?\)|\[.*?\]/g, '').replace(/\s+/g, ' ').trim() || 'Canción';
@@ -2476,7 +2512,7 @@ window.AuraMusic = window.AuraMusic || {};
 
     // 1. Comprobar caché de letras precargadas para hotload instantáneo
     let lyrics = null;
-    const cacheKey = makeLyricsCacheKey(cleanTitle, cleanArtist);
+    const cacheKey = makeLyricsCacheKey(title, artist, videoId);
 
     if (preloadLyricsCache[cacheKey] && Array.isArray(preloadLyricsCache[cacheKey].lyrics)) {
       const cached = preloadLyricsCache[cacheKey].lyrics;
@@ -2540,9 +2576,11 @@ window.AuraMusic = window.AuraMusic || {};
       } catch (_) {}
     }
 
+    if (curGen !== cinemaTrackGen || !isCinemaActive) return;
+
     // 5. NUNCA guardar fallbacks dummy en la caché (solo guardar letras reales)
     if (!isFallback && Array.isArray(finalLyrics) && finalLyrics.length > 0) {
-      preloadLyricsCache[cacheKey] = { lyrics: finalLyrics, fetchedAt: Date.now() };
+      preloadLyricsCache[cacheKey] = { lyrics, fetchedAt: Date.now() };
     }
 
     currentLyrics = finalLyrics;
@@ -2555,12 +2593,13 @@ window.AuraMusic = window.AuraMusic || {};
       rightScroll.scrollTop = 0;
       rightScroll.scrollTo({ top: 0, behavior: 'instant' });
       requestAnimationFrame(() => {
-        if (rightScroll) rightScroll.scrollTop = 0;
+        if (curGen === cinemaTrackGen && isCinemaActive) rightScroll.scrollTop = 0;
       });
     }
   }
 
   async function openCinemaMode() {
+    if (isCinemaActive) return;
     createCinemaOverlay();
     const overlay = document.getElementById('auramusic-cinema-overlay');
     if (!overlay) return;
@@ -2584,7 +2623,9 @@ window.AuraMusic = window.AuraMusic || {};
     if (state.theme === 'jesuluto') {
       if (jStage) jStage.style.display = 'flex';
       if (artBox) artBox.style.display = 'none';
-      setTimeout(initJesuluto3D, 100);
+      setTimeout(() => {
+        if (isCinemaActive && state.theme === 'jesuluto') window.AuraMusic?.Themes?.initJesuluto3D?.();
+      }, 100);
     } else {
       if (jStage) jStage.style.display = 'none';
       if (artBox) artBox.style.display = 'block';
@@ -2615,7 +2656,7 @@ window.AuraMusic = window.AuraMusic || {};
     // Poblar de inmediato la primera canción seleccionada
     const trackInfo = getCurrentTrackInfo();
     if (trackInfo && trackInfo.title) {
-      updateCinemaTrack(trackInfo.title, trackInfo.artist, trackInfo.coverUrl, trackInfo.videoId);
+      handleTrackChangeDetected(trackInfo.title, trackInfo.artist, trackInfo.videoId, trackInfo.coverUrl);
     } else {
       checkCinemaTrackChange();
     }
@@ -2641,17 +2682,23 @@ window.AuraMusic = window.AuraMusic || {};
       settingsModal.style.display = 'none';
     }
     isCinemaActive = false;
+    ++cinemaTrackGen;
+    ++translationRequestId;
+    isFetchingLyrics = false;
+    isUserDraggingProgress = false;
+    if (cinemaSyncFrameId !== null) cancelAnimationFrame(cinemaSyncFrameId);
+    cinemaSyncFrameId = null;
+    syncLoopRunning = false;
     document.body.classList.remove('auramusic-cinema-active');
 
     const barBtn = document.getElementById('auramusic-bar-lyrics-btn');
     if (barBtn) barBtn.classList.remove('active');
 
-    if (typeof destroyJesuluto3D === 'function') {
-      destroyJesuluto3D();
-    }
+    window.AuraMusic?.Themes?.destroyJesuluto3D?.();
   }
 
   let syncLoopRunning = false;
+  let cinemaSyncFrameId = null;
   function startCinemaSyncLoop() {
     if (syncLoopRunning) return;
     syncLoopRunning = true;
@@ -2663,18 +2710,18 @@ window.AuraMusic = window.AuraMusic || {};
     let lastLyricsOffsetCheckTime = 0;
     let cachedEffectiveOffset = 0;
     let lastWhatsAppCheckTime = 0;
-    let lastRenderedDisplayTime = -1;
+    lastRenderedDisplayTime = -1;
     let cachedVideo = null;
     let cachedFill = null;
     let cachedCurSpan = null;
     let cachedTotSpan = null;
     let cachedPlayBtn = null;
     let cachedArtImg = null;
-    let cachedActiveLineEl = null;
-    let cachedWordEls = [];
+    cachedActiveLineEl = null;
+    cachedWordEls = [];
     let lastSyncFrameTime = 0;
     let lastSyncIsPlaying = true;
-    let lastSingingWordIdx = -1;
+    lastSingingWordIdx = -1;
     let lastRenderedDuration = -1;
 
     function sync(timestamp) {
@@ -2695,7 +2742,7 @@ window.AuraMusic = window.AuraMusic || {};
       const nowTs = timestamp || performance.now();
       const minFrameInterval = lastSyncIsPlaying ? 24 : 250;
       if (nowTs - lastSyncFrameTime < minFrameInterval) {
-        requestAnimationFrame(sync);
+        cinemaSyncFrameId = requestAnimationFrame(sync);
         return;
       }
       lastSyncFrameTime = nowTs;
@@ -2732,16 +2779,7 @@ window.AuraMusic = window.AuraMusic || {};
         // 2. Duración precisa (recalcular solo cada 500ms para ahorrar CPU)
         if (now - lastDurationPollTime > 500 || cachedDuration <= 0) {
           lastDurationPollTime = now;
-          const barTimes = getNativeBarTimes();
-          if (barTimes && barTimes.durSec > 0) {
-            cachedDuration = barTimes.durSec;
-          } else if (cachedVideo && !isNaN(cachedVideo.duration) && isFinite(cachedVideo.duration) && cachedVideo.duration > 0) {
-            cachedDuration = cachedVideo.duration;
-          } else if (bridge && bridge.duration > 0) {
-            cachedDuration = bridge.duration;
-          } else {
-            cachedDuration = getYtMusicTrackDuration() || 0;
-          }
+          cachedDuration = getYtMusicTrackDuration();
         }
         const duration = cachedDuration;
 
@@ -2755,23 +2793,19 @@ window.AuraMusic = window.AuraMusic || {};
         }
 
         const vidTime = (cachedVideo && !isNaN(cachedVideo.currentTime) && isFinite(cachedVideo.currentTime) && cachedVideo.currentTime >= 0) ? cachedVideo.currentTime : -1;
+        const isVidActive = (cachedVideo && !cachedVideo.paused && !cachedVideo.ended && vidTime >= 0);
 
-        if (vidTime >= 0) {
+        if (isVidActive) {
           currentTime = vidTime;
-          isPlaying = isTrackPlaying(cachedVideo);
+          isPlaying = true;
         } else if (resolvedTime >= 0) {
           currentTime = resolvedTime;
-          isPlaying = resolvedPlaying;
+          isPlaying = resolvedPlaying || isTrackPlaying(cachedVideo);
+        } else if (vidTime >= 0) {
+          currentTime = vidTime;
+          isPlaying = isTrackPlaying(cachedVideo);
         }
         lastSyncIsPlaying = isPlaying;
-
-        // BLINDAJE ANTI-RESIDUAL: Si la pista cambió hace menos de 2500ms y el reproductor todavía reporta
-        // la posición final de la canción previa (> 2.0s), forzar 0 absoluto para que el contador jamás salga en 2:12
-        const isRecentTrackChange = (now - cinemaTrackChangeTime < 2500);
-        if (isRecentTrackChange && !isUserDraggingProgress && currentTime > 2.0) {
-          currentTime = 0;
-          lastRenderedPlaybackTime = 0;
-        }
 
         const isSeekingLocked = (now < cinemaSeekLockUntil && cinemaSeekTargetTime >= 0);
 
@@ -2779,14 +2813,16 @@ window.AuraMusic = window.AuraMusic || {};
         if (isUserDraggingProgress) {
           displayTime = lastRenderedDisplayTime;
         } else if (isSeekingLocked) {
-          if (Math.abs(currentTime - cinemaSeekTargetTime) < 0.6 || now >= cinemaSeekLockUntil) {
+          // Confirmar proximidad al destino también cuando el salto es hacia atrás.
+          if (Math.abs(currentTime - cinemaSeekTargetTime) < 0.8) {
             cinemaSeekLockUntil = 0;
             cinemaSeekTargetTime = -1;
             displayTime = currentTime;
             lastRenderedPlaybackTime = currentTime;
             if (cachedFill) cachedFill.classList.remove('is-seeking');
           } else {
-            displayTime = cinemaSeekTargetTime;
+            // Mantener el destino durante el buffering; no inventar tiempo reproducido.
+            displayTime = Math.min(duration > 0 ? duration : Infinity, cinemaSeekTargetTime);
           }
         } else {
           lastRenderedPlaybackTime = currentTime;
@@ -2796,7 +2832,7 @@ window.AuraMusic = window.AuraMusic || {};
 
         // 4. Actualizar barra de progreso visual solo si el tiempo cambió perceptiblemente
         if (!isUserDraggingProgress) {
-          if (Math.abs(displayTime - lastRenderedDisplayTime) > 0.05) {
+          if (Math.abs(displayTime - lastRenderedDisplayTime) > 0.05 || duration !== lastRenderedDuration) {
             lastRenderedDisplayTime = displayTime;
             if (cachedFill) {
               if (duration > 0) {
@@ -2941,7 +2977,7 @@ window.AuraMusic = window.AuraMusic || {};
             lastSingingWordIdx = -1;
 
             // Actualización de líneas: Si el salto es mayor a 1 (ej. por seek o clic en verso), resincronizar todo
-            if (Math.abs(activeIdx - prevIdx) > 1) {
+            if (activeIdx < prevIdx || Math.abs(activeIdx - prevIdx) > 1) {
               const allLines = document.querySelectorAll('.cinema-lyric-line');
               allLines.forEach(l => {
                 const idx = parseInt(l.dataset.index, 10);
@@ -2986,69 +3022,15 @@ window.AuraMusic = window.AuraMusic || {};
             }
           }
 
-          // Karaoke palabra por palabra: actualización reactiva SOLO cuando la palabra cantada cambia
-          if (activeIdx >= 0 && activeIdx < currentLyrics.length && cachedActiveLineEl) {
-            const lineObj = currentLyrics[activeIdx];
-            let words = lineObj?.words;
-            if (!Array.isArray(words) || words.length === 0) {
-              const nextLineTime = (activeIdx < currentLyrics.length - 1)
-                ? currentLyrics[activeIdx + 1].time
-                : (lineObj.time + 3.5);
-              words = smartDistributeWords(lineObj, nextLineTime);
-              lineObj.words = words;
-            }
-
-            if (Array.isArray(words) && words.length > 0) {
-              let singingIdx = -1;
-              const nextLineTime = (activeIdx < currentLyrics.length - 1)
-                ? currentLyrics[activeIdx + 1].time
-                : (words[words.length - 1].time + 2.5);
-
-              for (let w = 0; w < words.length; w++) {
-                const wTime = typeof words[w].time === 'number' ? words[w].time : parseFloat(words[w].time);
-                const nextWTime = (w < words.length - 1)
-                  ? (typeof words[w + 1].time === 'number' ? words[w + 1].time : parseFloat(words[w + 1].time))
-                  : nextLineTime;
-
-                if (effectiveTime >= wTime && effectiveTime < nextWTime) {
-                  singingIdx = w;
-                  break;
-                } else if (w === words.length - 1 && effectiveTime >= wTime) {
-                  singingIdx = w;
-                }
-              }
-
-              if (singingIdx !== lastSingingWordIdx) {
-                lastSingingWordIdx = singingIdx;
-                cachedWordEls.forEach((wEl, wIdx) => {
-                  const wObj = words[wIdx];
-                  const wTime = wObj ? (typeof wObj.time === 'number' ? wObj.time : parseFloat(wObj.time)) : parseFloat(wEl.dataset.start);
-                  const hasBeenSung = !isNaN(wTime) && effectiveTime >= wTime;
-
-                  if (wIdx === singingIdx) {
-                    if (wEl.className !== 'k-word active') wEl.className = 'k-word active';
-                  } else if (hasBeenSung) {
-                    if (wEl.className !== 'k-word sung') wEl.className = 'k-word sung';
-                  } else {
-                    if (wEl.className !== 'k-word') wEl.className = 'k-word';
-                  }
-                });
-              }
-            } else if (cachedWordEls.length > 0) {
-              cachedWordEls.forEach(w => {
-                const start = parseFloat(w.dataset.start);
-                const end = parseFloat(w.dataset.end);
-                if (!isNaN(start) && !isNaN(end)) {
-                  if (effectiveTime >= end) {
-                    if (w.className !== 'k-word sung') w.className = 'k-word sung';
-                  } else if (effectiveTime >= start && effectiveTime < end) {
-                    if (w.className !== 'k-word active') w.className = 'k-word active';
-                  } else {
-                    if (w.className !== 'k-word') w.className = 'k-word';
-                  }
-                }
-              });
-            }
+          // Use the rendered timings, including translated words, as the single source of truth.
+          if (activeIdx >= 0 && cachedActiveLineEl) {
+            cachedWordEls.forEach(word => {
+              const start = Number(word.dataset.start);
+              const end = Number(word.dataset.end);
+              const className = effectiveTime >= end ? 'k-word sung'
+                : effectiveTime >= start ? 'k-word active' : 'k-word';
+              if (word.className !== className) word.className = className;
+            });
           }
         } else {
           const allLines = document.querySelectorAll('.cinema-lyric-line');
@@ -3073,14 +3055,14 @@ window.AuraMusic = window.AuraMusic || {};
         console.warn('AuraMusic: Error en ciclo de sincronización cinema:', err);
       } finally {
         if (isCinemaActive) {
-          requestAnimationFrame(sync);
+          cinemaSyncFrameId = requestAnimationFrame(sync);
         } else {
           syncLoopRunning = false;
         }
       }
     }
 
-    requestAnimationFrame(sync);
+    cinemaSyncFrameId = requestAnimationFrame(sync);
   }
 
   function formatTime(seconds) {

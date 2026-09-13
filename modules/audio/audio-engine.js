@@ -18,6 +18,8 @@ window.AuraMusic = window.AuraMusic || {};
   let eqFilters = {};
   let isAudioConnected = false;
   let postEQTap = null;
+  let connectedVideo = null;
+  const mediaSources = new WeakMap();
 
   function applyPlaybackSpeed(speed) {
     const video = document.querySelector('video');
@@ -48,13 +50,26 @@ window.AuraMusic = window.AuraMusic || {};
   // --- MOTOR DE AUDIO WEB AUDIO API ---
   function initAudioEngine() {
     const video = document.querySelector('video');
-    if (!video || isAudioConnected) return;
+    if (!video || (isAudioConnected && connectedVideo === video)) return;
 
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new AudioContext();
+      if (!audioCtx) audioCtx = new AudioContext();
+      let nextSource = mediaSources.get(video);
+      if (!nextSource) {
+        nextSource = audioCtx.createMediaElementSource(video);
+        mediaSources.set(video, nextSource);
+      }
 
-      sourceNode = audioCtx.createMediaElementSource(video);
+      if (isAudioConnected) {
+        if (sourceNode) sourceNode.disconnect();
+        sourceNode = nextSource;
+        sourceNode.connect(eqFilters['60Hz']);
+        connectedVideo = video;
+        applyPlaybackSpeed(getState().playbackSpeed);
+        return;
+      }
+      sourceNode = nextSource;
       analyser = audioCtx.createAnalyser();
       analyser.fftSize = 128;
       analyser.smoothingTimeConstant = 0.8;
@@ -95,6 +110,8 @@ window.AuraMusic = window.AuraMusic || {};
       analyser.connect(audioCtx.destination);
 
       isAudioConnected = true;
+      connectedVideo = video;
+      applyPlaybackSpeed(state.playbackSpeed);
       console.log('✅ AuraMusic: Motor Web Audio API conectado con éxito.');
     } catch (e) {
       console.warn('AuraMusic: AudioContext en modo seguro.', e);
@@ -102,11 +119,9 @@ window.AuraMusic = window.AuraMusic || {};
   }
 
   function _tryConnectAudio() {
+    initAudioEngine();
     if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-    if (!isAudioConnected) {
-      initAudioEngine();
+      audioCtx.resume().catch(() => {});
     }
   }
 
@@ -114,11 +129,14 @@ window.AuraMusic = window.AuraMusic || {};
     window.addEventListener(evt, _tryConnectAudio, { passive: true });
   });
 
-  const audioCheckInterval = setInterval(() => {
-    if (isAudioConnected) {
-      clearInterval(audioCheckInterval);
-      return;
+  // YouTube Music puede reemplazar el elemento video durante la navegación.
+  document.addEventListener('loadedmetadata', (event) => {
+    if (event.target === document.querySelector('video')) {
+      applyPlaybackSpeed(getState().playbackSpeed);
     }
+  }, true);
+
+  setInterval(() => {
     const video = document.querySelector('video');
     if (video && !video.paused) {
       _tryConnectAudio();
