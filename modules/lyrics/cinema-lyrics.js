@@ -228,6 +228,19 @@ window.AuraMusic = window.AuraMusic || {};
     return deepFindSlider(document.body || document.documentElement);
   }
 
+  function executeInPage(code) {
+    try {
+      const s = document.createElement('script');
+      const nonce = document.querySelector('script[nonce]')?.nonce || document.querySelector('script[nonce]')?.getAttribute('nonce');
+      if (nonce) s.setAttribute('nonce', nonce);
+      s.textContent = `(function(){ try { ${code} } catch(e){ console.warn("AuraMusic in-page exec error:", e); } })();`;
+      (document.head || document.documentElement).appendChild(s);
+      s.remove();
+    } catch (e) {
+      console.warn('AuraMusic executeInPage error:', e);
+    }
+  }
+
   function seekNativeProgressBar(targetSeconds) {
     const slider = findProgressBar();
     if (!slider) return false;
@@ -240,7 +253,7 @@ window.AuraMusic = window.AuraMusic || {};
     const dur = max > min ? (max - min) : (max || 1);
     const pct = Math.max(0, Math.min(1, targetSeconds / dur));
 
-    // 1. Simulación física precisa de clics de ratón y puntero en la posición porcentual exacta
+    // 1. Simulación física precisa y eventos Polymer Gestures (_calcKnobPosition requiere detail.x)
     try {
       const targetEl = (slider.shadowRoot?.querySelector('#sliderContainer') || slider.shadowRoot?.querySelector('#sliderBar') || slider);
       const rect = targetEl.getBoundingClientRect();
@@ -261,23 +274,45 @@ window.AuraMusic = window.AuraMusic || {};
           isPrimary: true
         };
 
+        const polymerDetail = {
+          x: clientX,
+          y: clientY,
+          sourceEvent: mouseOpts
+        };
+
         const elementsToTrigger = [slider, targetEl, slider.shadowRoot?.querySelector('#sliderContainer'), slider.shadowRoot?.querySelector('#sliderBar')];
         elementsToTrigger.forEach(el => {
           if (!el) return;
+          // Eventos Polymer Gestures
+          try { el.dispatchEvent(new CustomEvent('down', { detail: polymerDetail, bubbles: true, composed: true })); } catch (_) {}
+          try { el.dispatchEvent(new CustomEvent('track', { detail: { ...polymerDetail, state: 'track' }, bubbles: true, composed: true })); } catch (_) {}
+          try { el.dispatchEvent(new CustomEvent('up', { detail: polymerDetail, bubbles: true, composed: true })); } catch (_) {}
+          try { el.dispatchEvent(new CustomEvent('tap', { detail: polymerDetail, bubbles: true, composed: true })); } catch (_) {}
+
+          // Eventos Mouse / Pointer estándar
           try { el.dispatchEvent(new PointerEvent('pointerdown', mouseOpts)); } catch (_) {}
           try { el.dispatchEvent(new MouseEvent('mousedown', mouseOpts)); } catch (_) {}
           try { el.dispatchEvent(new PointerEvent('pointerup', mouseOpts)); } catch (_) {}
           try { el.dispatchEvent(new MouseEvent('mouseup', mouseOpts)); } catch (_) {}
           try { el.dispatchEvent(new MouseEvent('click', mouseOpts)); } catch (_) {}
         });
+
+        if (typeof slider._calcKnobPosition === 'function') {
+          try { slider._calcKnobPosition({ detail: polymerDetail }); } catch (_) {}
+        }
       }
     } catch (_) {}
 
     // 2. Modificación de valor de Polymer con eventos de cambio universales
     try {
-      const sliderVal = (rawSliderMax > 0 && Math.abs(rawSliderMax - 1000) < 50)
-        ? (pct * rawSliderMax)
-        : (rawSliderMax > 0 && rawSliderMax <= 100 ? (pct * rawSliderMax) : targetSeconds);
+      let sliderVal = targetSeconds;
+      if (rawSliderMax > 0 && Math.abs(rawSliderMax - 1000) < 50) {
+        sliderVal = pct * rawSliderMax;
+      } else if (rawSliderMax > 0 && rawSliderMax <= 100 && max > 100) {
+        sliderVal = pct * rawSliderMax;
+      } else if (rawSliderMax > 0) {
+        sliderVal = Math.min(rawSliderMax, targetSeconds);
+      }
 
       slider.value = sliderVal;
       if (slider.immediateValue !== undefined) slider.immediateValue = sliderVal;
@@ -295,6 +330,10 @@ window.AuraMusic = window.AuraMusic || {};
       const bar = document.querySelector('ytmusic-player-bar');
       if (bar) {
         bar.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+        bar.dispatchEvent(new CustomEvent('change', { bubbles: true, composed: true }));
+        if (typeof bar.onProgressBarChange_ === 'function') {
+          try { bar.onProgressBarChange_({ target: slider, detail: { value: sliderVal } }); } catch (_) {}
+        }
       }
     } catch (_) {}
 
@@ -309,9 +348,60 @@ window.AuraMusic = window.AuraMusic || {};
     }
 
     cinemaSeekTargetTime = clampedTime;
-    cinemaSeekLockUntil = Date.now() + 1500;
+    cinemaSeekLockUntil = Date.now() + 3000;
     lastRenderedPlaybackTime = clampedTime;
     lastRenderedDisplayTime = clampedTime;
+
+    // 0. Ejecución síncrona inmediata en MAIN WORLD (MediaSession + Todos los Player APIs descubiertos)
+    executeInPage(`
+      const t = ${clampedTime};
+      if (typeof window.__auramusic_media_handlers?.['seekto'] === 'function') {
+        try { window.__auramusic_media_handlers['seekto']({ seekTime: t, fastSeek: false }); } catch (_) {}
+      }
+      const apis = [];
+      if (window.movie_player && typeof window.movie_player.seekTo === 'function') apis.push(window.movie_player);
+      if (window.ytplayer && typeof window.ytplayer.seekTo === 'function') apis.push(window.ytplayer);
+      const sel = ['#movie_player', '.html5-video-player', 'ytmusic-player-bar', 'ytmusic-player', 'ytmusic-app', 'ytmusic-player-page'];
+      for (const s of sel) {
+        try {
+          const els = document.querySelectorAll(s);
+          for (const el of els) {
+            if (typeof el.seekTo === 'function') apis.push(el);
+            if (el.playerApi_ && typeof el.playerApi_.seekTo === 'function') apis.push(el.playerApi_);
+            if (el.shadowRoot) {
+              const inside = el.shadowRoot.querySelectorAll('#movie_player, .html5-video-player');
+              for (const i of inside) {
+                if (typeof i.seekTo === 'function') apis.push(i);
+                if (i.playerApi_ && typeof i.playerApi_.seekTo === 'function') apis.push(i.playerApi_);
+              }
+            }
+          }
+        } catch (_) {}
+      }
+      for (const api of apis) {
+        try { api.seekTo(t, true); } catch (_) {}
+      }
+      const slider = document.querySelector('ytmusic-player-bar #progress-bar, tp-yt-paper-slider#progress-bar, #progress-bar');
+      if (slider) {
+        try {
+          const max = slider.max || parseFloat(slider.getAttribute('aria-valuemax')) || 0;
+          if (max > 0) {
+            slider.value = (max <= 100 || Math.abs(max - 1000) < 50) ? (t / (max > 1 ? max : 1)) * max : t;
+          } else {
+            slider.value = t;
+          }
+          slider.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+          slider.dispatchEvent(new CustomEvent('change', { bubbles: true, composed: true }));
+        } catch (_) {}
+      }
+      if (${autoPlay !== false}) {
+        for (const api of apis) {
+          if (typeof api.playVideo === 'function') {
+            try { api.playVideo(); break; } catch (_) {}
+          }
+        }
+      }
+    `);
 
     // 1. Enviar comando nativo autoritativo al MAIN WORLD (#movie_player.seekTo)
     sendPlayerCommand({ action: 'seek', time: clampedTime, autoPlay: autoPlay !== false });

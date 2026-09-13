@@ -17,6 +17,25 @@
 
   console.log('⚡ AuraMusic: Conectando motor API nativo de YouTube Music en MAIN WORLD...');
 
+  // 0. Captura anticipada de MediaSession Actions de YouTube Music
+  window.__auramusic_media_handlers = window.__auramusic_media_handlers || {};
+  try {
+    if (navigator.mediaSession && typeof navigator.mediaSession.setActionHandler === 'function') {
+      const origSetActionHandler = navigator.mediaSession.setActionHandler.bind(navigator.mediaSession);
+      navigator.mediaSession.setActionHandler = function (action, handler) {
+        if (typeof handler === 'function') {
+          window.__auramusic_media_handlers[action] = handler;
+          console.log('⚡ AuraMusic: MediaSession hook capturó handler para:', action);
+        } else {
+          delete window.__auramusic_media_handlers[action];
+        }
+        return origSetActionHandler(action, handler);
+      };
+    }
+  } catch (e) {
+    console.warn('AuraMusic MediaSession hook error:', e);
+  }
+
   // 1. Elemento DOM puente compartido entre MAIN WORLD e ISOLATED WORLD
   let bridgeEl = document.getElementById('auramusic-bridge-data');
   if (!bridgeEl) {
@@ -29,55 +48,88 @@
   let lastTrackKey = '';
   let lastPlayerState = -1;
 
-  function getPlayer() {
+  function findEveryPlayerApi() {
+    const apis = new Set();
+
     // 1. Direct ID / Window
-    const mp = document.getElementById('movie_player') || window.movie_player;
-    if (mp && typeof mp.seekTo === 'function') return mp;
+    if (window.movie_player && typeof window.movie_player.seekTo === 'function') apis.add(window.movie_player);
+    if (window.ytplayer && typeof window.ytplayer.seekTo === 'function') apis.add(window.ytplayer);
+
+    const directMp = document.getElementById('movie_player');
+    if (directMp && typeof directMp.seekTo === 'function') apis.add(directMp);
 
     // 2. Query selectors conocidos en YouTube Music
     const list = [
-      document.querySelector('#movie_player'),
-      document.querySelector('.html5-video-player'),
-      document.querySelector('ytmusic-player-bar')?.playerApi_,
-      document.querySelector('ytmusic-app')?.playerApi_,
-      document.querySelector('ytmusic-player')?.playerApi_,
-      document.querySelector('ytmusic-player-page')?.playerApi_
+      '#movie_player',
+      '.html5-video-player',
+      'ytmusic-player-bar',
+      'ytmusic-app',
+      'ytmusic-player',
+      'ytmusic-player-page'
     ];
-    for (const c of list) {
-      if (c && typeof c.seekTo === 'function') return c;
-    }
-
-    // 3. Búsqueda profunda recursiva a través de Shadow Roots
-    function findInShadow(root, depth = 0) {
-      if (!root || depth > 8) return null;
+    for (const sel of list) {
       try {
-        if (typeof root.seekTo === 'function') return root;
-        if (root.playerApi_ && typeof root.playerApi_.seekTo === 'function') return root.playerApi_;
-        if (root.querySelector) {
-          const m = root.querySelector('#movie_player, .html5-video-player');
-          if (m && typeof m.seekTo === 'function') return m;
+        const els = document.querySelectorAll(sel);
+        for (const el of els) {
+          if (typeof el.seekTo === 'function') apis.add(el);
+          if (el.playerApi_ && typeof el.playerApi_.seekTo === 'function') apis.add(el.playerApi_);
+          if (el.player_ && typeof el.player_.seekTo === 'function') apis.add(el.player_);
+          if (el.shadowRoot) {
+            const inShadow = el.shadowRoot.querySelectorAll('#movie_player, .html5-video-player');
+            for (const s of inShadow) {
+              if (typeof s.seekTo === 'function') apis.add(s);
+              if (s.playerApi_ && typeof s.playerApi_.seekTo === 'function') apis.add(s.playerApi_);
+            }
+          }
         }
       } catch (_) {}
+    }
 
+    // 3. Shadow roots profundos
+    function searchShadow(root, depth = 0) {
+      if (!root || depth > 8) return;
       try {
         if (root.shadowRoot) {
-          const found = findInShadow(root.shadowRoot, depth + 1);
-          if (found) return found;
+          const mp = root.shadowRoot.querySelectorAll('#movie_player, .html5-video-player');
+          for (const s of mp) {
+            if (typeof s.seekTo === 'function') apis.add(s);
+            if (s.playerApi_ && typeof s.playerApi_.seekTo === 'function') apis.add(s.playerApi_);
+          }
+          for (const child of root.shadowRoot.children || []) {
+            searchShadow(child, depth + 1);
+          }
+        }
+        for (const child of root.children || []) {
+          searchShadow(child, depth + 1);
         }
       } catch (_) {}
-
-      try {
-        const children = root.children || [];
-        for (let i = 0; i < children.length; i++) {
-          const found = findInShadow(children[i], depth + 1);
-          if (found) return found;
-        }
-      } catch (_) {}
-      return null;
     }
+    try {
+      searchShadow(document.body || document.documentElement);
+    } catch (_) {}
 
-    const app = document.querySelector('ytmusic-app') || document.body;
-    return findInShadow(app);
+    // 4. Propiedades de ytmusic-player-bar
+    try {
+      const playerBar = document.querySelector('ytmusic-player-bar');
+      if (playerBar) {
+        if (typeof playerBar.seekTo === 'function') apis.add(playerBar);
+        if (playerBar.playerApi_ && typeof playerBar.playerApi_.seekTo === 'function') apis.add(playerBar.playerApi_);
+        for (const k of Object.keys(playerBar)) {
+          try {
+            if (playerBar[k] && typeof playerBar[k].seekTo === 'function') {
+              apis.add(playerBar[k]);
+            }
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+
+    return Array.from(apis);
+  }
+
+  function getPlayer() {
+    const all = findEveryPlayerApi();
+    return all.length > 0 ? all[0] : null;
   }
 
   function findProgressBar() {
@@ -128,7 +180,7 @@
     const dur = max > min ? (max - min) : (max || 1);
     const pct = Math.max(0, Math.min(1, targetSeconds / dur));
 
-    // 1. Simulación física precisa de clics de ratón y puntero en la posición porcentual exacta
+    // 1. Simulación física precisa y eventos Polymer Gestures (_calcKnobPosition requiere detail.x)
     try {
       const targetEl = (slider.shadowRoot?.querySelector('#sliderContainer') || slider.shadowRoot?.querySelector('#sliderBar') || slider);
       const rect = targetEl.getBoundingClientRect();
@@ -149,23 +201,45 @@
           isPrimary: true
         };
 
+        const polymerDetail = {
+          x: clientX,
+          y: clientY,
+          sourceEvent: mouseOpts
+        };
+
         const elementsToTrigger = [slider, targetEl, slider.shadowRoot?.querySelector('#sliderContainer'), slider.shadowRoot?.querySelector('#sliderBar')];
         elementsToTrigger.forEach(el => {
           if (!el) return;
+          // Eventos Polymer Gestures reconocidos por el PaperSlider de YouTube Music
+          try { el.dispatchEvent(new CustomEvent('down', { detail: polymerDetail, bubbles: true, composed: true })); } catch (_) {}
+          try { el.dispatchEvent(new CustomEvent('track', { detail: { ...polymerDetail, state: 'track' }, bubbles: true, composed: true })); } catch (_) {}
+          try { el.dispatchEvent(new CustomEvent('up', { detail: polymerDetail, bubbles: true, composed: true })); } catch (_) {}
+          try { el.dispatchEvent(new CustomEvent('tap', { detail: polymerDetail, bubbles: true, composed: true })); } catch (_) {}
+
+          // Eventos de ratón / puntero estándar
           try { el.dispatchEvent(new PointerEvent('pointerdown', mouseOpts)); } catch (_) {}
           try { el.dispatchEvent(new MouseEvent('mousedown', mouseOpts)); } catch (_) {}
           try { el.dispatchEvent(new PointerEvent('pointerup', mouseOpts)); } catch (_) {}
           try { el.dispatchEvent(new MouseEvent('mouseup', mouseOpts)); } catch (_) {}
           try { el.dispatchEvent(new MouseEvent('click', mouseOpts)); } catch (_) {}
         });
+
+        if (typeof slider._calcKnobPosition === 'function') {
+          try { slider._calcKnobPosition({ detail: polymerDetail }); } catch (_) {}
+        }
       }
     } catch (_) {}
 
     // 2. Modificación de valor de Polymer con eventos de cambio universales
     try {
-      const sliderVal = (rawSliderMax > 0 && rawSliderMax !== max && Math.abs(rawSliderMax - 1000) < 50)
-        ? (pct * rawSliderMax)
-        : (rawSliderMax > 0 && rawSliderMax <= 100 ? (pct * rawSliderMax) : targetSeconds);
+      let sliderVal = targetSeconds;
+      if (rawSliderMax > 0 && Math.abs(rawSliderMax - 1000) < 50) {
+        sliderVal = pct * rawSliderMax;
+      } else if (rawSliderMax > 0 && rawSliderMax <= 100 && max > 100) {
+        sliderVal = pct * rawSliderMax;
+      } else if (rawSliderMax > 0) {
+        sliderVal = Math.min(rawSliderMax, targetSeconds);
+      }
 
       slider.value = sliderVal;
       if (slider.immediateValue !== undefined) slider.immediateValue = sliderVal;
@@ -183,6 +257,10 @@
       const bar = document.querySelector('ytmusic-player-bar');
       if (bar) {
         bar.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+        bar.dispatchEvent(new CustomEvent('change', { bubbles: true, composed: true }));
+        if (typeof bar.onProgressBarChange_ === 'function') {
+          try { bar.onProgressBarChange_({ target: slider, detail: { value: sliderVal } }); } catch (_) {}
+        }
       }
     } catch (_) {}
 
@@ -453,64 +531,47 @@
           let sought = false;
           const vids = Array.from(document.querySelectorAll('video'));
 
-          // 1. Salto directo y preciso en movie_player y todas las instancias del reproductor
-          const candidatePlayers = [
-            player,
-            document.getElementById('movie_player'),
-            document.querySelector('#movie_player'),
-            document.querySelector('.html5-video-player'),
-            document.querySelector('ytmusic-player-bar')?.playerApi_,
-            document.querySelector('ytmusic-app')?.playerApi_,
-            document.querySelector('ytmusic-player')?.playerApi_,
-            document.querySelector('ytmusic-player-page')?.playerApi_,
-            window.movie_player,
-            window.ytplayer
-          ];
-
-          // Búsqueda profunda en propiedades de ytmusic-player-bar (por si Closure Compiler ofuscó playerApi_)
-          const playerBar = document.querySelector('ytmusic-player-bar');
-          if (playerBar) {
-            candidatePlayers.push(playerBar);
-            for (const k of Object.keys(playerBar)) {
-              try {
-                if (playerBar[k] && typeof playerBar[k].seekTo === 'function') {
-                  candidatePlayers.push(playerBar[k]);
-                }
-              } catch (_) {}
+          // Capa A: MediaSession oficial de YouTube Music (Handler nativo capturado)
+          if (typeof window.__auramusic_media_handlers?.['seekto'] === 'function') {
+            try {
+              window.__auramusic_media_handlers['seekto']({ seekTime: targetSeekTime, fastSeek: false });
+              console.log('⚡ AuraMusic: seekTo ejecutado vía MediaSession oficial!');
+              sought = true;
+            } catch (e) {
+              console.warn('AuraMusic: MediaSession seekto error:', e);
             }
           }
 
-          for (const p of candidatePlayers) {
-            if (p && typeof p.seekTo === 'function') {
-              try {
-                p.seekTo(targetSeekTime, true);
-                sought = true;
-                break;
-              } catch (e) {
-                console.warn('player.seekTo error:', e);
-              }
+          // Capa B: Búsqueda y ejecución exhaustiva sobre todos los reproductores descubiertos (sin break)
+          const allPlayers = findEveryPlayerApi();
+          allPlayers.forEach(p => {
+            try {
+              p.seekTo(targetSeekTime, true);
+              sought = true;
+            } catch (e) {
+              console.warn('player.seekTo error:', e);
             }
-          }
+          });
 
-          // 2. Ejecutar seek en la barra de progreso nativa (Polymer tp-yt-paper-slider)
+          // Capa C: Ejecutar seek en la barra de progreso nativa (Polymer tp-yt-paper-slider)
           try {
             seekNativeProgressBar(targetSeekTime);
           } catch (e) {
             console.warn('seekNativeProgressBar error:', e);
           }
 
-          // 3. Fallback / sincronización directa sobre todos los elementos <video>
+          // Capa D: Fallback / sincronización directa sobre todos los elementos <video>
           vids.forEach(vid => {
             try { vid.currentTime = targetSeekTime; } catch (_) {}
           });
 
-          // 4. Asegurar reproducción continua si correspondía (autoPlay)
+          // Capa E: Asegurar reproducción continua si correspondía (autoPlay)
           if (autoPlay !== false) {
-            for (const p of candidatePlayers) {
-              if (p && typeof p.playVideo === 'function') {
-                try { p.playVideo(); break; } catch (_) {}
+            allPlayers.forEach(p => {
+              if (typeof p.playVideo === 'function') {
+                try { p.playVideo(); } catch (_) {}
               }
-            }
+            });
             vids.forEach(vid => {
               if (vid.paused) {
                 try { vid.play().catch(() => {}); } catch (_) {}

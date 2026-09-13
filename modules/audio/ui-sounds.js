@@ -611,7 +611,7 @@ window.AuraMusic = window.AuraMusic || {};
       }
 
       // Letras sincronizadas
-      if (target.closest('.cinema-line, .cinema-line-word, .k-word, .cinema-line-time')) {
+      if (target.closest('.cinema-lyric-line, .cinema-line, .cinema-line-word, .k-word, .cinema-line-time')) {
         playLyricJump();
         return;
       }

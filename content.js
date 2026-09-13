@@ -15,7 +15,20 @@
     document.head.appendChild(link);
     console.log('✨ AuraMusic: Fuentes tipográficas temáticas cargadas.');
   }
-  injectGoogleFonts();
+  function injectPlayerBridge() {
+    if (document.getElementById('auramusic-player-bridge-script')) return;
+    try {
+      const script = document.createElement('script');
+      script.id = 'auramusic-player-bridge-script';
+      script.src = chrome.runtime.getURL('modules/core/player-bridge.js');
+      script.async = false;
+      (document.head || document.documentElement).appendChild(script);
+      console.log('⚡ AuraMusic: Player Bridge script inyectado directamente en DOM.');
+    } catch (e) {
+      console.warn('AuraMusic: error inyectando player-bridge script:', e);
+    }
+  }
+  injectPlayerBridge();
 
 
   console.log('%c✨ AuraMusic: Inicializando suite modular...', 'color: #00e5ff; font-weight: bold; font-size: 14px;');
