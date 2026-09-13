@@ -234,36 +234,48 @@ window.AuraMusic = window.AuraMusic || {};
 
     const ariaMax = parseFloat(slider.getAttribute('aria-valuemax'));
     const rawSliderMax = typeof slider.max === 'number' ? slider.max : parseFloat(slider.max);
-    const max = (!isNaN(ariaMax) && ariaMax > 5) ? ariaMax : (!isNaN(rawSliderMax) && rawSliderMax > 0 ? rawSliderMax : 0);
+    const trackDur = getYtMusicTrackDuration();
+    const max = (trackDur > 1) ? trackDur : ((!isNaN(ariaMax) && ariaMax > 5) ? ariaMax : (!isNaN(rawSliderMax) && rawSliderMax > 0 ? rawSliderMax : 0));
     const min = parseFloat(slider.getAttribute('aria-valuemin')) || parseFloat(slider.min) || 0;
     const dur = max > min ? (max - min) : (max || 1);
     const pct = Math.max(0, Math.min(1, targetSeconds / dur));
 
-    // Despacho de pointerdown, pointerup y click a las coordenadas de píxeles exactas
+    // 1. Simulación física precisa de clics de ratón y puntero en la posición porcentual exacta
     try {
       const targetEl = (slider.shadowRoot?.querySelector('#sliderContainer') || slider.shadowRoot?.querySelector('#sliderBar') || slider);
       const rect = targetEl.getBoundingClientRect();
       if (rect.width > 0) {
         const clientX = rect.left + (pct * rect.width);
         const clientY = rect.top + (rect.height / 2);
-        const opts = { bubbles: true, cancelable: true, composed: true, clientX, clientY, pointerId: 1, pointerType: 'mouse', isPrimary: true };
-        slider.dispatchEvent(new PointerEvent('pointerdown', opts));
-        slider.dispatchEvent(new PointerEvent('pointerup', opts));
-        slider.dispatchEvent(new MouseEvent('click', opts));
-        if (slider.shadowRoot) {
-          const container = slider.shadowRoot.querySelector('#sliderContainer');
-          if (container) {
-            container.dispatchEvent(new PointerEvent('pointerdown', opts));
-            container.dispatchEvent(new PointerEvent('pointerup', opts));
-            container.dispatchEvent(new MouseEvent('click', opts));
-          }
-        }
+        const mouseOpts = {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          clientX,
+          clientY,
+          screenX: clientX,
+          screenY: clientY,
+          buttons: 1,
+          pointerId: 1,
+          pointerType: 'mouse',
+          isPrimary: true
+        };
+
+        const elementsToTrigger = [slider, targetEl, slider.shadowRoot?.querySelector('#sliderContainer'), slider.shadowRoot?.querySelector('#sliderBar')];
+        elementsToTrigger.forEach(el => {
+          if (!el) return;
+          try { el.dispatchEvent(new PointerEvent('pointerdown', mouseOpts)); } catch (_) {}
+          try { el.dispatchEvent(new MouseEvent('mousedown', mouseOpts)); } catch (_) {}
+          try { el.dispatchEvent(new PointerEvent('pointerup', mouseOpts)); } catch (_) {}
+          try { el.dispatchEvent(new MouseEvent('mouseup', mouseOpts)); } catch (_) {}
+          try { el.dispatchEvent(new MouseEvent('click', mouseOpts)); } catch (_) {}
+        });
       }
     } catch (_) {}
 
-    // Despacho de eventos de cambio de valor Polymer
+    // 2. Modificación de valor de Polymer con eventos de cambio universales
     try {
-      const sliderVal = (rawSliderMax > 0 && rawSliderMax !== max && Math.abs(rawSliderMax - 1000) < 50)
+      const sliderVal = (rawSliderMax > 0 && Math.abs(rawSliderMax - 1000) < 50)
         ? (pct * rawSliderMax)
         : (rawSliderMax > 0 && rawSliderMax <= 100 ? (pct * rawSliderMax) : targetSeconds);
 
@@ -276,8 +288,14 @@ window.AuraMusic = window.AuraMusic || {};
       }
 
       slider.dispatchEvent(new CustomEvent('immediate-value-change', { bubbles: true, composed: true }));
+      slider.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
       slider.dispatchEvent(new CustomEvent('change', { bubbles: true, composed: true }));
       slider.dispatchEvent(new CustomEvent('value-change', { bubbles: true, composed: true }));
+
+      const bar = document.querySelector('ytmusic-player-bar');
+      if (bar) {
+        bar.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+      }
     } catch (_) {}
 
     return true;
@@ -291,23 +309,28 @@ window.AuraMusic = window.AuraMusic || {};
     }
 
     cinemaSeekTargetTime = clampedTime;
-    cinemaSeekLockUntil = Date.now() + 1000;
+    cinemaSeekLockUntil = Date.now() + 1500;
     lastRenderedPlaybackTime = clampedTime;
     lastRenderedDisplayTime = clampedTime;
 
     // 1. Enviar comando nativo autoritativo al MAIN WORLD (#movie_player.seekTo)
     sendPlayerCommand({ action: 'seek', time: clampedTime, autoPlay: autoPlay !== false });
 
-    // 2. Control directo sobre el elemento <video>
-    const video = getActiveVideo() || document.querySelector('video');
-    if (video) {
-      try { video.currentTime = clampedTime; } catch (_) {}
-      if (autoPlay !== false && video.paused) {
-        try { video.play().catch(() => {}); } catch (_) {}
-      }
-    }
+    // 2. Ejecutar seek directamente en la barra nativa (Polymer tp-yt-paper-slider)
+    try {
+      seekNativeProgressBar(clampedTime);
+    } catch (_) {}
 
-    // 3. Actualizar inmediatamente la barra y tiempos de la interfaz
+    // 3. Control directo sobre todos los elementos <video>
+    const videos = Array.from(document.querySelectorAll('video'));
+    videos.forEach(v => {
+      try { v.currentTime = clampedTime; } catch (_) {}
+      if (autoPlay !== false && v.paused) {
+        try { v.play().catch(() => {}); } catch (_) {}
+      }
+    });
+
+    // 4. Actualizar inmediatamente la barra y tiempos de la interfaz
     const fill = document.getElementById('cinema-progress-fill');
     const curSpan = document.getElementById('cinema-current-time');
     const waTimePill = document.getElementById('cinema-wa-time');
@@ -1103,23 +1126,32 @@ window.AuraMusic = window.AuraMusic || {};
         const timeBadge = document.createElement('span');
         timeBadge.className = 'cinema-line-time';
         timeBadge.textContent = formatTime(item.time);
+        timeBadge.style.cursor = 'pointer';
+        timeBadge.title = `Saltar a ${formatTime(item.time)}`;
         lineDiv.insertBefore(timeBadge, lineDiv.firstChild);
+
+        timeBadge.addEventListener('click', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          executeLineJump(item, index, lineDiv);
+        });
       }
 
-      lineDiv.addEventListener('click', (e) => {
-        e.stopPropagation();
+      lineDiv.style.cursor = 'pointer';
+
+      function executeLineJump(targetItem, lineIndex, lineEl) {
         const duration = getYtMusicTrackDuration();
 
         // 1. Salto autoritativo por verso completo (inicio exacto de la línea)
-        let seekTime = item.time;
-        if (item.isOutro && duration > 10) {
+        let seekTime = targetItem.time;
+        if (targetItem.isOutro && duration > 10) {
           seekTime = Math.max(0, duration - 6);
         }
 
         // 2. Resaltar visualmente de inmediato la línea seleccionada con animación viva
         const allLines = document.querySelectorAll('#cinema-lyrics-wrapper .cinema-lyric-line');
         allLines.forEach((l, lIdx) => {
-          if (lIdx === index) {
+          if (lIdx === lineIndex) {
             l.classList.remove('active-line', 'sung-line');
             void l.offsetWidth; // Forzar reinicio de animación CSS de entrada (cinemaPhraseEntrance)
             l.classList.add('active-line');
@@ -1129,7 +1161,7 @@ window.AuraMusic = window.AuraMusic || {};
             wordsInLine.forEach((w, wIdx) => {
               w.className = (wIdx === 0) ? 'k-word active' : 'k-word';
             });
-          } else if (lIdx < index) {
+          } else if (lIdx < lineIndex) {
             l.classList.remove('active-line');
             l.classList.add('sung-line');
             l.querySelectorAll('.k-word').forEach(w => w.className = 'k-word sung');
@@ -1139,23 +1171,28 @@ window.AuraMusic = window.AuraMusic || {};
           }
         });
 
-        // 2. Centrar la línea en la vista suavemente
+        // 3. Centrar la línea en la vista suavemente
         const container = document.getElementById('cinema-right-scroll');
         if (container) {
           const cRect = container.getBoundingClientRect();
-          const lRect = lineDiv.getBoundingClientRect();
+          const lRect = lineEl.getBoundingClientRect();
           const targetScroll = container.scrollTop + (lRect.top - cRect.top) - (cRect.height * 0.38);
           container.scrollTo({ top: targetScroll, behavior: 'smooth' });
         }
 
-        // 3. Sincronizar de inmediato referencias y estado del bucle de animación para fluidez sin pausas
-        cachedActiveLineEl = lineDiv;
-        cachedWordEls = Array.from(lineDiv.querySelectorAll('.k-word'));
+        // 4. Sincronizar de inmediato referencias y estado del bucle de animación para fluidez sin pausas
+        cachedActiveLineEl = lineEl;
+        cachedWordEls = Array.from(lineEl.querySelectorAll('.k-word'));
         lastSingingWordIdx = 0;
-        lastCinemaActiveIdx = index;
+        lastCinemaActiveIdx = lineIndex;
 
-        // 4. Saltar y reproducir inmediatamente desde ese verso vía API oficial y control directo
+        // 5. Saltar y reproducir inmediatamente desde ese verso vía API oficial y control directo
         seekTrack(seekTime, true);
+      }
+
+      lineDiv.addEventListener('click', (e) => {
+        e.stopPropagation();
+        executeLineJump(item, index, lineDiv);
       });
 
       wrapper.appendChild(lineDiv);
@@ -1870,8 +1907,7 @@ window.AuraMusic = window.AuraMusic || {};
         updateProgressVisual(targetTime, dur);
       });
 
-      // Al soltar — ejecuta el seek real
-      progressInput.addEventListener('change', () => {
+      const executeSeekFromInput = () => {
         const dur = getYtMusicTrackDuration() || (getActiveVideo()?.duration || 0);
         if (dur <= 0) return;
         const pct = Number(progressInput.value) / 1000;
@@ -1881,6 +1917,29 @@ window.AuraMusic = window.AuraMusic || {};
         if (fill) fill.classList.remove('is-seeking');
         updateProgressVisual(targetTime, dur);
         seekTrack(targetTime, true);
+      };
+
+      // Al soltar por cualquier método — ejecuta el seek real
+      progressInput.addEventListener('change', executeSeekFromInput);
+      progressInput.addEventListener('pointerup', executeSeekFromInput);
+      progressInput.addEventListener('mouseup', executeSeekFromInput);
+      progressInput.addEventListener('touchend', executeSeekFromInput);
+    }
+
+    if (progressBg) {
+      progressBg.addEventListener('click', (e) => {
+        if (e.target === progressInput) return;
+        const rect = progressBg.getBoundingClientRect();
+        if (rect.width > 0) {
+          const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+          const dur = getYtMusicTrackDuration() || (getActiveVideo()?.duration || 0);
+          if (dur > 0) {
+            const targetTime = Math.min(Math.max(0, pct * dur), dur > 1 ? dur - 0.3 : dur);
+            isUserDraggingProgress = false;
+            updateProgressVisual(targetTime, dur);
+            seekTrack(targetTime, true);
+          }
+        }
       });
     }
   }

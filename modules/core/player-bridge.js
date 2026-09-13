@@ -123,34 +123,45 @@
 
     const ariaMax = parseFloat(slider.getAttribute('aria-valuemax'));
     const rawSliderMax = typeof slider.max === 'number' ? slider.max : parseFloat(slider.max);
-    const max = (!isNaN(ariaMax) && ariaMax > 5) ? ariaMax : (!isNaN(rawSliderMax) && rawSliderMax > 0 ? rawSliderMax : 0);
+    const max = (!isNaN(ariaMax) && ariaMax > 5) ? ariaMax : (!isNaN(rawSliderMax) && rawSliderMax > 0 ? rawSliderMax : (cachedDuration > 0 ? cachedDuration : 0));
     const min = parseFloat(slider.getAttribute('aria-valuemin')) || parseFloat(slider.min) || 0;
     const dur = max > min ? (max - min) : (max || 1);
     const pct = Math.max(0, Math.min(1, targetSeconds / dur));
 
-    // Despacho de pointerdown, pointerup y click a las coordenadas de píxeles exactas
+    // 1. Simulación física precisa de clics de ratón y puntero en la posición porcentual exacta
     try {
       const targetEl = (slider.shadowRoot?.querySelector('#sliderContainer') || slider.shadowRoot?.querySelector('#sliderBar') || slider);
       const rect = targetEl.getBoundingClientRect();
       if (rect.width > 0) {
         const clientX = rect.left + (pct * rect.width);
         const clientY = rect.top + (rect.height / 2);
-        const opts = { bubbles: true, cancelable: true, composed: true, clientX, clientY, pointerId: 1, pointerType: 'mouse', isPrimary: true };
-        slider.dispatchEvent(new PointerEvent('pointerdown', opts));
-        slider.dispatchEvent(new PointerEvent('pointerup', opts));
-        slider.dispatchEvent(new MouseEvent('click', opts));
-        if (slider.shadowRoot) {
-          const container = slider.shadowRoot.querySelector('#sliderContainer');
-          if (container) {
-            container.dispatchEvent(new PointerEvent('pointerdown', opts));
-            container.dispatchEvent(new PointerEvent('pointerup', opts));
-            container.dispatchEvent(new MouseEvent('click', opts));
-          }
-        }
+        const mouseOpts = {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          clientX,
+          clientY,
+          screenX: clientX,
+          screenY: clientY,
+          buttons: 1,
+          pointerId: 1,
+          pointerType: 'mouse',
+          isPrimary: true
+        };
+
+        const elementsToTrigger = [slider, targetEl, slider.shadowRoot?.querySelector('#sliderContainer'), slider.shadowRoot?.querySelector('#sliderBar')];
+        elementsToTrigger.forEach(el => {
+          if (!el) return;
+          try { el.dispatchEvent(new PointerEvent('pointerdown', mouseOpts)); } catch (_) {}
+          try { el.dispatchEvent(new MouseEvent('mousedown', mouseOpts)); } catch (_) {}
+          try { el.dispatchEvent(new PointerEvent('pointerup', mouseOpts)); } catch (_) {}
+          try { el.dispatchEvent(new MouseEvent('mouseup', mouseOpts)); } catch (_) {}
+          try { el.dispatchEvent(new MouseEvent('click', mouseOpts)); } catch (_) {}
+        });
       }
     } catch (_) {}
 
-    // Despacho de eventos de cambio de valor Polymer
+    // 2. Modificación de valor de Polymer con eventos de cambio universales
     try {
       const sliderVal = (rawSliderMax > 0 && rawSliderMax !== max && Math.abs(rawSliderMax - 1000) < 50)
         ? (pct * rawSliderMax)
@@ -165,8 +176,14 @@
       }
 
       slider.dispatchEvent(new CustomEvent('immediate-value-change', { bubbles: true, composed: true }));
+      slider.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
       slider.dispatchEvent(new CustomEvent('change', { bubbles: true, composed: true }));
       slider.dispatchEvent(new CustomEvent('value-change', { bubbles: true, composed: true }));
+
+      const bar = document.querySelector('ytmusic-player-bar');
+      if (bar) {
+        bar.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+      }
     } catch (_) {}
 
     return true;
@@ -434,18 +451,36 @@
 
         if (!isNaN(targetSeekTime) && isFinite(targetSeekTime)) {
           let sought = false;
+          const vids = Array.from(document.querySelectorAll('video'));
 
-          // Salto directo y preciso al segundo exacto en movie_player y sus instancias
-          const players = [
+          // 1. Salto directo y preciso en movie_player y todas las instancias del reproductor
+          const candidatePlayers = [
             player,
             document.getElementById('movie_player'),
+            document.querySelector('#movie_player'),
+            document.querySelector('.html5-video-player'),
             document.querySelector('ytmusic-player-bar')?.playerApi_,
             document.querySelector('ytmusic-app')?.playerApi_,
             document.querySelector('ytmusic-player')?.playerApi_,
-            window.movie_player
+            document.querySelector('ytmusic-player-page')?.playerApi_,
+            window.movie_player,
+            window.ytplayer
           ];
 
-          for (const p of players) {
+          // Búsqueda profunda en propiedades de ytmusic-player-bar (por si Closure Compiler ofuscó playerApi_)
+          const playerBar = document.querySelector('ytmusic-player-bar');
+          if (playerBar) {
+            candidatePlayers.push(playerBar);
+            for (const k of Object.keys(playerBar)) {
+              try {
+                if (playerBar[k] && typeof playerBar[k].seekTo === 'function') {
+                  candidatePlayers.push(playerBar[k]);
+                }
+              } catch (_) {}
+            }
+          }
+
+          for (const p of candidatePlayers) {
             if (p && typeof p.seekTo === 'function') {
               try {
                 p.seekTo(targetSeekTime, true);
@@ -457,27 +492,21 @@
             }
           }
 
-          // Fallback adicional sobre ytmusic-player-bar
-          if (!sought) {
-            try {
-              const playerBar = document.querySelector('ytmusic-player-bar');
-              if (playerBar && typeof playerBar.seekTo === 'function') {
-                playerBar.seekTo(targetSeekTime);
-                sought = true;
-              }
-            } catch (_) {}
+          // 2. Ejecutar seek en la barra de progreso nativa (Polymer tp-yt-paper-slider)
+          try {
+            seekNativeProgressBar(targetSeekTime);
+          } catch (e) {
+            console.warn('seekNativeProgressBar error:', e);
           }
 
-          // Fallback directo sobre <video> si no hubo API de reproductor disponible
-          if (!sought) {
-            const vids = document.querySelectorAll('video');
-            vids.forEach(vid => {
-              try { vid.currentTime = targetSeekTime; } catch (_) {}
-            });
-          }
+          // 3. Fallback / sincronización directa sobre todos los elementos <video>
+          vids.forEach(vid => {
+            try { vid.currentTime = targetSeekTime; } catch (_) {}
+          });
 
+          // 4. Asegurar reproducción continua si correspondía (autoPlay)
           if (autoPlay !== false) {
-            for (const p of players) {
+            for (const p of candidatePlayers) {
               if (p && typeof p.playVideo === 'function') {
                 try { p.playVideo(); break; } catch (_) {}
               }
@@ -488,7 +517,11 @@
               }
             });
           }
-          if (bridgeEl) bridgeEl.dataset.currentTime = String(targetSeekTime);
+
+          if (bridgeEl) {
+            bridgeEl.dataset.currentTime = String(targetSeekTime);
+            bridgeEl.dataset.updatedAt = String(Date.now());
+          }
           syncFromAPI();
         }
       } else if (action === 'play') {
