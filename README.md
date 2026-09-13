@@ -42,12 +42,14 @@ AuraMusic es una extensión moderna (Manifest V3) que transforma por completo la
 
 ### 📹 Video Tutorial de Instalación
 
-¿Primera vez instalando una extensión? Mira este tutorial paso a paso:
-
-https://github.com/enam49378-debug/auraMusic/raw/main/media/auramusic-demo.mp4
+¿Primera vez instalando una extensión? Mira la demostración animada paso a paso directamente aquí:
 
 <div align="center">
-  <video src="media/auramusic-demo.mp4" controls="controls" width="100%" style="max-width: 820px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);"></video>
+  <a href="https://github.com/enam49378-debug/auraMusic/blob/main/media/auramusic-demo.mp4">
+    <img src="media/auramusic-install.gif" alt="Tutorial de Instalación de AuraMusic" width="100%" style="max-width: 820px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);" />
+  </a>
+  <p><em>🎬 Reproducción directa en GitHub. Haz clic en la imagen o en el siguiente enlace para verlo en video completo con audio:</em><br>
+  👉 <a href="https://github.com/enam49378-debug/auraMusic/blob/main/media/auramusic-demo.mp4"><strong>Ver Video Tutorial Completo en Reproductor Web de GitHub</strong></a></p>
 </div>
 
 ---

@@ -11,6 +11,9 @@ window.AuraMusic = window.AuraMusic || {};
   let uiAudioCtx = null;
   let masterGain = null;
   let lastSoundTime = 0;
+  let lastHoverSoundTime = 0;
+  let lastVolSoundTime = 0;
+  let lastTrackStartTime = 0;
 
   function getState() {
     return window.AuraMusic?.state || window.state || {};
@@ -68,6 +71,36 @@ window.AuraMusic = window.AuraMusic || {};
 
     osc.start(now);
     osc.stop(now + 0.025);
+  }
+
+  /**
+   * Micro-blip sutil al pasar el cursor sobre botones (Hover)
+   */
+  function playHover() {
+    if (!isAuraThemeActive()) return;
+    const nowMs = Date.now();
+    if (nowMs - lastHoverSoundTime < 140) return; // Anti-spam suave
+    lastHoverSoundTime = nowMs;
+
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, now);
+    osc.frequency.exponentialRampToValueAtTime(1120, now + 0.016);
+
+    gain.gain.setValueAtTime(0.06, now); // Muy sutil
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.016);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+
+    osc.start(now);
+    osc.stop(now + 0.018);
   }
 
   /**
@@ -225,6 +258,160 @@ window.AuraMusic = window.AuraMusic || {};
   }
 
   /**
+   * Sonido al mover el control deslizante de volumen
+   */
+  function playVolumeTick(vol = 50) {
+    if (!isAuraThemeActive()) return;
+    const nowMs = Date.now();
+    if (nowMs - lastVolSoundTime < 45) return;
+    lastVolSoundTime = nowMs;
+
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    const freq = 600 + Math.min(800, vol * 8);
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, now);
+
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+
+    osc.start(now);
+    osc.stop(now + 0.022);
+  }
+
+  /**
+   * Campanadas al dar Me Gusta (Like)
+   */
+  function playLike() {
+    if (!isAuraThemeActive()) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const chord = [659.25, 880, 1318.5, 1760]; // E5, A5, E6, A6 brillante festivo
+
+    chord.forEach((f, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, now + idx * 0.028);
+
+      gain.gain.setValueAtTime(0.15, now + idx * 0.028);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.028 + 0.16);
+
+      osc.connect(gain);
+      gain.connect(masterGain);
+
+      osc.start(now + idx * 0.028);
+      osc.stop(now + idx * 0.028 + 0.18);
+    });
+  }
+
+  /**
+   * Apertura o cierre espacial del Hub (Whoosh)
+   */
+  function playHubWoosh(isOpen = true) {
+    if (!isAuraThemeActive()) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    osc.type = 'sine';
+    if (isOpen) {
+      osc.frequency.setValueAtTime(260, now);
+      osc.frequency.exponentialRampToValueAtTime(780, now + 0.14);
+    } else {
+      osc.frequency.setValueAtTime(780, now);
+      osc.frequency.exponentialRampToValueAtTime(260, now + 0.12);
+    }
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(2200, now);
+
+    gain.gain.setValueAtTime(0.22, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + (isOpen ? 0.15 : 0.13));
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+
+    osc.start(now);
+    osc.stop(now + 0.16);
+  }
+
+  /**
+   * Foco en buscador (Efecto escáner sci-fi)
+   */
+  function playSearchFocus() {
+    if (!isAuraThemeActive()) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(900, now);
+    osc.frequency.exponentialRampToValueAtTime(1450, now + 0.04);
+
+    gain.gain.setValueAtTime(0.14, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+
+    osc.start(now);
+    osc.stop(now + 0.055);
+  }
+
+  /**
+   * Resonancia celestial al arrancar o cambiar de canción
+   */
+  function playTrackStart() {
+    if (!isAuraThemeActive()) return;
+    const nowMs = Date.now();
+    if (nowMs - lastTrackStartTime < 2000) return;
+    lastTrackStartTime = nowMs;
+
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const chord = [392.0, 587.33, 880.0, 1174.66]; // G4, D5, A5, D6 aura armónico
+
+    chord.forEach((f, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, now + idx * 0.04);
+
+      gain.gain.setValueAtTime(0.12, now + idx * 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.28);
+
+      osc.connect(gain);
+      gain.connect(masterGain);
+
+      osc.start(now + idx * 0.04);
+      osc.stop(now + idx * 0.04 + 0.3);
+    });
+  }
+
+  /**
    * Activación del tema AuraMusic (Acorde holográfico de firma)
    */
   function playThemeSelect() {
@@ -252,6 +439,118 @@ window.AuraMusic = window.AuraMusic || {};
     });
   }
 
+  /**
+   * Modo Aleatorio (Shuffle) o Repetir (Repeat)
+   */
+  function playShuffleRepeat(isActive = true) {
+    if (!isAuraThemeActive()) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(isActive ? 740 : 880, now);
+    osc.frequency.exponentialRampToValueAtTime(isActive ? 1175 : 587, now + 0.04);
+
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+
+    osc.start(now);
+    osc.stop(now + 0.05);
+  }
+
+  /**
+   * Silenciar o reactivar sonido (Mute / Unmute)
+   */
+  function playMute(isMuted = true) {
+    if (!isAuraThemeActive()) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    if (isMuted) {
+      osc.frequency.setValueAtTime(540, now);
+      osc.frequency.exponentialRampToValueAtTime(180, now + 0.06);
+    } else {
+      osc.frequency.setValueAtTime(260, now);
+      osc.frequency.exponentialRampToValueAtTime(740, now + 0.05);
+    }
+
+    gain.gain.setValueAtTime(0.16, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+
+    osc.start(now);
+    osc.stop(now + 0.075);
+  }
+
+  /**
+   * Toque en canción de lista de reproducción o cola
+   */
+  function playQueueSelect() {
+    if (!isAuraThemeActive()) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.025);
+
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.028);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+
+    osc.start(now);
+    osc.stop(now + 0.03);
+  }
+
+  /**
+   * Activación / Cierre de Modo Letras / Modo Cine
+   */
+  function playCinemaModeToggle(isOpen = true) {
+    if (!isAuraThemeActive()) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const chord = isOpen ? [523.25, 659.25, 987.77, 1318.5] : [1046.5, 783.99, 523.25];
+
+    chord.forEach((f, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, now + idx * 0.03);
+
+      gain.gain.setValueAtTime(0.14, now + idx * 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.03 + 0.16);
+
+      osc.connect(gain);
+      gain.connect(masterGain);
+
+      osc.start(now + idx * 0.03);
+      osc.stop(now + idx * 0.03 + 0.18);
+    });
+  }
+
   // --- ESCUCHADOR GLOBAL INTELIGENTE DE EVENTOS DOM ---
   function initGlobalListeners() {
     // 1. Clics en la interfaz
@@ -260,6 +559,14 @@ window.AuraMusic = window.AuraMusic || {};
 
       const target = e.target;
       if (!target) return;
+
+      // Modo Letras / Cine
+      if (target.closest('#cinema-lyrics-toggle, .cinema-toggle-btn, #hub-cinema-lyrics-tab, #cinema-close-btn')) {
+        const overlay = document.getElementById('auramusic-cinema-overlay');
+        const isClosing = overlay && overlay.classList.contains('active');
+        playCinemaModeToggle(!isClosing);
+        return;
+      }
 
       // Play/Pause botones
       if (target.closest('.play-pause-button, #play-pause-button, #cinema-play-btn, .cinema-play-btn, #cinema-wa-play-btn')) {
@@ -281,14 +588,43 @@ window.AuraMusic = window.AuraMusic || {};
         return;
       }
 
+      // Shuffle y Repeat botones
+      if (target.closest('.shuffle, .repeat, #shuffle-button, #repeat-button, tp-yt-paper-icon-button.shuffle, tp-yt-paper-icon-button.repeat')) {
+        const btn = target.closest('.shuffle, .repeat, #shuffle-button, #repeat-button, tp-yt-paper-icon-button.shuffle, tp-yt-paper-icon-button.repeat');
+        const isSelected = btn && (btn.getAttribute('aria-pressed') === 'true' || btn.classList.contains('active'));
+        playShuffleRepeat(!isSelected);
+        return;
+      }
+
+      // Mute / Volumen icono
+      if (target.closest('.volume-slider-icon, #volume-slider-icon, #volume-button, tp-yt-paper-icon-button#volume-slider')) {
+        const video = document.querySelector('video');
+        const isMuted = video ? video.muted : false;
+        playMute(!isMuted);
+        return;
+      }
+
+      // Botón de Me Gusta (Like)
+      if (target.closest('.like, [aria-label*="Me gusta"], [aria-label*="Like"], #like-button-renderer')) {
+        playLike();
+        return;
+      }
+
       // Letras sincronizadas
       if (target.closest('.cinema-line, .cinema-line-word, .k-word, .cinema-line-time')) {
         playLyricJump();
         return;
       }
 
-      // Pestañas del Hub
-      if (target.closest('.auramusic-tab, .auramusic-launcher-btn, .auramusic-icon-btn, .auramusic-hub-close')) {
+      // Pestañas del Hub y lanzador
+      if (target.closest('.auramusic-launcher-btn, .auramusic-hub-close')) {
+        const hubOverlay = document.getElementById('auramusic-hub-overlay');
+        const isClosing = hubOverlay && hubOverlay.classList.contains('active');
+        playHubWoosh(!isClosing);
+        return;
+      }
+
+      if (target.closest('.auramusic-tab, .auramusic-icon-btn')) {
         playClick();
         return;
       }
@@ -311,19 +647,51 @@ window.AuraMusic = window.AuraMusic || {};
         return;
       }
 
+      // Canción en lista o cola
+      if (target.closest('ytmusic-player-queue-item, ytmusic-responsive-list-item-renderer, .ytmusic-player-queue-item')) {
+        playQueueSelect();
+        return;
+      }
+
       // Cualquier botón general o enlace interactivo
       if (target.closest('button, tp-yt-paper-icon-button, yt-icon-button, [role="button"]')) {
         playClick();
       }
     }, true);
 
-    // 2. Arrastre y saltos en barra de tiempo
+    // 2. Hover suave en elementos interactivos
+    document.addEventListener('mouseover', (e) => {
+      if (!isAuraThemeActive()) return;
+      const target = e.target;
+      if (!target) return;
+
+      if (target.closest('button, .theme-pill-btn, .auramusic-tab, .cinema-line, ytmusic-chip-cloud-chip-renderer, .play-pause-button')) {
+        playHover();
+      }
+    }, { passive: true, capture: true });
+
+    // 3. Foco en el buscador
+    document.addEventListener('focusin', (e) => {
+      if (!isAuraThemeActive()) return;
+      if (e.target.closest('ytmusic-search-box, input#input')) {
+        playSearchFocus();
+      }
+    }, true);
+
+    // 4. Arrastre y saltos en barra de tiempo y volumen
     document.addEventListener('input', (e) => {
       if (!isAuraThemeActive()) return;
       if (e.target.matches('#cinema-progress-input, #progress-bar, input[type="range"]')) {
         playSeek();
+      } else if (e.target.closest('#volume-slider, input#volume')) {
+        playVolumeTick(Number(e.target.value) || 50);
       }
     }, true);
+
+    // 5. Cambio de pista (Anuncio armónico)
+    document.addEventListener('auramusic-track-change', () => {
+      playTrackStart();
+    });
   }
 
   // Desbloquear AudioContext en la primera interacción
@@ -343,12 +711,22 @@ window.AuraMusic = window.AuraMusic || {};
 
   window.AuraMusic.UISounds = {
     playClick,
+    playHover,
     playSeek,
     playLyricJump,
     playPlayPause,
     playTrackNav,
     playToggle,
+    playVolumeTick,
+    playLike,
+    playHubWoosh,
+    playSearchFocus,
+    playTrackStart,
     playThemeSelect,
+    playShuffleRepeat,
+    playMute,
+    playQueueSelect,
+    playCinemaModeToggle,
     isAuraThemeActive
   };
 })();
