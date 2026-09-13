@@ -221,6 +221,7 @@ body.auramusic-theme-cyberpunk .line-original-sub {
 .cinema-timeline-box {
   width: 380px;
   margin-bottom: 22px;
+  position: relative;
 }
 
 .cinema-progress-bg {
@@ -235,17 +236,7 @@ body.auramusic-theme-cyberpunk .line-original-sub {
   transition: height 0.15s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease;
 }
 
-/* Área de clic e interacción expandida invisible (+12px arriba y abajo) para no fallar jamás */
-.cinema-progress-bg::before {
-  content: '';
-  position: absolute;
-  top: -12px;
-  bottom: -12px;
-  left: 0;
-  right: 0;
-  cursor: pointer;
-}
-
+/* Hover expansion de la barra */
 .cinema-progress-bg:hover {
   height: 8px;
   background: rgba(255, 255, 255, 0.25);
@@ -259,6 +250,7 @@ body.auramusic-theme-cyberpunk .line-original-sub {
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
   transition: width 0.1s linear;
   position: relative;
+  pointer-events: none;
 }
 
 /* Tirador interactivo (Scrubber Thumb / Circulito para agarrar) */
@@ -267,22 +259,41 @@ body.auramusic-theme-cyberpunk .line-original-sub {
   position: absolute;
   right: -7px;
   top: 50%;
-  transform: translateY(-50%) scale(1) !important;
+  transform: translateY(-50%) scale(1);
   width: 15px;
   height: 15px;
   background: #ffffff;
   border-radius: 50%;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.6), 0 0 12px rgba(255, 255, 255, 0.95);
   transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
-  pointer-events: auto;
-  cursor: grab;
+  pointer-events: none;
 }
 
-.cinema-progress-bg:hover .cinema-progress-fill::after,
+/* Input range invisible que captura toda la interacción sobre la barra */
+.cinema-progress-input {
+  position: absolute;
+  top: -12px;
+  left: 0;
+  width: 100%;
+  height: calc(100% + 24px);
+  opacity: 0;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  z-index: 10;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.cinema-timeline-box:hover .cinema-progress-bg {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.cinema-timeline-box:hover .cinema-progress-fill::after,
 .cinema-progress-fill.is-seeking::after {
-  transform: translateY(-50%) scale(1.4) !important;
+  transform: translateY(-50%) scale(1.4);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7), 0 0 18px rgba(255, 255, 255, 1);
-  cursor: grabbing;
 }
 
 .cinema-progress-fill.is-seeking {

@@ -1221,6 +1221,7 @@ window.AuraMusic = window.AuraMusic || {};
             <div class="cinema-timeline-box">
               <div class="cinema-progress-bg" id="cinema-progress-bg">
                 <div class="cinema-progress-fill" id="cinema-progress-fill"></div>
+                <input type="range" id="cinema-progress-input" class="cinema-progress-input" min="0" max="1000" value="0" step="1" aria-label="Tiempo de reproducción">
               </div>
               <div class="cinema-time-row">
                 <span id="cinema-current-time">0:00</span>
@@ -1828,75 +1829,49 @@ window.AuraMusic = window.AuraMusic || {};
     if (waPrevBtn) waPrevBtn.addEventListener('click', playPrevTrack);
     if (waNextBtn) waNextBtn.addEventListener('click', playNextTrack);
 
-    // Salto y arrastre fluido en la barra de tiempo (Pointer Events con bloqueo anti-rebote)
+    // Barra de tiempo — usa input[type=range] como overlay nativo (método Spotify/YouTube)
+    // Es el único enfoque 100% confiable para drag+click sin fallos de pointer capture.
+    const progressInput = document.getElementById('cinema-progress-input');
     const progressBg = document.getElementById('cinema-progress-bg');
 
-    let lastSeekCommitTime = 0;
-    let lastSeekCommitTarget = -1;
-
-    function handleProgressSeek(e, commitToVideo) {
-      const dur = getYtMusicTrackDuration() || (getActiveVideo()?.duration || 0);
-      if (dur <= 0) return;
-      const rect = progressBg.getBoundingClientRect();
-      if (rect.width <= 0) return;
-
-      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      let targetTime = pct * dur;
-
-      // Proteger el borde final para que MSE no desborde
-      if (dur > 1 && targetTime > dur - 0.2) {
-        targetTime = Math.max(0, dur - 0.3);
-      }
-      targetTime = Math.max(0, targetTime);
-
+    function updateProgressVisual(targetTime, dur) {
       const fill = document.getElementById('cinema-progress-fill');
       const curSpan = document.getElementById('cinema-current-time');
       const waTimePill = document.getElementById('cinema-wa-time');
+      const durSafe = dur > 0 ? dur : 1;
 
       if (fill) {
-        fill.classList.add('is-seeking');
         fill.style.setProperty('transition', 'none', 'important');
-        fill.style.width = `${Math.max(0, Math.min(100, (targetTime / dur) * 100))}%`;
+        fill.style.width = `${Math.max(0, Math.min(100, (targetTime / durSafe) * 100))}%`;
       }
-      if (curSpan) {
-        curSpan.textContent = formatTime(targetTime);
-      }
-      if (waTimePill) {
-        waTimePill.textContent = `${formatTime(targetTime)} / ${formatTime(dur)}`;
-      }
-
-      if (commitToVideo) {
-        seekTrack(targetTime, true);
-      }
+      if (curSpan) curSpan.textContent = formatTime(targetTime);
+      if (waTimePill) waTimePill.textContent = `${formatTime(targetTime)} / ${formatTime(dur)}`;
     }
 
-    if (progressBg) {
-      progressBg.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        try { progressBg.setPointerCapture(e.pointerId); } catch (_) {}
+    if (progressInput) {
+      // Durante el drag — actualiza visual sin hacer seek (suave)
+      progressInput.addEventListener('input', () => {
+        const dur = getYtMusicTrackDuration() || (getActiveVideo()?.duration || 0);
+        if (dur <= 0) return;
         isUserDraggingProgress = true;
-        handleProgressSeek(e, false);
+        const pct = Number(progressInput.value) / 1000;
+        const targetTime = Math.min(Math.max(0, pct * dur), dur > 1 ? dur - 0.3 : dur);
+        const fill = document.getElementById('cinema-progress-fill');
+        if (fill) { fill.classList.add('is-seeking'); }
+        updateProgressVisual(targetTime, dur);
       });
 
-      progressBg.addEventListener('pointermove', (e) => {
-        if (!isUserDraggingProgress) return;
-        e.preventDefault();
-        handleProgressSeek(e, false);
-      });
-
-      const endPointerSeek = (e) => {
-        if (!isUserDraggingProgress) return;
+      // Al soltar — ejecuta el seek real
+      progressInput.addEventListener('change', () => {
+        const dur = getYtMusicTrackDuration() || (getActiveVideo()?.duration || 0);
+        if (dur <= 0) return;
+        const pct = Number(progressInput.value) / 1000;
+        const targetTime = Math.min(Math.max(0, pct * dur), dur > 1 ? dur - 0.3 : dur);
         isUserDraggingProgress = false;
-        try { progressBg.releasePointerCapture(e.pointerId); } catch (_) {}
-        handleProgressSeek(e, true);
-      };
-
-      progressBg.addEventListener('pointerup', endPointerSeek);
-      progressBg.addEventListener('pointercancel', endPointerSeek);
-
-      // Clic directo en la barra para salto inmediato en cualquier punto
-      progressBg.addEventListener('click', (e) => {
-        handleProgressSeek(e, true);
+        const fill = document.getElementById('cinema-progress-fill');
+        if (fill) fill.classList.remove('is-seeking');
+        updateProgressVisual(targetTime, dur);
+        seekTrack(targetTime, true);
       });
     }
   }
@@ -2659,6 +2634,11 @@ window.AuraMusic = window.AuraMusic || {};
             if (cachedCurSpan) {
               const formattedCur = formatTime(displayTime);
               if (cachedCurSpan.textContent !== formattedCur) cachedCurSpan.textContent = formattedCur;
+            }
+            // Sincronizar el input range overlay con la posición actual
+            const progInput = document.getElementById('cinema-progress-input');
+            if (progInput && duration > 0) {
+              progInput.value = String(Math.round((displayTime / duration) * 1000));
             }
           }
         }
