@@ -289,11 +289,11 @@ window.AuraMusic = window.AuraMusic || {};
 
     return `
       :host {
-        height: 8px !important;
+        height: 6px !important;
         display: block !important;
       }
       #progressContainer {
-        height: 8px !important;
+        height: 6px !important;
         background: ${containerBg} !important;
         border: ${containerBorder} !important;
         box-shadow: ${containerShadow} !important;
@@ -301,14 +301,13 @@ window.AuraMusic = window.AuraMusic || {};
         overflow: hidden !important;
       }
       #primaryProgress {
-        height: 8px !important;
+        height: 6px !important;
         background: ${primaryBg} !important;
         box-shadow: ${primaryGlow} !important;
         border-radius: ${borderRadius} !important;
-        transition: width 0.1s linear !important;
       }
       #secondaryProgress {
-        height: 8px !important;
+        height: 6px !important;
         background: ${secondaryBg} !important;
         border-radius: ${borderRadius} !important;
       }
@@ -482,10 +481,10 @@ window.AuraMusic = window.AuraMusic || {};
     return `
       :host {
         overflow: visible !important;
-        height: 24px !important;
+        height: 12px !important;
       }
       #sliderContainer {
-        height: 24px !important;
+        height: 12px !important;
         position: relative !important;
         margin: 0 !important;
         padding: 0 !important;
@@ -508,9 +507,9 @@ window.AuraMusic = window.AuraMusic || {};
         left: 0 !important;
         right: 0 !important;
         width: 100% !important;
-        height: 8px !important;
+        height: 6px !important;
         margin: 0 !important;
-        margin-top: -4px !important;
+        margin-top: -3px !important;
         padding: 0 !important;
         border-radius: 999px !important;
         overflow: hidden !important;
@@ -560,31 +559,31 @@ window.AuraMusic = window.AuraMusic || {};
   }
 
   function getAllSliders() {
-    const sliders = new Set();
-    function scan(root) {
-      if (!root) return;
-      try {
-        const found = root.querySelectorAll('#progress-bar, tp-yt-paper-slider#progress-bar, ytmusic-player-bar tp-yt-paper-slider, #volume-slider tp-yt-paper-slider, tp-yt-paper-slider');
-        found.forEach(s => sliders.add(s));
-      } catch (e) {}
-
-      try {
-        const allElements = root.querySelectorAll ? root.querySelectorAll('*') : [];
-        for (let i = 0; i < allElements.length; i++) {
-          if (allElements[i].shadowRoot) {
-            scan(allElements[i].shadowRoot);
-          }
-        }
-      } catch (e) {}
-    }
-
-    scan(document);
-    return Array.from(sliders);
+    const list = [];
+    try {
+      const pb = document.querySelector('ytmusic-player-bar #progress-bar, #progress-bar.ytmusic-player-bar');
+      if (pb) list.push(pb);
+      const vol = document.querySelector('ytmusic-player-bar #volume-slider tp-yt-paper-slider, #volume-slider tp-yt-paper-slider');
+      if (vol) list.push(vol);
+    } catch (_) {}
+    return list;
   }
 
-  function updateSliderShadowDom(themeName) {
+  let lastAppliedSliderTheme = '';
+
+  function updateSliderShadowDom(themeName, force = false) {
     const theme = themeName || getState().theme || 'default';
     const sliders = getAllSliders();
+    if (sliders.length === 0) return;
+
+    // Fast-path de ultra rendimiento: si el tema no ha cambiado y ya está inyectado, salir inmediatamente (0% CPU)
+    if (!force && lastAppliedSliderTheme === theme) {
+      const mainPb = sliders[0];
+      if (mainPb && mainPb.shadowRoot?.getElementById('auramusic-slider-shadow-style')) {
+        return;
+      }
+    }
+    lastAppliedSliderTheme = theme;
 
     sliders.forEach(slider => {
       // 1. Asignar variables CSS en el host para componentes Polymer nativos
@@ -627,16 +626,17 @@ window.AuraMusic = window.AuraMusic || {};
     });
   }
 
-  // Vigilante periódico de bajo impacto y eventos para mantener los estilos de Shadow DOM siempre activos
+  // Vigilante de cambio de tema ultra-ligero (0% CPU)
   setInterval(() => {
     const curTheme = getState().theme || 'default';
-    updateSliderShadowDom(curTheme);
-  }, 1200);
+    if (curTheme !== lastAppliedSliderTheme) {
+      updateSliderShadowDom(curTheme);
+    }
+  }, 3000);
 
   document.addEventListener('auramusic-track-change', () => {
     const curTheme = getState().theme || 'default';
-    setTimeout(() => updateSliderShadowDom(curTheme), 200);
-    setTimeout(() => updateSliderShadowDom(curTheme), 800);
+    updateSliderShadowDom(curTheme, true);
   });
 
   // --- INYECCIÓN DE ELEMENTOS OFICIALES DE SPOTIFY (LOGO, BOTÓN HOME, PLACEHOLDER) ---

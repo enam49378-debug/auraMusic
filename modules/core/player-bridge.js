@@ -134,41 +134,11 @@
     return withGetTime || all[0];
   }
 
+  let cachedSlider = null;
   function findProgressBar() {
-    let slider = document.querySelector('ytmusic-player-bar #progress-bar, #progress-bar.ytmusic-player-bar, tp-yt-paper-slider#progress-bar, ytmusic-player-bar #slider, tp-yt-paper-slider#slider, #progress-bar');
-    if (slider) return slider;
-
-    const playerBar = document.querySelector('ytmusic-player-bar');
-    if (playerBar && playerBar.shadowRoot) {
-      slider = playerBar.shadowRoot.querySelector('#progress-bar, tp-yt-paper-slider#progress-bar, #slider, tp-yt-paper-slider');
-      if (slider) return slider;
-    }
-
-    function deepFindSlider(root, depth = 0) {
-      if (!root || depth > 8) return null;
-      try {
-        if (root.querySelector) {
-          const s = root.querySelector('#progress-bar, tp-yt-paper-slider#progress-bar, tp-yt-paper-slider');
-          if (s) return s;
-        }
-      } catch (_) {}
-      try {
-        if (root.shadowRoot) {
-          const found = deepFindSlider(root.shadowRoot, depth + 1);
-          if (found) return found;
-        }
-      } catch (_) {}
-      try {
-        const children = root.children || [];
-        for (let i = 0; i < children.length; i++) {
-          const found = deepFindSlider(children[i], depth + 1);
-          if (found) return found;
-        }
-      } catch (_) {}
-      return null;
-    }
-
-    return deepFindSlider(document.body || document.documentElement);
+    if (cachedSlider && cachedSlider.isConnected) return cachedSlider;
+    cachedSlider = document.querySelector('ytmusic-player-bar #progress-bar, #progress-bar.ytmusic-player-bar, tp-yt-paper-slider#progress-bar');
+    return cachedSlider;
   }
 
   function seekNativeProgressBar(targetSeconds) {
@@ -525,13 +495,20 @@
 
   // --- RECONCILIADOR VISUAL Y DETECTOR DE INTERACCIÓN NATIVA DE LA LÍNEA DE TIEMPO ---
   let isUserInteractingWithSlider = false;
+  let pendingSeekSeconds = -1;
+  let lastReconcileTime = 0;
 
   function reconcileTimelineKnob(curTime, dur) {
     if (isUserInteractingWithSlider) return;
     if (!dur || dur <= 0 || curTime < 0) return;
 
+    // Comprobación periódica ultra-ligera (cada 1000ms) para 0% de uso de CPU
+    const now = performance.now();
+    if (now - lastReconcileTime < 1000) return;
+    lastReconcileTime = now;
+
     const slider = findProgressBar();
-    if (!slider) return;
+    if (!slider || !slider.shadowRoot) return;
 
     // Si Polymer quedó en estado dragging sin que el ratón esté presionado:
     if (slider.hasAttribute('dragging') || slider.dragging) {
@@ -540,23 +517,15 @@
     }
 
     const expectedPct = Math.max(0, Math.min(100, (curTime / dur) * 100));
-
-    if (slider.shadowRoot) {
-      const knob = slider.shadowRoot.querySelector('#sliderKnob');
-      if (knob) {
-        const curLeft = parseFloat(knob.style.left);
-        // Si no tiene posición o diverge más de 0.6% de la reproducción real:
-        if (isNaN(curLeft) || Math.abs(curLeft - expectedPct) > 0.6) {
-          knob.style.left = `${expectedPct}%`;
-        }
-      }
-
-      const sliderBar = slider.shadowRoot.querySelector('#sliderBar, tp-yt-paper-progress');
-      if (sliderBar && sliderBar.shadowRoot) {
-        const primary = sliderBar.shadowRoot.querySelector('#primaryProgress');
-        if (primary) {
-          primary.style.transform = `scaleX(${expectedPct / 100})`;
-        }
+    const knob = slider.shadowRoot.querySelector('#sliderKnob');
+    if (knob) {
+      const rawStyle = knob.style.left || '';
+      // Si Polymer está controlando la barra nativamente con calc() o valor similar, no intervenir para no provocar lag
+      if (rawStyle.includes('calc')) return;
+      const curLeft = parseFloat(rawStyle);
+      // Solo sincronizar si diverge más de 5.0% de la posición esperada
+      if (isNaN(curLeft) || Math.abs(curLeft - expectedPct) > 5.0) {
+        knob.style.left = `${expectedPct}%`;
       }
     }
   }
@@ -566,50 +535,57 @@
     if (!slider || slider.__auramusic_hooked) return;
     slider.__auramusic_hooked = true;
 
-    function handleSeekFromPointer(e) {
+    function getRatio(e) {
       const rect = slider.getBoundingClientRect();
-      if (!rect || rect.width <= 0) return;
-      const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      const player = getPlayer();
-      const dur = cachedDuration > 0 ? cachedDuration : (typeof player?.getDuration === 'function' ? player.getDuration() : 0);
-      if (dur > 0) {
-        const targetSeconds = ratio * dur;
-        handleCommand({ action: 'seekTo', time: targetSeconds, autoPlay: true });
+      if (!rect || rect.width <= 0) return 0;
+      return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    }
 
-        // Actualizar visualmente al instante
-        if (slider.shadowRoot) {
-          const knob = slider.shadowRoot.querySelector('#sliderKnob');
-          if (knob) knob.style.left = `${ratio * 100}%`;
-          const sliderBar = slider.shadowRoot.querySelector('#sliderBar, tp-yt-paper-progress');
-          if (sliderBar && sliderBar.shadowRoot) {
-            const primary = sliderBar.shadowRoot.querySelector('#primaryProgress');
-            if (primary) primary.style.transform = `scaleX(${ratio})`;
-          }
-        }
-      }
+    function updateVisualPreview(ratio) {
+      if (!slider.shadowRoot) return;
+      const knob = slider.shadowRoot.querySelector('#sliderKnob');
+      if (knob) knob.style.left = `${ratio * 100}%`;
     }
 
     slider.addEventListener('pointerdown', (e) => {
       isUserInteractingWithSlider = true;
-      handleSeekFromPointer(e);
+      const ratio = getRatio(e);
+      const dur = cachedDuration > 0 ? cachedDuration : getPlayer()?.getDuration();
+      if (dur > 0) {
+        pendingSeekSeconds = ratio * dur;
+        updateVisualPreview(ratio);
+      }
     }, { passive: true });
 
     window.addEventListener('pointermove', (e) => {
       if (!isUserInteractingWithSlider) return;
-      handleSeekFromPointer(e);
+      const ratio = getRatio(e);
+      const dur = cachedDuration > 0 ? cachedDuration : getPlayer()?.getDuration();
+      if (dur > 0) {
+        pendingSeekSeconds = ratio * dur;
+        // Solo actualizar el circulito visualmente a 60 FPS sin saturar la API
+        updateVisualPreview(ratio);
+      }
     }, { passive: true });
 
-    const endInteraction = () => {
+    const commitSeek = () => {
       if (isUserInteractingWithSlider) {
         isUserInteractingWithSlider = false;
+        if (pendingSeekSeconds >= 0) {
+          const target = pendingSeekSeconds;
+          pendingSeekSeconds = -1;
+          // Ejecutar el salto una sola vez al soltar el ratón
+          handleCommand({ action: 'seekTo', time: target, autoPlay: true });
+        }
         if (slider) {
           slider.dragging = false;
           slider.removeAttribute('dragging');
         }
       }
     };
-    window.addEventListener('pointerup', endInteraction, { passive: true });
-    window.addEventListener('pointercancel', endInteraction, { passive: true });
+
+    window.addEventListener('pointerup', commitSeek, { passive: true });
+    window.addEventListener('pointercancel', commitSeek, { passive: true });
   }
 
   // Bucle maestro adaptativo ultra-optimizado:
@@ -620,7 +596,7 @@
     const now = timestamp || performance.now();
     const isCinemaActive = !!(document.getElementById('auramusic-cinema-overlay')?.classList.contains('active') || document.body.classList.contains('auramusic-cinema-active'));
 
-    const minInterval = isCinemaActive ? 40 : 500;
+    const minInterval = isCinemaActive ? 40 : 1000;
     if (now - lastBridgeRafTime < minInterval) {
       requestAnimationFrame(rafLoop);
       return;
@@ -665,6 +641,11 @@
     // Descartar comandos duplicados recibidos por múltiples canales (CustomEvent + MutationObserver)
     if (action !== 'seek' && action !== 'seekTo') {
       if (cmdKey && cmdKey === lastProcessedCmdKey && (now - lastProcessedCmdTime < 400)) {
+        return;
+      }
+    } else {
+      // Deduplicar seeks rápidos consecutivos para no bloquear la reproducción
+      if (now - lastProcessedCmdTime < 250) {
         return;
       }
     }
