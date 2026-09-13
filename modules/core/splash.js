@@ -132,7 +132,7 @@
     splash.setAttribute('aria-label', 'AuraMusic Intro');
 
     splash.innerHTML = `
-      <!-- Fondo oscuro continuo con máscara de portal triangular -->
+      <!-- Fondo oscuro continuo con brillo ambiental sutil -->
       <svg class="splash-stage-backdrop" id="splash-stage-backdrop" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
         <defs>
           <radialGradient id="splash-bg-glow-yt" cx="30%" cy="55%" r="60%">
@@ -143,17 +143,10 @@
             <stop id="splash-glow-stop-aura" offset="0%" stop-color="#a855f7" stop-opacity="0.10"/>
             <stop offset="70%" stop-color="#a855f7" stop-opacity="0"/>
           </radialGradient>
-          <!-- Máscara de portal continuo: blanco es opaco (#08090f), negro es transparente a YouTube Music -->
-          <mask id="splash-backdrop-mask" maskUnits="userSpaceOnUse" x="-50000" y="-50000" width="100000" height="100000">
-            <rect x="-50000" y="-50000" width="100000" height="100000" fill="white"/>
-            <polygon id="splash-portal-triangle" points="0,0 0,0 0,0" fill="black"/>
-          </mask>
         </defs>
-        <g mask="url(#splash-backdrop-mask)">
-          <rect x="-20%" y="-20%" width="140%" height="140%" fill="#08090f"/>
-          <rect x="-20%" y="-20%" width="140%" height="140%" fill="url(#splash-bg-glow-yt)"/>
-          <rect x="-20%" y="-20%" width="140%" height="140%" fill="url(#splash-bg-glow-aura)"/>
-        </g>
+        <rect width="100%" height="100%" fill="#08090f"/>
+        <rect width="100%" height="100%" fill="url(#splash-bg-glow-yt)"/>
+        <rect width="100%" height="100%" fill="url(#splash-bg-glow-aura)"/>
       </svg>
 
       <div class="splash-intro-stage" id="splash-intro-stage">
@@ -212,23 +205,26 @@
                     <stop offset="1" stop-color="#461281"/>
                   </linearGradient>
 
-                  <!-- Máscara interna para perforar el triángulo en el disco 50/50 -->
-                  <mask id="aura-disc-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="1600" height="1600">
-                    <rect width="1600" height="1600" fill="white"/>
+                  <!-- Máscara maestra unificada: el orificio triangular perfora TODO al unísono -->
+                  <mask id="aura-disc-mask" maskUnits="userSpaceOnUse" x="-60000" y="-60000" width="120000" height="120000">
+                    <rect x="-60000" y="-60000" width="120000" height="120000" fill="white"/>
                     <path id="splash-portal-hole" d="M679 625 L965 789 L679 962 Z" fill="black" opacity="0"/>
                   </mask>
                 </defs>
 
-                <!-- Grupo enmascarado del disco circular -->
-                <g mask="url(#aura-disc-mask)" clip-path="url(#aura-disc-clip)">
-                  <g id="splash-animated-logo" opacity="0">
-                    <g id="splash-brand-halves" transform="rotate(0 800 800)">
-                      <path d="M800 142 A658 658 0 0 0 800 1458 Z" fill="#f10921"/>
-                      <path d="M800 142 A658 658 0 0 1 800 1458 Z" fill="url(#aura-gradient-half)"/>
+                <!-- Grupo enmascarado unificado: contiene tanto la placa de fondo como el disco -->
+                <g mask="url(#aura-disc-mask)">
+                  <rect class="splash-infinite-plate" x="-60000" y="-60000" width="120000" height="120000" fill="#08090f"/>
+                  <g clip-path="url(#aura-disc-clip)">
+                    <g id="splash-animated-logo" opacity="0">
+                      <g id="splash-brand-halves" transform="rotate(0 800 800)">
+                        <path d="M800 142 A658 658 0 0 0 800 1458 Z" fill="#f10921"/>
+                        <path d="M800 142 A658 658 0 0 1 800 1458 Z" fill="url(#aura-gradient-half)"/>
+                      </g>
+                      <circle cx="800" cy="800" r="331" fill="none" stroke="white" stroke-width="33"/>
                     </g>
-                    <circle cx="800" cy="800" r="331" fill="none" stroke="white" stroke-width="33"/>
+                    <image id="splash-reference-logo" href="${logoUrl}" width="1316" height="1316" x="142" y="142"/>
                   </g>
-                  <image id="splash-reference-logo" href="${logoUrl}" width="1316" height="1316" x="142" y="142"/>
                 </g>
 
                 <!-- Triángulo central del logo que se desvanece suavemente al abrirse el portal -->
@@ -275,9 +271,7 @@
     const ring2El        = splash.querySelector('#splash-fusion-ring-2');
     const finalStage     = splash.querySelector('#splash-final-stage');
     const emblemBox      = splash.querySelector('#splash-emblem-box');
-    const emblemGlow     = splash.querySelector('#splash-emblem-glow');
     const portalHole     = splash.querySelector('#splash-portal-hole');
-    const portalTriangle = splash.querySelector('#splash-portal-triangle');
     const centerTriangle = splash.querySelector('#splash-center-triangle');
     const brandHalves    = splash.querySelector('#splash-brand-halves');
     const referenceLogo  = splash.querySelector('#splash-reference-logo');
@@ -406,6 +400,9 @@
       finalStage.style.opacity = '1';
       finalStage.classList.add('portal-flight');
 
+      // Ocultar el backdrop secundario para que la placa unificada asuma el fondo sin fisuras
+      if (backdrop) backdrop.style.display = 'none';
+
       // Modo portal activo
       splash.classList.add('portal-active');
 
@@ -423,7 +420,6 @@
       const smooth = n => { n = clamp(n); return n * n * n * (10 + n * (-15 + 6 * n)); };
       const frames = [];
       const holeFrames = [];
-      const glowFrames = [];
 
       for (let i = 0; i <= 180; i++) {
         const u = i / 180;
@@ -444,9 +440,8 @@
           offset: u
         });
 
-        // El orificio triangular en el disco se vuelve transparente
-        holeFrames.push({ opacity: smooth((u - .04) / .18), offset: u });
-        glowFrames.push({ opacity: .8 * (1 - smooth(u / .42)), offset: u });
+        // El orificio triangular se vuelve 100% transparente en los primeros frames de forma fluida
+        holeFrames.push({ opacity: smooth(u / 0.05), offset: u });
       }
 
       motion(finalStage, [
@@ -458,63 +453,19 @@
       animatedLogo.style.opacity = '1';
       motion(referenceLogo, [{ opacity: 1 }, { opacity: 0 }], 180, 'ease-in-out');
       if (centerTriangle) {
-        motion(centerTriangle, [{ opacity: 1 }, { opacity: 0 }], 220, 'ease-out');
+        motion(centerTriangle, [{ opacity: 1 }, { opacity: 0 }], 180, 'ease-out');
       }
 
       const camera = motion(emblemBox, frames, duration);
-
-      // Centro del SVG de fondo para sincronización de coordenadas
-      const svgCenterX = (stage.clientWidth || window.innerWidth) / 2;
-      const svgCenterY = (stage.clientHeight || window.innerHeight) / 2;
 
       const syncHalves = () => {
         if (!camera) return;
         const curTime = Number(camera.currentTime) || 0;
         const u = clamp(curTime / duration);
 
-        // 1. Rotación de las dos mitades 50/50
+        // Rotación continua de las dos mitades 50/50
         const angleHalves = 180 * smooth((u - .06) / .49);
         brandHalves.setAttribute('transform', `rotate(${angleHalves} 800 800)`);
-
-        // 2. Perforación continua y matemáticamente exacta del orificio triangular en el fondo
-        if (portalTriangle) {
-          const angle = 360 * smooth((u - .15) / .55);
-          const cameraTravel = .12 * smooth(u / .70) + .88 * smooth((u - .43) / .57);
-          const scale = Math.exp(Math.log(endScale) * cameraTravel);
-          const align = smooth((u - .28) / .40);
-          const rad = angle * Math.PI / 180;
-
-          const dx = -38 * unit;
-          const dy = -10 * unit;
-          const tx = -(dx * Math.cos(rad) - dy * Math.sin(rad)) * scale * align;
-          const ty = -(dx * Math.sin(rad) + dy * Math.cos(rad)) * scale * align;
-
-          // Apertura gradual desde el centroide del triángulo en los primeros frames (u = 0 a 0.08)
-          const openU = smooth(u / 0.08);
-
-          if (openU > 0) {
-            const cos = Math.cos(rad);
-            const sin = Math.sin(rad);
-
-            // Centroide del triángulo: ( (679 + 965 + 679)/3 - 800, (625 + 789 + 962)/3 - 800 ) = (-25.67, -8.0)
-            const cx_v = -25.67 * unit;
-            const cy_v = -8.0 * unit;
-
-            const calcPt = (vx, vy) => {
-              const lx = cx_v + (vx - cx_v) * openU;
-              const ly = cy_v + (vy - cy_v) * openU;
-              const rx = (lx * cos - ly * sin) * scale;
-              const ry = (lx * sin + ly * cos) * scale;
-              return `${(svgCenterX + tx + rx).toFixed(1)},${(svgCenterY + ty + ry).toFixed(1)}`;
-            };
-
-            const p1 = calcPt(-121 * unit, -175 * unit);
-            const p2 = calcPt(165 * unit, -11 * unit);
-            const p3 = calcPt(-121 * unit, 162 * unit);
-
-            portalTriangle.setAttribute('points', `${p1} ${p2} ${p3}`);
-          }
-        }
 
         if (camera.playState === 'running' || camera.playState === 'pending') {
           portalFrame = requestAnimationFrame(syncHalves);
@@ -525,7 +476,6 @@
       syncHalves();
 
       motion(portalHole, holeFrames, duration);
-      motion(emblemGlow, glowFrames, duration);
 
       if (camera && camera.finished) {
         camera.finished.then(() => {

@@ -481,24 +481,35 @@ body.auramusic-splash-active::-webkit-scrollbar {
 }
 
 /* ── ESTADO DURANTE EL VUELO DEL PORTAL HACIA YOUTUBE MUSIC ───── */
+.splash-infinite-plate {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .final-fused-stage.portal-flight {
   animation: none;
   opacity: 1;
 }
 
+.final-fused-stage.portal-flight .splash-infinite-plate {
+  opacity: 1;
+}
+
 .final-fused-stage.portal-flight .fused-ambient-glow {
-  animation: none;
-  opacity: 0;
+  animation: none !important;
+  opacity: 0 !important;
+  display: none !important;
 }
 
 .final-fused-stage.portal-flight .fused-shimmer {
-  display: none;
+  display: none !important;
 }
 
 .final-fused-stage.portal-flight .fused-emblem-circle {
-  box-shadow: none;
+  box-shadow: none !important;
   overflow: visible !important;
   border-radius: 0 !important;
+  background: transparent !important;
 }
 
 .final-fused-stage.portal-complete {
