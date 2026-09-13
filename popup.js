@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const themeBtns = document.querySelectorAll('.theme-btn');
   const allThemes = [
+    'auramusic-theme-auramusic',
     'auramusic-theme-jesuluto',
     'auramusic-theme-komi',
     'auramusic-theme-apple',

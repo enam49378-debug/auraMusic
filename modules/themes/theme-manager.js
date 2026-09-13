@@ -12,6 +12,7 @@ window.AuraMusic = window.AuraMusic || {};
   }
 
   const ALL_THEMES = [
+    'auramusic-theme-auramusic',
     'auramusic-theme-jesuluto',
     'auramusic-theme-komi',
     'auramusic-theme-apple',
@@ -319,6 +320,20 @@ window.AuraMusic = window.AuraMusic || {};
     let knobStyles = '';
 
     switch (theme) {
+      case 'auramusic':
+        knobStyles = `
+          width: 22px !important;
+          height: 22px !important;
+          min-width: 22px !important;
+          min-height: 22px !important;
+          border-radius: 50% !important;
+          background: #ffffff !important;
+          border: 3.5px solid #00e5ff !important;
+          box-shadow: 0 0 18px #00e5ff, 0 0 32px rgba(189, 0, 255, 0.95), 0 2px 8px rgba(0, 0, 0, 0.6) !important;
+          transform: scale(1) !important;
+        `;
+        break;
+
       case 'aesthetic':
         knobStyles = `
           width: 20px !important;

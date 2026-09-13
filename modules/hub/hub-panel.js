@@ -66,6 +66,7 @@ window.AuraMusic = window.AuraMusic || {};
               <span class="auramusic-label">Estilo de Interfaz</span>
               <span class="auramusic-sublabel">Selecciona el tema que transformará la estética de YouTube Music.</span>
               <div class="auramusic-theme-grid">
+                <button type="button" class="theme-pill-btn" data-theme="auramusic" style="border-color: #00e5ff; box-shadow: 0 0 14px rgba(0, 229, 255, 0.4); font-weight: 700;">✨ AuraMusic</button>
                 <button type="button" class="theme-pill-btn" data-theme="jesuluto">⚡ Jesuluto</button>
                 <button type="button" class="theme-pill-btn" data-theme="komi">🐱 Komi-san</button>
                 <button type="button" class="theme-pill-btn" data-theme="apple">🍎 Apple Music</button>

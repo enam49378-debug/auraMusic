@@ -327,6 +327,375 @@ ytmusic-player-bar #progress-bar {
 }
 
 /* ==========================================================================
+   DISEÑO OFICIAL: ✨ AURAMUSIC SIGNATURE (NEÓN HOLOGRÁFICO, DOCK FLOTANTE, GLASSMORFISMO Y AURA CIAN/MAGENTA)
+   ========================================================================== */
+body.auramusic-theme-auramusic {
+  --auramusic-primary: #00e5ff;
+  --auramusic-secondary: #bd00ff;
+  --auramusic-accent: #ff007f;
+  --auramusic-glow: rgba(0, 229, 255, 0.45);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+}
+
+body.auramusic-theme-auramusic * {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+}
+
+/* Fondo principal cósmico profundo con sutil aura radiante */
+body.auramusic-theme-auramusic ytmusic-app,
+body.auramusic-theme-auramusic ytmusic-browse-response,
+body.auramusic-theme-auramusic ytmusic-player-page {
+  background: radial-gradient(circle at 50% 18%, rgba(189, 0, 255, 0.12) 0%, rgba(0, 229, 255, 0.08) 25%, #080911 70%) !important;
+  background-attachment: fixed !important;
+}
+
+/* Barra de navegación superior (Vidrio esmerilado con bisel neón) */
+body.auramusic-theme-auramusic ytmusic-nav-bar {
+  background: rgba(8, 9, 17, 0.82) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(0, 229, 255, 0.22) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.65), 0 1px 20px rgba(0, 229, 255, 0.15) !important;
+}
+
+/* Buscador con brillo holográfico */
+body.auramusic-theme-auramusic ytmusic-search-box {
+  background: rgba(18, 20, 36, 0.75) !important;
+  border: 1.5px solid rgba(0, 229, 255, 0.3) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+body.auramusic-theme-auramusic ytmusic-search-box:focus-within {
+  border-color: #00e5ff !important;
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.55), 0 0 50px rgba(189, 0, 255, 0.35) !important;
+  background: rgba(18, 20, 36, 0.95) !important;
+}
+
+/* Barra lateral / Guía de navegación */
+body.auramusic-theme-auramusic ytmusic-guide-entry-renderer {
+  border-radius: 14px !important;
+  margin: 2px 10px !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+body.auramusic-theme-auramusic ytmusic-guide-entry-renderer:hover {
+  background: rgba(0, 229, 255, 0.12) !important;
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.2) !important;
+  transform: translateX(4px) !important;
+}
+
+body.auramusic-theme-auramusic ytmusic-guide-entry-renderer[is-primary] tp-yt-paper-item,
+body.auramusic-theme-auramusic ytmusic-guide-entry-renderer[aria-selected="true"] tp-yt-paper-item {
+  background: linear-gradient(90deg, rgba(0, 229, 255, 0.24), rgba(189, 0, 255, 0.2)) !important;
+  border-left: 3.5px solid #00e5ff !important;
+  color: #00e5ff !important;
+  font-weight: 700 !important;
+}
+
+/* Filtros y chips */
+body.auramusic-theme-auramusic ytmusic-chip-cloud-chip-renderer {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(0, 229, 255, 0.25) !important;
+  border-radius: 999px !important;
+  color: #e0f2fe !important;
+  backdrop-filter: blur(12px) !important;
+  transition: all 0.25s ease !important;
+}
+
+body.auramusic-theme-auramusic ytmusic-chip-cloud-chip-renderer:hover {
+  background: rgba(0, 229, 255, 0.18) !important;
+  border-color: #00e5ff !important;
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.35) !important;
+  transform: translateY(-2px) !important;
+}
+
+body.auramusic-theme-auramusic ytmusic-chip-cloud-chip-renderer[is-selected] {
+  background: linear-gradient(135deg, #00e5ff, #bd00ff) !important;
+  border-color: #00e5ff !important;
+  color: #06070d !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 20px rgba(0, 229, 255, 0.6) !important;
+}
+
+/* Tarjetas de canciones y álbumes */
+body.auramusic-theme-auramusic ytmusic-two-row-item-renderer {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease !important;
+  border-radius: 18px !important;
+  padding: 8px !important;
+}
+
+body.auramusic-theme-auramusic ytmusic-two-row-item-renderer:hover {
+  transform: translateY(-6px) scale(1.02) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 229, 255, 0.25) !important;
+}
+
+body.auramusic-theme-auramusic ytmusic-two-row-item-renderer .image-wrapper.ytmusic-two-row-item-renderer,
+body.auramusic-theme-auramusic ytmusic-two-row-item-renderer img {
+  border-radius: 14px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.auramusic-theme-auramusic ytmusic-responsive-list-item-renderer {
+  border-radius: 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+body.auramusic-theme-auramusic ytmusic-responsive-list-item-renderer:hover {
+  background: rgba(0, 229, 255, 0.08) !important;
+  border-left: 3px solid #00e5ff !important;
+  box-shadow: 0 4px 20px rgba(0, 229, 255, 0.15) !important;
+}
+
+/* ==========================================================================
+   REPRODUCTOR DOCK FLOTANTE OFICIAL AURAMUSIC
+   ========================================================================== */
+body.auramusic-theme-auramusic ytmusic-player-bar {
+  position: fixed !important;
+  bottom: 20px !important;
+  left: 4% !important;
+  right: 4% !important;
+  width: 92% !important;
+  max-width: 1360px !important;
+  height: 88px !important;
+  margin: 0 auto !important;
+  background: linear-gradient(135deg, rgba(8, 10, 18, 0.94), rgba(16, 12, 28, 0.92)) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 1.5px solid rgba(0, 229, 255, 0.35) !important;
+  border-radius: 38px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(0, 229, 255, 0.25), 0 0 50px rgba(189, 0, 255, 0.18) !important;
+  padding: 6px 28px 0 28px !important;
+  box-sizing: border-box !important;
+  z-index: 1000 !important;
+  overflow: visible !important;
+}
+
+/* LÍNEA DE TIEMPO AURAMUSIC (HOLOGRÁFICA, RESPLANDECIENTE, CIAN A MAGENTA) */
+body.auramusic-theme-auramusic #progress-bar.ytmusic-player-bar {
+  position: absolute !important;
+  top: -4px !important;
+  left: 36px !important;
+  right: 36px !important;
+  width: calc(100% - 72px) !important;
+  max-width: calc(100% - 72px) !important;
+  height: 20px !important;
+  border-radius: 999px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  z-index: 100 !important;
+  overflow: visible !important;
+  cursor: pointer !important;
+  --paper-slider-height: 8px !important;
+  --paper-progress-height: 8px !important;
+  --paper-slider-knob-size: 24px !important;
+  --paper-slider-knob-start-size: 24px !important;
+  --paper-slider-container-color: rgba(255, 255, 255, 0.25) !important;
+  --paper-progress-container-color: rgba(255, 255, 255, 0.25) !important;
+  --paper-slider-active-color: #00e5ff !important;
+  --paper-progress-active-color: #00e5ff !important;
+  --paper-slider-secondary-color: rgba(189, 0, 255, 0.45) !important;
+  --paper-progress-secondary-color: rgba(189, 0, 255, 0.45) !important;
+  --paper-slider-knob-color: #ffffff !important;
+}
+
+body.auramusic-theme-auramusic #progress-bar.ytmusic-player-bar::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 6px !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 8px !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(0, 229, 255, 0.4) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.3), inset 0 1px 4px rgba(0, 0, 0, 0.5) !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+body.auramusic-theme-auramusic #progress-bar.ytmusic-player-bar tp-yt-paper-slider {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+body.auramusic-theme-auramusic #progress-bar.ytmusic-player-bar #sliderContainer.tp-yt-paper-slider {
+  padding: 0 !important;
+  margin: 0 !important;
+  height: 100% !important;
+  overflow: visible !important;
+}
+
+body.auramusic-theme-auramusic #progress-bar.ytmusic-player-bar tp-yt-paper-progress#sliderBar,
+body.auramusic-theme-auramusic #progress-bar.ytmusic-player-bar #progressContainer.tp-yt-paper-progress {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border-radius: 999px !important;
+  height: 8px !important;
+  overflow: hidden !important;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Flujo de energía AuraMusic (Cian a Violeta Neón) */
+body.auramusic-theme-auramusic tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
+  background: linear-gradient(90deg, #00e5ff, #bd00ff, #00e5ff) !important;
+  background-size: 200% 100% !important;
+  animation: auraEnergyStream 4.5s linear infinite !important;
+  border-radius: 6px !important;
+  height: 8px !important;
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.95), 0 0 28px rgba(189, 0, 255, 0.8) !important;
+}
+
+@keyframes auraEnergyStream {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* CIRCULITO HOLOGRÁFICO AURAMUSIC (22px, BRILLANTE CIAN CON BÚFER MAGENTA) */
+body.auramusic-theme-auramusic #progress-bar.ytmusic-player-bar #sliderKnob.tp-yt-paper-slider,
+body.auramusic-theme-auramusic #progress-bar.ytmusic-player-bar #sliderKnob,
+body.auramusic-theme-auramusic tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider,
+body.auramusic-theme-auramusic tp-yt-paper-slider #sliderKnob {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  top: 50% !important;
+  margin-top: -14px !important;
+  margin-left: -14px !important;
+  pointer-events: auto !important;
+  overflow: visible !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+body.auramusic-theme-auramusic #progress-bar.ytmusic-player-bar #sliderKnobInner.tp-yt-paper-slider,
+body.auramusic-theme-auramusic #progress-bar.ytmusic-player-bar #sliderKnobInner,
+body.auramusic-theme-auramusic tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider,
+body.auramusic-theme-auramusic tp-yt-paper-slider #sliderKnobInner,
+body.auramusic-theme-auramusic #sliderKnob.ring > #sliderKnobInner,
+body.auramusic-theme-auramusic #progress-bar.ytmusic-player-bar #sliderKnob.ring > #sliderKnobInner {
+  display: block !important;
+  background: #ffffff !important;
+  border: 3.5px solid #00e5ff !important;
+  border-radius: 50% !important;
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  min-height: 22px !important;
+  transform: scale(1) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  box-shadow: 0 0 18px #00e5ff, 0 0 32px rgba(189, 0, 255, 0.95), 0 2px 8px rgba(0, 0, 0, 0.6) !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease !important;
+  cursor: grab !important;
+  margin: 0 auto !important;
+}
+
+body.auramusic-theme-auramusic #progress-bar.ytmusic-player-bar:hover #sliderKnobInner.tp-yt-paper-slider,
+body.auramusic-theme-auramusic #progress-bar.ytmusic-player-bar tp-yt-paper-slider[dragging] #sliderKnobInner.tp-yt-paper-slider,
+body.auramusic-theme-auramusic #progress-bar.ytmusic-player-bar:hover #sliderKnobInner,
+body.auramusic-theme-auramusic #progress-bar.ytmusic-player-bar[dragging] #sliderKnobInner,
+body.auramusic-theme-auramusic tp-yt-paper-slider:hover #sliderKnobInner.tp-yt-paper-slider,
+body.auramusic-theme-auramusic tp-yt-paper-slider[dragging] #sliderKnobInner.tp-yt-paper-slider {
+  transform: scale(1.35) !important;
+  box-shadow: 0 0 25px #00e5ff, 0 0 45px rgba(189, 0, 255, 1), 0 2px 10px rgba(0, 0, 0, 0.7) !important;
+  cursor: grabbing !important;
+}
+
+/* BOTÓN PLAY/PAUSE AURAMUSIC */
+body.auramusic-theme-auramusic ytmusic-player-bar .play-pause-button {
+  background: linear-gradient(135deg, #00e5ff, #bd00ff) !important;
+  border-radius: 50% !important;
+  width: 54px !important;
+  height: 54px !important;
+  color: #06070d !important;
+  box-shadow: 0 8px 25px rgba(0, 229, 255, 0.6), 0 0 35px rgba(189, 0, 255, 0.45) !important;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+body.auramusic-theme-auramusic ytmusic-player-bar .play-pause-button:hover {
+  transform: scale(1.18) !important;
+  box-shadow: 0 12px 35px rgba(0, 229, 255, 0.8), 0 0 45px rgba(189, 0, 255, 0.7) !important;
+}
+
+body.auramusic-theme-auramusic ytmusic-player-bar .play-pause-button:active {
+  transform: scale(0.9) !important;
+}
+
+body.auramusic-theme-auramusic ytmusic-player-bar .previous-button,
+body.auramusic-theme-auramusic ytmusic-player-bar .next-button {
+  background: rgba(0, 229, 255, 0.1) !important;
+  border: 1px solid rgba(0, 229, 255, 0.25) !important;
+  border-radius: 50% !important;
+  width: 42px !important;
+  height: 42px !important;
+  color: #00e5ff !important;
+  margin: 0 4px !important;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+body.auramusic-theme-auramusic ytmusic-player-bar .previous-button:hover,
+body.auramusic-theme-auramusic ytmusic-player-bar .next-button:hover {
+  background: rgba(0, 229, 255, 0.25) !important;
+  border-color: #00e5ff !important;
+  transform: scale(1.18) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.5) !important;
+}
+
+/* Carátula en reproducción con respiración mágica cian/magenta */
+body.auramusic-theme-auramusic ytmusic-player-bar .image.ytmusic-player-bar {
+  border-radius: 14px !important;
+  animation: auraVinylGlow 4s ease-in-out infinite alternate !important;
+}
+
+@keyframes auraVinylGlow {
+  0% { box-shadow: 0 4px 15px rgba(0, 229, 255, 0.4), 0 0 20px rgba(189, 0, 255, 0.25); transform: rotate(0deg); }
+  50% { box-shadow: 0 8px 28px rgba(189, 0, 255, 0.6), 0 0 35px rgba(0, 229, 255, 0.45); transform: rotate(1deg) translateY(-2px); }
+  100% { box-shadow: 0 4px 15px rgba(0, 229, 255, 0.4), 0 0 20px rgba(189, 0, 255, 0.25); transform: rotate(0deg); }
+}
+
+body.auramusic-theme-auramusic #volume-slider tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
+  background: linear-gradient(90deg, #00e5ff, #bd00ff) !important;
+}
+
+/* Menús desplegables AuraMusic */
+body.auramusic-theme-auramusic ytmusic-menu-popup-renderer,
+body.auramusic-theme-auramusic tp-yt-iron-dropdown tp-yt-paper-listbox,
+body.auramusic-theme-auramusic ytmusic-multi-page-menu-renderer,
+body.auramusic-theme-auramusic ytmusic-search-suggestions-section-renderer {
+  background: rgba(10, 12, 22, 0.94) !important;
+  backdrop-filter: blur(24px) !important;
+  border: 1.5px solid rgba(0, 229, 255, 0.35) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(0, 229, 255, 0.25) !important;
+  padding: 8px !important;
+}
+
+body.auramusic-theme-auramusic tp-yt-paper-item:hover,
+body.auramusic-theme-auramusic ytmusic-menu-navigation-item-renderer:hover,
+body.auramusic-theme-auramusic ytmusic-menu-service-item-renderer:hover,
+body.auramusic-theme-auramusic ytmusic-search-suggestion:hover,
+body.auramusic-theme-auramusic ytmusic-compact-link-renderer:hover {
+  background: rgba(0, 229, 255, 0.16) !important;
+  color: #00e5ff !important;
+  border-left: 3.5px solid #00e5ff !important;
+  border-radius: 10px !important;
+  transform: translateX(4px) !important;
+}
+
+/* ==========================================================================
    DISEÑO 1: 🌸 AESTHETIC PASTEL (REPRODUCTOR FLOTANTE DOCK, FLOTE Y NUBES)
    ========================================================================== */
 body.auramusic-theme-aesthetic {

@@ -5,7 +5,7 @@
 var AuraMusic = window.AuraMusic = window.AuraMusic || {};
 
 var defaultSettings = window.defaultSettings = AuraMusic.defaultSettings = {
-  theme: 'oled',
+  theme: 'auramusic',
   primaryColor: '#00e5ff',
   ambientGlow: true,
   visualizer: 'bars',
