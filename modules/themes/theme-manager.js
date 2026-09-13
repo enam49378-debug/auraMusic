@@ -321,14 +321,14 @@ window.AuraMusic = window.AuraMusic || {};
     switch (theme) {
       case 'aesthetic':
         knobStyles = `
-          width: 16px !important;
-          height: 16px !important;
-          min-width: 16px !important;
-          min-height: 16px !important;
+          width: 18px !important;
+          height: 18px !important;
+          min-width: 18px !important;
+          min-height: 18px !important;
           border-radius: 50% !important;
           background: #ffffff !important;
-          border: 3px solid #ff8fa3 !important;
-          box-shadow: 0 0 14px rgba(255, 143, 163, 1), 0 0 24px rgba(199, 125, 255, 0.95), 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+          border: 3.5px solid #ff8fa3 !important;
+          box-shadow: 0 0 16px rgba(255, 143, 163, 1), 0 0 28px rgba(199, 125, 255, 0.95), 0 2px 6px rgba(0, 0, 0, 0.5) !important;
           transform: scale(1) !important;
         `;
         break;
@@ -519,15 +519,39 @@ window.AuraMusic = window.AuraMusic || {};
     `;
   }
 
+  function getAllSliders() {
+    const sliders = new Set();
+    function scan(root) {
+      if (!root) return;
+      try {
+        const found = root.querySelectorAll('#progress-bar, tp-yt-paper-slider#progress-bar, ytmusic-player-bar tp-yt-paper-slider, #volume-slider tp-yt-paper-slider, tp-yt-paper-slider');
+        found.forEach(s => sliders.add(s));
+      } catch (e) {}
+
+      try {
+        const allElements = root.querySelectorAll ? root.querySelectorAll('*') : [];
+        for (let i = 0; i < allElements.length; i++) {
+          if (allElements[i].shadowRoot) {
+            scan(allElements[i].shadowRoot);
+          }
+        }
+      } catch (e) {}
+    }
+
+    scan(document);
+    return Array.from(sliders);
+  }
+
   function updateSliderShadowDom(themeName) {
     const theme = themeName || getState().theme || 'default';
-    const sliders = document.querySelectorAll('#progress-bar, ytmusic-player-bar tp-yt-paper-slider, #volume-slider tp-yt-paper-slider');
+    const sliders = getAllSliders();
 
     sliders.forEach(slider => {
       // 1. Asignar variables CSS en el host para componentes Polymer nativos
       slider.style.setProperty('--paper-slider-height', '8px', 'important');
       slider.style.setProperty('--paper-progress-height', '8px', 'important');
       slider.style.setProperty('--paper-slider-knob-size', '24px', 'important');
+      slider.style.setProperty('--paper-slider-knob-start-size', '24px', 'important');
 
       if (!slider || !slider.shadowRoot) return;
 

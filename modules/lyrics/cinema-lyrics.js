@@ -191,6 +191,98 @@ window.AuraMusic = window.AuraMusic || {};
     return false;
   }
 
+  function findProgressBar() {
+    let slider = document.querySelector('ytmusic-player-bar #progress-bar, #progress-bar.ytmusic-player-bar, tp-yt-paper-slider#progress-bar, ytmusic-player-bar #slider, tp-yt-paper-slider#slider, #progress-bar');
+    if (slider) return slider;
+
+    const playerBar = document.querySelector('ytmusic-player-bar');
+    if (playerBar && playerBar.shadowRoot) {
+      slider = playerBar.shadowRoot.querySelector('#progress-bar, tp-yt-paper-slider#progress-bar, #slider, tp-yt-paper-slider');
+      if (slider) return slider;
+    }
+
+    function deepFindSlider(root, depth = 0) {
+      if (!root || depth > 8) return null;
+      try {
+        if (root.querySelector) {
+          const s = root.querySelector('#progress-bar, tp-yt-paper-slider#progress-bar, tp-yt-paper-slider');
+          if (s) return s;
+        }
+      } catch (_) {}
+      try {
+        if (root.shadowRoot) {
+          const found = deepFindSlider(root.shadowRoot, depth + 1);
+          if (found) return found;
+        }
+      } catch (_) {}
+      try {
+        const children = root.children || [];
+        for (let i = 0; i < children.length; i++) {
+          const found = deepFindSlider(children[i], depth + 1);
+          if (found) return found;
+        }
+      } catch (_) {}
+      return null;
+    }
+
+    return deepFindSlider(document.body || document.documentElement);
+  }
+
+  function seekNativeProgressBar(targetSeconds) {
+    const slider = findProgressBar();
+    if (!slider) return false;
+
+    const ariaMax = parseFloat(slider.getAttribute('aria-valuemax'));
+    const rawSliderMax = typeof slider.max === 'number' ? slider.max : parseFloat(slider.max);
+    const max = (!isNaN(ariaMax) && ariaMax > 5) ? ariaMax : (!isNaN(rawSliderMax) && rawSliderMax > 0 ? rawSliderMax : 0);
+    const min = parseFloat(slider.getAttribute('aria-valuemin')) || parseFloat(slider.min) || 0;
+    const dur = max > min ? (max - min) : (max || 1);
+    const pct = Math.max(0, Math.min(1, targetSeconds / dur));
+
+    // Despacho de pointerdown, pointerup y click a las coordenadas de píxeles exactas
+    try {
+      const targetEl = (slider.shadowRoot?.querySelector('#sliderContainer') || slider.shadowRoot?.querySelector('#sliderBar') || slider);
+      const rect = targetEl.getBoundingClientRect();
+      if (rect.width > 0) {
+        const clientX = rect.left + (pct * rect.width);
+        const clientY = rect.top + (rect.height / 2);
+        const opts = { bubbles: true, cancelable: true, composed: true, clientX, clientY, pointerId: 1, pointerType: 'mouse', isPrimary: true };
+        slider.dispatchEvent(new PointerEvent('pointerdown', opts));
+        slider.dispatchEvent(new PointerEvent('pointerup', opts));
+        slider.dispatchEvent(new MouseEvent('click', opts));
+        if (slider.shadowRoot) {
+          const container = slider.shadowRoot.querySelector('#sliderContainer');
+          if (container) {
+            container.dispatchEvent(new PointerEvent('pointerdown', opts));
+            container.dispatchEvent(new PointerEvent('pointerup', opts));
+            container.dispatchEvent(new MouseEvent('click', opts));
+          }
+        }
+      }
+    } catch (_) {}
+
+    // Despacho de eventos de cambio de valor Polymer
+    try {
+      const sliderVal = (rawSliderMax > 0 && rawSliderMax !== max && Math.abs(rawSliderMax - 1000) < 50)
+        ? (pct * rawSliderMax)
+        : (rawSliderMax > 0 && rawSliderMax <= 100 ? (pct * rawSliderMax) : targetSeconds);
+
+      slider.value = sliderVal;
+      if (slider.immediateValue !== undefined) slider.immediateValue = sliderVal;
+      slider.setAttribute('aria-valuenow', String(Math.round(targetSeconds)));
+
+      if (typeof slider._setValue === 'function') {
+        try { slider._setValue(sliderVal); } catch (_) {}
+      }
+
+      slider.dispatchEvent(new CustomEvent('immediate-value-change', { bubbles: true, composed: true }));
+      slider.dispatchEvent(new CustomEvent('change', { bubbles: true, composed: true }));
+      slider.dispatchEvent(new CustomEvent('value-change', { bubbles: true, composed: true }));
+    } catch (_) {}
+
+    return true;
+  }
+
   function seekTrack(targetTime, autoPlay = true) {
     const duration = getYtMusicTrackDuration();
     let clampedTime = Math.max(0, targetTime);
@@ -199,16 +291,17 @@ window.AuraMusic = window.AuraMusic || {};
     }
 
     cinemaSeekTargetTime = clampedTime;
-    cinemaSeekLockUntil = Date.now() + 1500;
+    cinemaSeekLockUntil = Date.now() + 800;
     lastRenderedPlaybackTime = clampedTime;
     lastRenderedDisplayTime = clampedTime;
 
     // 1. Enviar comando nativo autoritativo al MAIN WORLD (#movie_player.seekTo)
     sendPlayerCommand({ action: 'seek', time: clampedTime, autoPlay: autoPlay !== false });
 
-    // 2. Control directo sobre el slider nativo de YouTube Music si está disponible
+    // 2. Control directo sobre la barra de progreso nativa de YouTube Music
+    seekNativeProgressBar(clampedTime);
     try {
-      const nativeSlider = document.querySelector('ytmusic-player-bar #progress-bar, ytmusic-player-bar #slider, #progress-bar.ytmusic-player-bar');
+      const nativeSlider = findProgressBar();
       if (nativeSlider && typeof nativeSlider.seekTo === 'function') {
         nativeSlider.seekTo(clampedTime);
       }
@@ -2735,8 +2828,24 @@ window.AuraMusic = window.AuraMusic || {};
             lastCinemaActiveIdx = activeIdx;
             lastSingingWordIdx = -1;
 
-            // Actualización selectiva ultrarrápida: solo tocar la línea previa y la nueva
-            if (prevIdx >= 0) {
+            // Actualización de líneas: Si el salto es mayor a 1 (ej. por seek o clic en verso), resincronizar todo
+            if (Math.abs(activeIdx - prevIdx) > 1) {
+              const allLines = document.querySelectorAll('.cinema-lyric-line');
+              allLines.forEach(l => {
+                const idx = parseInt(l.dataset.index, 10);
+                if (idx < activeIdx) {
+                  l.classList.remove('active-line');
+                  l.classList.add('sung-line');
+                  l.querySelectorAll('.k-word').forEach(w => { if (w.className !== 'k-word sung') w.className = 'k-word sung'; });
+                } else if (idx === activeIdx) {
+                  l.classList.add('active-line');
+                  l.classList.remove('sung-line');
+                } else {
+                  l.classList.remove('active-line', 'sung-line');
+                  l.querySelectorAll('.k-word').forEach(w => { if (w.className !== 'k-word') w.className = 'k-word'; });
+                }
+              });
+            } else if (prevIdx >= 0) {
               const prevLine = document.querySelector(`.cinema-lyric-line[data-index="${prevIdx}"]`);
               if (prevLine) {
                 prevLine.classList.remove('active-line');

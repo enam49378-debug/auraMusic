@@ -466,23 +466,24 @@ body.auramusic-theme-aesthetic ytmusic-player-bar {
 body.auramusic-theme-aesthetic #progress-bar.ytmusic-player-bar {
   position: absolute !important;
   top: 0px !important;
-  left: 24px !important;
-  right: 24px !important;
-  width: calc(100% - 48px) !important;
-  max-width: calc(100% - 48px) !important;
-  height: 6px !important;
+  left: 28px !important;
+  right: 28px !important;
+  width: calc(100% - 56px) !important;
+  max-width: calc(100% - 56px) !important;
+  height: 16px !important;
   border-radius: 999px !important;
   padding: 0 !important;
   margin: 0 !important;
   box-sizing: border-box !important;
   z-index: 100 !important;
   overflow: visible !important;
-  --paper-slider-height: 4px !important;
-  --paper-progress-height: 4px !important;
-  --paper-slider-knob-size: 16px !important;
-  --paper-slider-knob-start-size: 16px !important;
-  --paper-slider-container-color: rgba(255, 255, 255, 0.2) !important;
-  --paper-progress-container-color: rgba(255, 255, 255, 0.2) !important;
+  cursor: pointer !important;
+  --paper-slider-height: 5px !important;
+  --paper-progress-height: 5px !important;
+  --paper-slider-knob-size: 20px !important;
+  --paper-slider-knob-start-size: 20px !important;
+  --paper-slider-container-color: rgba(255, 255, 255, 0.22) !important;
+  --paper-progress-container-color: rgba(255, 255, 255, 0.22) !important;
   --paper-slider-active-color: #ff8fa3 !important;
   --paper-progress-active-color: #ff8fa3 !important;
   --paper-slider-secondary-color: rgba(199, 125, 255, 0.45) !important;
@@ -490,18 +491,20 @@ body.auramusic-theme-aesthetic #progress-bar.ytmusic-player-bar {
   --paper-slider-knob-color: #ffffff !important;
 }
 
-/* Eliminar el falso carril previo que se veía grueso y desfasado */
-body.auramusic-theme-aesthetic #progress-bar.ytmusic-player-bar::before {
+/* Eliminar el falso carril previo o pseudo-elementos que desfasen el dock */
+body.auramusic-theme-aesthetic #progress-bar.ytmusic-player-bar::before,
+body.auramusic-theme-aesthetic #progress-bar.ytmusic-player-bar::after {
   display: none !important;
   content: none !important;
 }
 
 body.auramusic-theme-aesthetic #progress-bar.ytmusic-player-bar tp-yt-paper-progress#sliderBar,
 body.auramusic-theme-aesthetic #progress-bar.ytmusic-player-bar #progressContainer.tp-yt-paper-progress {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.22) !important;
   border-radius: 999px !important;
-  height: 4px !important;
+  height: 5px !important;
   overflow: hidden !important;
+  margin: auto 0 !important;
 }
 
 /* Carátula en reproducción con respiración mágica pastel */
@@ -558,37 +561,53 @@ body.auramusic-theme-aesthetic ytmusic-player-bar .next-button:hover {
 body.auramusic-theme-aesthetic tp-yt-paper-progress #primaryProgress.tp-yt-paper-progress {
   background: linear-gradient(90deg, #ff8fa3, #c77dff) !important;
   border-radius: 999px !important;
-  height: 4px !important;
-  box-shadow: 0 0 12px rgba(255, 143, 163, 0.9) !important;
+  height: 5px !important;
+  box-shadow: 0 0 14px rgba(255, 143, 163, 0.95) !important;
 }
 
-/* CIRCULITO / HANDLE PARA ARRASTRAR LA LÍNEA (SIEMPRE VISIBLE, 16px, BRILLANTE PASTEL) */
+/* CIRCULITO / HANDLE PARA ARRASTRAR LA LÍNEA (SIEMPRE VISIBLE, 18px, BRILLANTE PASTEL) */
 body.auramusic-theme-aesthetic #progress-bar.ytmusic-player-bar #sliderKnob.tp-yt-paper-slider,
 body.auramusic-theme-aesthetic #progress-bar.ytmusic-player-bar #sliderKnob,
-body.auramusic-theme-aesthetic tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider {
+body.auramusic-theme-aesthetic tp-yt-paper-slider #sliderKnob.tp-yt-paper-slider,
+body.auramusic-theme-aesthetic tp-yt-paper-slider #sliderKnob {
   opacity: 1 !important;
   visibility: visible !important;
   display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  top: 50% !important;
+  margin-top: -12px !important;
+  margin-left: -12px !important;
+  pointer-events: auto !important;
+  overflow: visible !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 body.auramusic-theme-aesthetic #progress-bar.ytmusic-player-bar #sliderKnobInner.tp-yt-paper-slider,
 body.auramusic-theme-aesthetic #progress-bar.ytmusic-player-bar #sliderKnobInner,
 body.auramusic-theme-aesthetic tp-yt-paper-slider #sliderKnobInner.tp-yt-paper-slider,
-body.auramusic-theme-aesthetic tp-yt-paper-slider #sliderKnobInner {
+body.auramusic-theme-aesthetic tp-yt-paper-slider #sliderKnobInner,
+body.auramusic-theme-aesthetic #sliderKnob.ring > #sliderKnobInner,
+body.auramusic-theme-aesthetic #progress-bar.ytmusic-player-bar #sliderKnob.ring > #sliderKnobInner {
   display: block !important;
   background: #ffffff !important;
-  border: 3px solid #ff8fa3 !important;
+  border: 3.5px solid #ff8fa3 !important;
   border-radius: 50% !important;
-  width: 16px !important;
-  height: 16px !important;
-  min-width: 16px !important;
-  min-height: 16px !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
   transform: scale(1) !important;
   opacity: 1 !important;
   visibility: visible !important;
-  box-shadow: 0 0 14px rgba(255, 143, 163, 1), 0 0 22px rgba(199, 125, 255, 0.9), 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 0 16px rgba(255, 143, 163, 1), 0 0 28px rgba(199, 125, 255, 0.95), 0 2px 6px rgba(0, 0, 0, 0.5) !important;
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease !important;
   cursor: grab !important;
+  margin: 0 auto !important;
 }
 
 body.auramusic-theme-aesthetic #progress-bar.ytmusic-player-bar:hover #sliderKnobInner.tp-yt-paper-slider,
@@ -598,7 +617,7 @@ body.auramusic-theme-aesthetic #progress-bar.ytmusic-player-bar[dragging] #slide
 body.auramusic-theme-aesthetic tp-yt-paper-slider:hover #sliderKnobInner.tp-yt-paper-slider,
 body.auramusic-theme-aesthetic tp-yt-paper-slider[dragging] #sliderKnobInner.tp-yt-paper-slider {
   transform: scale(1.35) !important;
-  box-shadow: 0 0 22px rgba(255, 143, 163, 1), 0 0 35px rgba(199, 125, 255, 1) !important;
+  box-shadow: 0 0 22px rgba(255, 143, 163, 1), 0 0 35px rgba(199, 125, 255, 1), 0 2px 8px rgba(0, 0, 0, 0.6) !important;
   cursor: grabbing !important;
 }
 
