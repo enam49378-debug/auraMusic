@@ -412,11 +412,13 @@
     const cmdKey = _id || `${action}:::${time !== undefined ? time : ''}:::${_ts || ''}`;
 
     // Descartar comandos duplicados recibidos por múltiples canales (CustomEvent + MutationObserver)
-    if (cmdKey && cmdKey === lastProcessedCmdKey && (now - lastProcessedCmdTime < 500)) {
-      return;
+    if (action !== 'seek' && action !== 'seekTo') {
+      if (cmdKey && cmdKey === lastProcessedCmdKey && (now - lastProcessedCmdTime < 400)) {
+        return;
+      }
     }
-    // Descartar ráfagas accidentales de cambio de canción o toggle en menos de 450ms
-    if ((action === 'next' || action === 'prev' || action === 'togglePlay') && (now - lastProcessedCmdTime < 450)) {
+    // Descartar ráfagas accidentales de cambio de canción o toggle en menos de 400ms
+    if ((action === 'next' || action === 'prev' || action === 'togglePlay') && (now - lastProcessedCmdTime < 400)) {
       return;
     }
     lastProcessedCmdKey = cmdKey;

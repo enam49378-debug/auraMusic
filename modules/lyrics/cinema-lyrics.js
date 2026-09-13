@@ -290,43 +290,29 @@ window.AuraMusic = window.AuraMusic || {};
       clampedTime = Math.max(0, duration - 0.3);
     }
 
-    cinemaSeekTargetTime = clampedTime;
-    cinemaSeekLockUntil = Date.now() + 800;
     lastRenderedPlaybackTime = clampedTime;
     lastRenderedDisplayTime = clampedTime;
 
-    // 1. Enviar comando nativo autoritativo al MAIN WORLD (#movie_player.seekTo)
+    // 1. Control directo e instantáneo sobre el elemento <video>
+    const video = getActiveVideo() || document.querySelector('video');
+    if (video) {
+      try { video.currentTime = clampedTime; } catch (_) {}
+      if (autoPlay !== false && video.paused) {
+        try { video.play().catch(() => {}); } catch (_) {}
+      }
+    }
+
+    // 2. Enviar comando nativo al MAIN WORLD (#movie_player.seekTo)
     sendPlayerCommand({ action: 'seek', time: clampedTime, autoPlay: autoPlay !== false });
 
-    // 2. Control directo sobre la barra de progreso nativa de YouTube Music
-    seekNativeProgressBar(clampedTime);
-    try {
-      const nativeSlider = findProgressBar();
-      if (nativeSlider && typeof nativeSlider.seekTo === 'function') {
-        nativeSlider.seekTo(clampedTime);
-      }
-    } catch (_) {}
-
-    // 3. Control directo e instantáneo sobre todos los elementos <video>
-    const videos = Array.from(document.querySelectorAll('video'));
-    videos.forEach(v => {
-      try { v.currentTime = clampedTime; } catch (_) {}
-      if (autoPlay !== false && v.paused) {
-        try { v.play().catch(() => {}); } catch (_) {}
-      }
-    });
-
-    // 4. Actualizar inmediatamente la barra y tiempos de la interfaz
+    // 3. Actualizar inmediatamente la barra y tiempos de la interfaz
     const fill = document.getElementById('cinema-progress-fill');
     const curSpan = document.getElementById('cinema-current-time');
     const waTimePill = document.getElementById('cinema-wa-time');
 
-    if (fill) {
-      fill.classList.add('is-seeking');
+    if (fill && duration > 0) {
       fill.style.setProperty('transition', 'none', 'important');
-      if (duration > 0) {
-        fill.style.width = `${Math.max(0, Math.min(100, (clampedTime / duration) * 100))}%`;
-      }
+      fill.style.width = `${Math.max(0, Math.min(100, (clampedTime / duration) * 100))}%`;
     }
     if (curSpan) {
       curSpan.textContent = formatTime(clampedTime);
@@ -1880,13 +1866,6 @@ window.AuraMusic = window.AuraMusic || {};
       }
 
       if (commitToVideo) {
-        const now = Date.now();
-        // Descartar seeks duplicados disparados en ráfaga por pointerup + click en menos de 220ms
-        if (now - lastSeekCommitTime < 220 && Math.abs(targetTime - lastSeekCommitTarget) < 0.6) {
-          return;
-        }
-        lastSeekCommitTime = now;
-        lastSeekCommitTarget = targetTime;
         seekTrack(targetTime, true);
       }
     }
@@ -2644,10 +2623,7 @@ window.AuraMusic = window.AuraMusic || {};
 
         const vidTime = (cachedVideo && !isNaN(cachedVideo.currentTime) && isFinite(cachedVideo.currentTime) && cachedVideo.currentTime >= 0) ? cachedVideo.currentTime : -1;
 
-        if (resolvedTime >= 0 && (resolvedTime > 0 || resolvedPlaying || vidTime < 0 || cachedVideo?.paused)) {
-          currentTime = resolvedTime;
-          isPlaying = resolvedPlaying;
-        } else if (vidTime >= 0) {
+        if (vidTime >= 0) {
           currentTime = vidTime;
           isPlaying = isTrackPlaying(cachedVideo);
         } else if (resolvedTime >= 0) {
@@ -2659,33 +2635,14 @@ window.AuraMusic = window.AuraMusic || {};
         // BLINDAJE ANTI-RESIDUAL: Si la pista cambió hace menos de 2500ms y el reproductor todavía reporta
         // la posición final de la canción previa (> 2.0s), forzar 0 absoluto para que el contador jamás salga en 2:12
         const isRecentTrackChange = (now - cinemaTrackChangeTime < 2500);
-        if (isRecentTrackChange && !isUserDraggingProgress && cinemaSeekTargetTime < 0) {
-          if (currentTime > 2.0) {
-            currentTime = 0;
-            lastRenderedPlaybackTime = 0;
-          }
+        if (isRecentTrackChange && !isUserDraggingProgress && currentTime > 2.0) {
+          currentTime = 0;
+          lastRenderedPlaybackTime = 0;
         }
 
-        const isSeekingLocked = (now < cinemaSeekLockUntil && cinemaSeekTargetTime >= 0);
-
-        let displayTime = currentTime;
-        if (isUserDraggingProgress) {
-          // El usuario está arrastrando interactivamente la barra
-        } else if (isSeekingLocked) {
-          if (Math.abs(currentTime - cinemaSeekTargetTime) < 1.0 || now >= cinemaSeekLockUntil) {
-            cinemaSeekLockUntil = 0;
-            cinemaSeekTargetTime = -1;
-            displayTime = currentTime;
-            lastRenderedPlaybackTime = currentTime;
-            if (cachedFill) cachedFill.classList.remove('is-seeking');
-          } else {
-            displayTime = cinemaSeekTargetTime;
-          }
-        } else {
-          lastRenderedPlaybackTime = currentTime;
-          displayTime = currentTime;
-          if (cachedFill && cachedFill.classList.contains('is-seeking')) cachedFill.classList.remove('is-seeking');
-        }
+        let displayTime = isUserDraggingProgress ? lastRenderedDisplayTime : currentTime;
+        lastRenderedPlaybackTime = currentTime;
+        if (cachedFill && cachedFill.classList.contains('is-seeking')) cachedFill.classList.remove('is-seeking');
 
         // 4. Actualizar barra de progreso visual solo si el tiempo cambió perceptiblemente
         if (!isUserDraggingProgress) {

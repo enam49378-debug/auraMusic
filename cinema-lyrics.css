@@ -261,25 +261,28 @@ body.auramusic-theme-cyberpunk .line-original-sub {
   position: relative;
 }
 
-/* Tirador interactivo (Scrubber Thumb) estilo Apple Music */
+/* Tirador interactivo (Scrubber Thumb / Circulito para agarrar) */
 .cinema-progress-fill::after {
   content: '';
   position: absolute;
-  right: -6px;
+  right: -7px;
   top: 50%;
-  transform: translateY(-50%) scale(0);
-  width: 14px;
-  height: 14px;
+  transform: translateY(-50%) scale(1) !important;
+  width: 15px;
+  height: 15px;
   background: #ffffff;
   border-radius: 50%;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 255, 255, 0.9);
-  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: none;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.6), 0 0 12px rgba(255, 255, 255, 0.95);
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
+  pointer-events: auto;
+  cursor: grab;
 }
 
 .cinema-progress-bg:hover .cinema-progress-fill::after,
 .cinema-progress-fill.is-seeking::after {
-  transform: translateY(-50%) scale(1);
+  transform: translateY(-50%) scale(1.4) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7), 0 0 18px rgba(255, 255, 255, 1);
+  cursor: grabbing;
 }
 
 .cinema-progress-fill.is-seeking {
