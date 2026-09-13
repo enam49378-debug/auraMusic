@@ -534,8 +534,12 @@
           portalFrame = 0;
           brandHalves.setAttribute('transform', 'rotate(180 800 800)');
           
+          // Ocultar de inmediato el logo y escenario para que JAMÁS salte o reaparezca al centro
+          finalStage.style.display = 'none';
+          stage.style.display = 'none';
+
           // El usuario ya está 100% viendo YouTube Music a través del triángulo expandido. Descarte inmediato y fluido.
-          dismissSplash(false);
+          dismissSplash(true);
         }).catch(() => {});
       }
     }
@@ -667,13 +671,19 @@
     if (isDismissed) return;
     isDismissed = true;
 
-    clearAllAnimations();
-
     document.documentElement.classList.remove('auramusic-splash-active');
     if (document.body) document.body.classList.remove('auramusic-splash-active');
 
     const splash = document.getElementById('auramusic-splash-screen');
-    if (!splash) return;
+    if (splash) {
+      // Ocultar de inmediato los elementos internos para que JAMÁS salte el logo al final
+      const finalStage = splash.querySelector('#splash-final-stage');
+      if (finalStage) finalStage.style.display = 'none';
+      const stage = splash.querySelector('#splash-intro-stage');
+      if (stage) stage.style.display = 'none';
+      const backdrop = splash.querySelector('#splash-stage-backdrop');
+      if (backdrop) backdrop.style.display = 'none';
+    }
 
     // Desvanecer volumen de audio suavemente si está reproduciéndose
     try {
@@ -686,14 +696,22 @@
             clearInterval(fade);
             audioInstance.pause();
           }
-        }, 35);
+        }, 30);
       }
     } catch (_) {}
 
-    splash.classList.add('splash-dismissed');
-    setTimeout(() => {
-      try { splash.remove(); } catch (_) {}
-    }, 280);
+    clearAllAnimations();
+
+    if (splash) {
+      if (immediate) {
+        try { splash.remove(); } catch (_) {}
+      } else {
+        splash.classList.add('splash-dismissed');
+        setTimeout(() => {
+          try { splash.remove(); } catch (_) {}
+        }, 180);
+      }
+    }
   }
 
   function onPageReady() {
