@@ -321,14 +321,14 @@ window.AuraMusic = window.AuraMusic || {};
     switch (theme) {
       case 'aesthetic':
         knobStyles = `
-          width: 22px !important;
-          height: 22px !important;
-          min-width: 22px !important;
-          min-height: 22px !important;
+          width: 16px !important;
+          height: 16px !important;
+          min-width: 16px !important;
+          min-height: 16px !important;
           border-radius: 50% !important;
           background: #ffffff !important;
-          border: 3.5px solid #ff8fa3 !important;
-          box-shadow: 0 0 18px rgba(255, 143, 163, 1), 0 0 32px rgba(199, 125, 255, 0.95), 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+          border: 3px solid #ff8fa3 !important;
+          box-shadow: 0 0 14px rgba(255, 143, 163, 1), 0 0 24px rgba(199, 125, 255, 0.95), 0 2px 6px rgba(0, 0, 0, 0.4) !important;
           transform: scale(1) !important;
         `;
         break;
@@ -497,7 +497,10 @@ window.AuraMusic = window.AuraMusic || {};
       #sliderKnobInner.tp-yt-paper-slider,
       :host #sliderKnobInner,
       :host:not([dragging]):not(:hover) #sliderKnobInner,
-      :host:not([dragging]):not(:hover) #sliderKnobInner.tp-yt-paper-slider {
+      :host:not([dragging]):not(:hover) #sliderKnobInner.tp-yt-paper-slider,
+      #sliderKnob.ring > #sliderKnobInner,
+      :host([pin]) #sliderKnobInner,
+      :host([disabled]) #sliderKnobInner {
         display: block !important;
         opacity: 1 !important;
         visibility: visible !important;
@@ -560,11 +563,17 @@ window.AuraMusic = window.AuraMusic || {};
     });
   }
 
-  // Vigilante periódico de bajo impacto para verificar estilos de Shadow DOM
+  // Vigilante periódico de bajo impacto y eventos para mantener los estilos de Shadow DOM siempre activos
   setInterval(() => {
     const curTheme = getState().theme || 'default';
     updateSliderShadowDom(curTheme);
-  }, 2500);
+  }, 1200);
+
+  document.addEventListener('auramusic-track-change', () => {
+    const curTheme = getState().theme || 'default';
+    setTimeout(() => updateSliderShadowDom(curTheme), 200);
+    setTimeout(() => updateSliderShadowDom(curTheme), 800);
+  });
 
   // --- INYECCIÓN DE ELEMENTOS OFICIALES DE SPOTIFY (LOGO, BOTÓN HOME, PLACEHOLDER) ---
   function updateSpotifyBrandElements() {

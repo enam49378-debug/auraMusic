@@ -1320,6 +1320,320 @@ ytmusic-player-queue-item[data-merged-hidden="true"] {
   padding: 9px 12px;
 }
 
+/* =========================================================
+   TIENDA DE TEMAS DE LA COMUNIDAD (AURAMARKET BETA)
+   ========================================================= */
+
+.auramusic-store-header-card {
+  background: linear-gradient(135deg, rgba(255, 183, 3, 0.12) 0%, rgba(138, 43, 226, 0.1) 100%), rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 183, 3, 0.25) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.auramusic-store-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 183, 3, 0.18);
+  border: 1px solid rgba(255, 183, 3, 0.4);
+  color: #ffb703;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.auramusic-store-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.2px;
+}
+
+.auramusic-store-subtitle {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Banner de Creador de Temas a Futuro */
+.auramusic-store-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(0, 229, 255, 0.08)) !important;
+  border: 1px solid rgba(168, 85, 247, 0.35) !important;
+  padding: 14px 18px !important;
+  border-radius: 14px;
+  margin-top: 12px;
+}
+
+.auramusic-store-banner-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.auramusic-store-banner-body {
+  flex: 1;
+}
+
+.auramusic-store-banner-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #e0aaff;
+  margin-bottom: 4px;
+}
+
+.auramusic-store-banner-text {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.45;
+}
+
+/* Filtros de la Tienda */
+.auramusic-store-filters {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0 12px 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.store-filter-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.75);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.store-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.store-filter-btn.active {
+  background: linear-gradient(135deg, #ffb703, #fb8500);
+  color: #120e18;
+  font-weight: 700;
+  border-color: transparent;
+  box-shadow: 0 2px 12px rgba(255, 183, 3, 0.4);
+}
+
+/* Cuadrícula de Temas */
+.auramusic-store-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.auramusic-store-item {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.auramusic-store-item:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* Previsualización del Tema */
+.store-item-preview {
+  height: 95px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.preview-sakura {
+  background: linear-gradient(135deg, #2b102b 0%, #4a1936 50%, #ff8fa3 120%);
+}
+
+.preview-cyber {
+  background: linear-gradient(135deg, #09122c 0%, #16003b 50%, #00f5ff 140%);
+}
+
+.preview-lofi {
+  background: linear-gradient(135deg, #10002b 0%, #240046 60%, #9d4edd 140%);
+}
+
+.preview-glass {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #70d6ff 130%);
+}
+
+.preview-pixel {
+  background: linear-gradient(135deg, #141414 0%, #2d1810 60%, #55ff55 140%);
+}
+
+.preview-matcha {
+  background: linear-gradient(135deg, #132a13 0%, #31572c 60%, #74c69d 130%);
+}
+
+.store-preview-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba(255, 143, 163, 0.25);
+  color: #ff8fa3;
+  border: 1px solid rgba(255, 143, 163, 0.4);
+  padding: 2px 8px;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+
+.store-preview-chip-row {
+  display: flex;
+  gap: 5px;
+  margin-left: auto;
+}
+
+.store-color-chip {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Cuerpo de la Tarjeta */
+.store-item-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.store-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.store-item-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.store-item-rating {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #ffb703;
+}
+
+.store-item-author {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 6px;
+}
+
+.store-downloads {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.store-item-desc {
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.35;
+  margin: 0 0 10px 0;
+  flex: 1;
+}
+
+.store-item-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.store-item-tag {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.store-install-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.store-install-btn:hover {
+  background: linear-gradient(135deg, #00f2fe, #4facfe);
+  color: #0b132b;
+  font-weight: 700;
+  border-color: transparent;
+  box-shadow: 0 2px 10px rgba(0, 242, 254, 0.4);
+  transform: scale(1.03);
+}
+
+.store-install-btn:active {
+  transform: scale(0.97);
+}
+
+/* Toast flotante de confirmación */
+.store-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(18, 14, 24, 0.94);
+  border: 1px solid rgba(255, 183, 3, 0.5);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 183, 3, 0.3);
+  color: #ffffff;
+  padding: 10px 22px;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(12px);
+}
+
+.store-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+
 
 
 

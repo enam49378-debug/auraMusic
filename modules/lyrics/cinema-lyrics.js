@@ -206,7 +206,15 @@ window.AuraMusic = window.AuraMusic || {};
     // 1. Enviar comando nativo autoritativo al MAIN WORLD (#movie_player.seekTo)
     sendPlayerCommand({ action: 'seek', time: clampedTime, autoPlay: autoPlay !== false });
 
-    // 2. Control directo e instantáneo sobre todos los elementos <video>
+    // 2. Control directo sobre el slider nativo de YouTube Music si está disponible
+    try {
+      const nativeSlider = document.querySelector('ytmusic-player-bar #progress-bar, ytmusic-player-bar #slider, #progress-bar.ytmusic-player-bar');
+      if (nativeSlider && typeof nativeSlider.seekTo === 'function') {
+        nativeSlider.seekTo(clampedTime);
+      }
+    } catch (_) {}
+
+    // 3. Control directo e instantáneo sobre todos los elementos <video>
     const videos = Array.from(document.querySelectorAll('video'));
     videos.forEach(v => {
       try { v.currentTime = clampedTime; } catch (_) {}
@@ -215,7 +223,7 @@ window.AuraMusic = window.AuraMusic || {};
       }
     });
 
-    // 3. Actualizar inmediatamente la barra y tiempos de la interfaz
+    // 4. Actualizar inmediatamente la barra y tiempos de la interfaz
     const fill = document.getElementById('cinema-progress-fill');
     const curSpan = document.getElementById('cinema-current-time');
     const waTimePill = document.getElementById('cinema-wa-time');
@@ -1673,9 +1681,23 @@ window.AuraMusic = window.AuraMusic || {};
 
     function togglePlayback() {
       const now = Date.now();
-      if (now - lastUserNavClick < 400) return;
+      if (now - lastUserNavClick < 320) return;
       lastUserNavClick = now;
+
+      // 1. Enviar comando nativo al Player Bridge (MAIN WORLD)
       sendPlayerCommand({ action: 'togglePlay' });
+
+      // 2. Disparo instantáneo al botón nativo de YouTube Music en el DOM
+      const nativePlay = document.querySelector('ytmusic-player-bar .play-pause-button, #play-pause-button, ytmusic-player-bar [class*="play-pause-button"], tp-yt-paper-icon-button.play-pause-button');
+      if (nativePlay) {
+        try { nativePlay.click(); } catch (_) {}
+      } else {
+        const vid = getActiveVideo();
+        if (vid) {
+          if (vid.paused) vid.play().catch(() => {});
+          else vid.pause();
+        }
+      }
     }
 
     function triggerQuickTrackPoll() {
@@ -1684,22 +1706,38 @@ window.AuraMusic = window.AuraMusic || {};
         checkCinemaTrackChange();
         count++;
         if (count > 5) clearInterval(intId);
-      }, 350);
+      }, 300);
     }
 
     function playPrevTrack() {
       const now = Date.now();
-      if (now - lastUserNavClick < 500) return;
+      if (now - lastUserNavClick < 400) return;
       lastUserNavClick = now;
+
+      // 1. Enviar comando nativo al Player Bridge (MAIN WORLD)
       sendPlayerCommand({ action: 'prev' });
+
+      // 2. Disparo instantáneo al botón nativo de YouTube Music en el DOM
+      const nativePrev = document.querySelector('ytmusic-player-bar .previous-button, #previous-button, ytmusic-player-bar [class*="previous-button"], tp-yt-paper-icon-button.previous-button');
+      if (nativePrev) {
+        try { nativePrev.click(); } catch (_) {}
+      }
       triggerQuickTrackPoll();
     }
 
     function playNextTrack() {
       const now = Date.now();
-      if (now - lastUserNavClick < 500) return;
+      if (now - lastUserNavClick < 400) return;
       lastUserNavClick = now;
+
+      // 1. Enviar comando nativo al Player Bridge (MAIN WORLD)
       sendPlayerCommand({ action: 'next' });
+
+      // 2. Disparo instantáneo al botón nativo de YouTube Music en el DOM
+      const nativeNext = document.querySelector('ytmusic-player-bar .next-button, #next-button, ytmusic-player-bar [class*="next-button"], tp-yt-paper-icon-button.next-button');
+      if (nativeNext) {
+        try { nativeNext.click(); } catch (_) {}
+      }
       triggerQuickTrackPoll();
     }
 
@@ -2502,14 +2540,26 @@ window.AuraMusic = window.AuraMusic || {};
         }
         const duration = cachedDuration;
 
-        // 3. TIEMPO ACTUAL EN VIVO: Sub-segundo fluido en memoria
+        // 3. TIEMPO ACTUAL EN VIVO: Prioridad absoluta al reproductor oficial de YouTube Music (Bridge API)
+        let resolvedTime = -1;
+        let resolvedPlaying = false;
+
+        if (bridge && bridge.isFresh && bridge.currentTime >= 0) {
+          resolvedTime = bridge.currentTime;
+          resolvedPlaying = (bridge.playerState === 1);
+        }
+
         const vidTime = (cachedVideo && !isNaN(cachedVideo.currentTime) && isFinite(cachedVideo.currentTime) && cachedVideo.currentTime >= 0) ? cachedVideo.currentTime : -1;
-        if (vidTime >= 0) {
+
+        if (resolvedTime >= 0 && (resolvedTime > 0 || resolvedPlaying || vidTime < 0 || cachedVideo?.paused)) {
+          currentTime = resolvedTime;
+          isPlaying = resolvedPlaying;
+        } else if (vidTime >= 0) {
           currentTime = vidTime;
           isPlaying = isTrackPlaying(cachedVideo);
-        } else if (bridge && bridge.isFresh && bridge.currentTime >= 0) {
-          currentTime = bridge.currentTime;
-          isPlaying = (bridge.playerState === 1);
+        } else if (resolvedTime >= 0) {
+          currentTime = resolvedTime;
+          isPlaying = resolvedPlaying;
         }
         lastSyncIsPlaying = isPlaying;
 

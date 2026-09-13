@@ -53,6 +53,7 @@ window.AuraMusic = window.AuraMusic || {};
           <button type="button" class="auramusic-tab" data-tab="audio">🎚️ Audio & EQ</button>
           <button type="button" class="auramusic-tab" data-tab="clean">🚫 Limpieza</button>
           <button type="button" class="auramusic-tab" id="hub-cinema-lyrics-tab" style="color: #ff8fa3; font-weight: 700;">✨ Modo Letras</button>
+          <button type="button" class="auramusic-tab" data-tab="store" id="hub-tab-store" style="color: #ffb703; font-weight: 700;">🛍️ Tienda</button>
           <button type="button" class="auramusic-tab" data-tab="updates" id="hub-tab-updates" style="position:relative;">
             🚀 Actualizaciones <span id="hub-update-dot" class="hub-tab-update-dot" style="display:none;"></span>
           </button>
@@ -256,6 +257,204 @@ window.AuraMusic = window.AuraMusic || {};
                 💡 <strong>100% Automático:</strong> AuraMusic descarga las novedades directamente desde GitHub y recarga la extensión en segundo plano. No necesitas ir a chrome://extensions ni reiniciar Chrome.
               </div>
             </div>
+          </section>
+
+          <!-- PESTAÑA 6: TIENDA DE TEMAS DE LA COMUNIDAD (AURAMARKET BETA) -->
+          <section class="auramusic-panel" id="panel-store">
+            <div class="auramusic-card auramusic-store-header-card">
+              <div class="auramusic-store-header-content">
+                <div class="auramusic-store-badge">🛍️ AuraMarket Beta</div>
+                <h3 class="auramusic-store-title">Tienda de Temas de la Comunidad</h3>
+                <p class="auramusic-store-subtitle">Explora, prueba e instala temas creados por la comunidad y diseñadores para transformar YouTube Music.</p>
+              </div>
+            </div>
+
+            <!-- Banner Informativo del Creador de Temas a Futuro -->
+            <div class="auramusic-card auramusic-store-banner">
+              <div class="auramusic-store-banner-icon">🎨</div>
+              <div class="auramusic-store-banner-body">
+                <div class="auramusic-store-banner-title">🚀 Próximamente: Estudio de Creación y Subida de Temas</div>
+                <div class="auramusic-store-banner-text">
+                  En una próxima versión podrás diseñar tus propios temas directamente con tus colores, fuentes, dock translúcido y fondos dinámicos, y publicarlos en esta tienda para compartirlos con toda la comunidad con 1 clic.
+                </div>
+              </div>
+            </div>
+
+            <!-- Filtros de Categorías -->
+            <div class="auramusic-store-filters">
+              <button type="button" class="store-filter-btn active" data-filter="all">🌟 Todos</button>
+              <button type="button" class="store-filter-btn" data-filter="popular">🔥 Populares</button>
+              <button type="button" class="store-filter-btn" data-filter="aesthetic">🌸 Aesthetic</button>
+              <button type="button" class="store-filter-btn" data-filter="cyber">⚡ Cyberpunk</button>
+              <button type="button" class="store-filter-btn" data-filter="lofi">☕ Lo-Fi</button>
+            </div>
+
+            <!-- Cuadrícula de Temas de la Comunidad -->
+            <div class="auramusic-store-grid">
+              <!-- Tarjeta 1: Sakura Neon Dream -->
+              <div class="auramusic-store-item" data-category="aesthetic popular">
+                <div class="store-item-preview preview-sakura">
+                  <span class="store-preview-badge">🌸 Popular</span>
+                  <div class="store-preview-glow"></div>
+                  <div class="store-preview-chip-row">
+                    <span class="store-color-chip" style="background:#ff8fa3;"></span>
+                    <span class="store-color-chip" style="background:#c77dff;"></span>
+                    <span class="store-color-chip" style="background:#ffd166;"></span>
+                  </div>
+                </div>
+                <div class="store-item-body">
+                  <div class="store-item-header">
+                    <span class="store-item-name">Sakura Neon Dream</span>
+                    <span class="store-item-rating">⭐ 4.9</span>
+                  </div>
+                  <div class="store-item-author">Por @KomiFan99 · <span class="store-downloads">📥 14.2k</span></div>
+                  <p class="store-item-desc">Estética pastel suave con destellos de cerezo japonés y barra flotante de cristal translúcido.</p>
+                  <div class="store-item-footer">
+                    <span class="store-item-tag">#Aesthetic</span>
+                    <button type="button" class="store-install-btn" data-theme-apply="aesthetic" data-accent="#ff8fa3">
+                      ▶ Probar Tema
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tarjeta 2: Neo Tokyo 2077 -->
+              <div class="auramusic-store-item" data-category="cyber popular">
+                <div class="store-item-preview preview-cyber">
+                  <span class="store-preview-badge" style="background: rgba(0, 245, 255, 0.25); color: #00f5ff; border-color: rgba(0,245,255,0.4);">⚡ Destacado</span>
+                  <div class="store-preview-glow"></div>
+                  <div class="store-preview-chip-row">
+                    <span class="store-color-chip" style="background:#00f5ff;"></span>
+                    <span class="store-color-chip" style="background:#ff2d78;"></span>
+                    <span class="store-color-chip" style="background:#ffe600;"></span>
+                  </div>
+                </div>
+                <div class="store-item-body">
+                  <div class="store-item-header">
+                    <span class="store-item-name">Neo Tokyo 2077</span>
+                    <span class="store-item-rating">⭐ 5.0</span>
+                  </div>
+                  <div class="store-item-author">Por @JesulutoXd · <span class="store-downloads">📥 28.6k</span></div>
+                  <p class="store-item-desc">Diseño mecha futurista con acentos glitch cian y rosa neón de alto contraste y dock holográfico.</p>
+                  <div class="store-item-footer">
+                    <span class="store-item-tag">#Cyberpunk</span>
+                    <button type="button" class="store-install-btn" data-theme-apply="cyberpunk" data-accent="#00f5ff">
+                      ▶ Probar Tema
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tarjeta 3: Midnight Lo-Fi Café -->
+              <div class="auramusic-store-item" data-category="lofi popular">
+                <div class="store-item-preview preview-lofi">
+                  <span class="store-preview-badge" style="background: rgba(199, 125, 255, 0.25); color: #e0aaff; border-color: rgba(199,125,255,0.4);">🌙 Relajante</span>
+                  <div class="store-preview-glow"></div>
+                  <div class="store-preview-chip-row">
+                    <span class="store-color-chip" style="background:#3c096c;"></span>
+                    <span class="store-color-chip" style="background:#9d4edd;"></span>
+                    <span class="store-color-chip" style="background:#e0aaff;"></span>
+                  </div>
+                </div>
+                <div class="store-item-body">
+                  <div class="store-item-header">
+                    <span class="store-item-name">Midnight Lo-Fi Café</span>
+                    <span class="store-item-rating">⭐ 4.8</span>
+                  </div>
+                  <div class="store-item-author">Por @ChillBeats · <span class="store-downloads">📥 9.8k</span></div>
+                  <p class="store-item-desc">Atmósfera oscura con tonos púrpuras cálidos para estudiar y escuchar de noche sin fatiga visual.</p>
+                  <div class="store-item-footer">
+                    <span class="store-item-tag">#LoFi</span>
+                    <button type="button" class="store-install-btn" data-theme-apply="oled" data-accent="#9d4edd">
+                      ▶ Probar Tema
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tarjeta 4: Holographic Glass Pro -->
+              <div class="auramusic-store-item" data-category="aesthetic">
+                <div class="store-item-preview preview-glass">
+                  <span class="store-preview-badge" style="background: rgba(112, 214, 255, 0.25); color: #70d6ff; border-color: rgba(112,214,255,0.4);">💎 Glass Pro</span>
+                  <div class="store-preview-glow"></div>
+                  <div class="store-preview-chip-row">
+                    <span class="store-color-chip" style="background:#ffffff;"></span>
+                    <span class="store-color-chip" style="background:#70d6ff;"></span>
+                    <span class="store-color-chip" style="background:#ff70a6;"></span>
+                  </div>
+                </div>
+                <div class="store-item-body">
+                  <div class="store-item-header">
+                    <span class="store-item-name">Hologram Glass Pro</span>
+                    <span class="store-item-rating">⭐ 4.9</span>
+                  </div>
+                  <div class="store-item-author">Por @AuraDesign · <span class="store-downloads">📥 18.3k</span></div>
+                  <p class="store-item-desc">Vidrio esmerilado translúcido con refracción cromática y dock ultra minimalista estilo Cupertino.</p>
+                  <div class="store-item-footer">
+                    <span class="store-item-tag">#Glass</span>
+                    <button type="button" class="store-install-btn" data-theme-apply="apple" data-accent="#70d6ff">
+                      ▶ Probar Tema
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tarjeta 5: Retro 8-Bit Pixel -->
+              <div class="auramusic-store-item" data-category="popular">
+                <div class="store-item-preview preview-pixel">
+                  <span class="store-preview-badge" style="background: rgba(85, 255, 85, 0.25); color: #55ff55; border-color: rgba(85,255,85,0.4);">⛏️ Pixel Art</span>
+                  <div class="store-preview-glow"></div>
+                  <div class="store-preview-chip-row">
+                    <span class="store-color-chip" style="background:#55ff55;"></span>
+                    <span class="store-color-chip" style="background:#aa0000;"></span>
+                    <span class="store-color-chip" style="background:#55ffff;"></span>
+                  </div>
+                </div>
+                <div class="store-item-body">
+                  <div class="store-item-header">
+                    <span class="store-item-name">Retro 8-Bit Pixel</span>
+                    <span class="store-item-rating">⭐ 4.7</span>
+                  </div>
+                  <div class="store-item-author">Por @StevePixel · <span class="store-downloads">📥 11.5k</span></div>
+                  <p class="store-item-desc">Bloques clásicos, fuentes pixeladas y barras con textura de obsidiana y portal misterioso.</p>
+                  <div class="store-item-footer">
+                    <span class="store-item-tag">#PixelArt</span>
+                    <button type="button" class="store-install-btn" data-theme-apply="minecraft" data-accent="#55ff55">
+                      ▶ Probar Tema
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tarjeta 6: Matcha Cream Zen -->
+              <div class="auramusic-store-item" data-category="aesthetic lofi">
+                <div class="store-item-preview preview-matcha">
+                  <span class="store-preview-badge" style="background: rgba(82, 183, 136, 0.25); color: #74c69d; border-color: rgba(82,183,136,0.4);">🍃 Zen Pastel</span>
+                  <div class="store-preview-glow"></div>
+                  <div class="store-preview-chip-row">
+                    <span class="store-color-chip" style="background:#74c69d;"></span>
+                    <span class="store-color-chip" style="background:#d8f3dc;"></span>
+                    <span class="store-color-chip" style="background:#b7e4c7;"></span>
+                  </div>
+                </div>
+                <div class="store-item-body">
+                  <div class="store-item-header">
+                    <span class="store-item-name">Matcha Cream Zen</span>
+                    <span class="store-item-rating">⭐ 4.8</span>
+                  </div>
+                  <div class="store-item-author">Por @PastelWave · <span class="store-downloads">📥 7.4k</span></div>
+                  <p class="store-item-desc">Paleta verde té matcha y marfil relajante para descansar la vista con elegancia y minimalismo.</p>
+                  <div class="store-item-footer">
+                    <span class="store-item-tag">#Zen</span>
+                    <button type="button" class="store-install-btn" data-theme-apply="aesthetic" data-accent="#52b788">
+                      ▶ Probar Tema
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="auramusic-store-toast" class="store-toast" style="display:none;"></div>
           </section>
         </main>
 
@@ -670,6 +869,64 @@ window.AuraMusic = window.AuraMusic || {};
     setTimeout(() => {
       refreshHubUpdateStatus(false);
     }, 1500);
+
+    // --- LÓGICA DE TIENDA DE TEMAS DE LA COMUNIDAD (AuraMarket) ---
+    const filterBtns = overlay.querySelectorAll('.store-filter-btn');
+    const storeItems = overlay.querySelectorAll('.auramusic-store-item');
+    const storeToast = document.getElementById('auramusic-store-toast');
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+
+        storeItems.forEach(item => {
+          if (filter === 'all') {
+            item.style.display = 'flex';
+          } else {
+            const cats = (item.dataset.category || '').split(' ');
+            item.style.display = cats.includes(filter) ? 'flex' : 'none';
+          }
+        });
+      });
+    });
+
+    overlay.querySelectorAll('.store-install-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const themeToApply = btn.dataset.themeApply;
+        const accent = btn.dataset.accent;
+        const state = getState();
+
+        if (themeToApply) {
+          state.theme = themeToApply;
+          if (window.applyTheme) window.applyTheme(themeToApply);
+          else if (window.AuraMusic?.applyTheme) window.AuraMusic.applyTheme(themeToApply);
+        }
+
+        if (accent) {
+          state.primaryColor = accent;
+          document.documentElement.style.setProperty('--auramusic-primary', accent);
+          const picker = document.getElementById('auramusic-color-picker');
+          if (picker) picker.value = accent;
+        }
+
+        if (window.saveSettings) window.saveSettings();
+        updateUIControls();
+
+        if (storeToast) {
+          const name = btn.closest('.auramusic-store-item')?.querySelector('.store-item-name')?.textContent || 'Tema';
+          storeToast.textContent = `✨ ¡Tema "${name}" activado en YouTube Music!`;
+          storeToast.style.display = 'block';
+          storeToast.classList.add('show');
+          setTimeout(() => {
+            storeToast.classList.remove('show');
+            setTimeout(() => { storeToast.style.display = 'none'; }, 300);
+          }, 2800);
+        }
+      });
+    });
   }
 
   function updateUIControls() {
